@@ -7,6 +7,7 @@ function of time, so any frame can be rendered on its own.
 | Ad | What it shows | Length |
 |---|---|---|
 | [`memento-demo/`](memento-demo/) | Memento's core features on Apple's on-device model, hosted by Sol, and why the AI runs locally | 58 s, 9:16 |
+| [`memento-demo-wide/`](memento-demo-wide/) | The same cut laid out for landscape (shares timeline, footage, voice and score) | 58 s, 16:9 |
 
 ## Commands
 
@@ -17,6 +18,7 @@ TAKE=B memento-demo/record.sh Scene4Sol                       # another take of 
 node kit/render.mjs memento-demo --still 2,34.9               # PNG stills into build/stills/
 node kit/render.mjs memento-demo                              # frames, SFX and the silent cut into out/
 ELEVENLABS_API_KEY=... node kit/voice.mjs memento-demo        # voice + score mix → out/memento-demo-9x16-vo.mp4
+node kit/render.mjs memento-demo-wide && node kit/voice.mjs memento-demo-wide   # landscape (copy build/vo and build/music.mp3 first to reuse them)
 ```
 
 - **Footage:** the real app in the iOS Simulator with its live on-device AI (Apple's Foundation Models on the Mac).

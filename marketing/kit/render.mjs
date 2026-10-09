@@ -91,6 +91,8 @@ async function serve(folder) {
   return { server, base: `http://127.0.0.1:${server.address().port}/marketing/${folder}/scene.html` };
 }
 
+export const aspect = (tl) => (tl.WIDTH > tl.HEIGHT ? "16x9" : "9x16");
+
 // ---------- capture ----------
 
 const query = (variant, extra) => `?${new URLSearchParams({ ...(variant ? { variant } : {}), ...extra })}`;
@@ -250,13 +252,13 @@ async function main() {
       await page.close();
 
       console.log(`[${cut.name}] muxing…`);
-      const master = path.join(ad.out, `${cut.name}-9x16.mp4`);
+      const master = path.join(ad.out, `${cut.name}-${aspect(tl)}.mp4`);
       await run("ffmpeg", ["-y", "-loglevel", "error", "-i", video, "-i", sfx,
         "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2", "-shortest", "-movflags", "+faststart",
         master]).done;
       await run("ffmpeg", ["-y", "-loglevel", "error", "-i", video, "-f", "lavfi", "-t", String(tl.DURATION), "-i", "anullsrc=r=48000:cl=stereo",
         "-c:v", "copy", "-c:a", "aac", "-b:a", "128k", "-shortest", "-movflags", "+faststart",
-        path.join(ad.out, `${cut.name}-9x16-nosfx.mp4`)]).done;
+        path.join(ad.out, `${cut.name}-${aspect(tl)}-nosfx.mp4`)]).done;
       await writeCrops(tl, master, (key) => path.join(ad.out, `${cut.name}-${key}.mp4`));
     }
     if (still === undefined) {

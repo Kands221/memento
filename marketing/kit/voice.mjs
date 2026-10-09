@@ -33,6 +33,8 @@ const TAKE_GAP = 0.06;
 const MAX_TAKE_TEMPO = 1.08;
 
 const exec = promisify(execFile);
+const aspect = (tl) => (tl.WIDTH > tl.HEIGHT ? "16x9" : "9x16");
+
 const exists = (f) => access(f).then(() => true, () => false);
 
 async function ffmpeg(args) {
@@ -213,7 +215,7 @@ async function mixCut(ad, cut, clips) {
   ]);
 
   // SFX (and an optional score, <ad>/build/music.mp3) duck under the voice, then everything goes through a limiter.
-  const master = path.join(ad.out, `${cut.name}-9x16-vo.mp4`);
+  const master = path.join(ad.out, `${cut.name}-${aspect(tl)}-vo.mp4`);
   const music = path.join(ad.build, "music.mp3");
   const withMusic = await exists(music);
   const st = "aformat=sample_rates=48000:channel_layouts=stereo";
@@ -237,7 +239,7 @@ async function mixCut(ad, cut, clips) {
 
   const srt = clips.map((c, i) => `${i + 1}\n${stamp(c.start)} --> ${stamp(c.out)}\n${c.line.text}\n`).join("\n");
   await writeFile(path.join(ad.out, `${cut.name}-vo.srt`), srt);
-  console.log(`[${cut.name}] done → out/${cut.name}-9x16-vo.mp4${Object.keys(tl.CROPS ?? {}).map((k) => `, ${cut.name}-${k}-vo.mp4`).join("")}`);
+  console.log(`[${cut.name}] done → out/${cut.name}-${aspect(tl)}-vo.mp4${Object.keys(tl.CROPS ?? {}).map((k) => `, ${cut.name}-${k}-vo.mp4`).join("")}`);
 }
 
 async function main() {

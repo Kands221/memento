@@ -9,11 +9,22 @@ let caps = [];
 let bullets = [];
 let lastSrc = "";
 
-// Sol's place: big in the opening and the close, small beside the phone in between.
-const BIG = { x: 540, y: 1420, w: 800 };
-const HOST = { x: 108, y: 1895, w: 226 };
-const OUTRO = { x: 540, y: 1060, w: 560 };
-const END = { x: 540, y: 1100, w: 520 };
+// Positions for this cut. A scene.html may set window.LAYOUT (the landscape cut does); these are the 9:16 ones.
+const L = {
+  // Sol's place: big in the opening and the close, small beside the phone in between.
+  big: { x: 540, y: 1420, w: 800 },
+  host: { x: 108, y: 1895, w: 226 },
+  outro: { x: 540, y: 1060, w: 560 },
+  end: { x: 540, y: 1100, w: 520 },
+  // The phone slides in from (and out to) this offset; the push-in grows it by `zoom`.
+  slide: { x: 0, y: 1500 },
+  zoom: 0.13,
+  // The journal chip, as fractions of the screen image.
+  chip: { left: 0.154, top: 0.653, width: 0.544, height: 0.0444 },
+  glows: [{ x: -180, y: 120 }, { x: 560, y: 1200 }],
+  ...(window.LAYOUT ?? {}),
+};
+const BIG = L.big, HOST = L.host, OUTRO = L.outro, END = L.end;
 
 function buildCaptions() {
   const root = $("#captions");
@@ -47,8 +58,9 @@ async function build() {
 // ---------- pieces ----------
 
 function renderBackground(t) {
-  css($("#glow1"), { transform: `translate(${-180 + Math.sin(t * 0.35) * 70}px, ${120 + Math.cos(t * 0.3) * 60}px)` });
-  css($("#glow2"), { transform: `translate(${560 + Math.cos(t * 0.28) * 80}px, ${1200 + Math.sin(t * 0.33) * 70}px)` });
+  const [g1, g2] = L.glows;
+  css($("#glow1"), { transform: `translate(${g1.x + Math.sin(t * 0.35) * 70}px, ${g1.y + Math.cos(t * 0.3) * 60}px)` });
+  css($("#glow2"), { transform: `translate(${g2.x + Math.cos(t * 0.28) * 80}px, ${g2.y + Math.sin(t * 0.33) * 70}px)` });
 }
 
 function renderCaptions(t) {
@@ -73,15 +85,21 @@ async function renderPhone(t) {
   // A gentle push-in on Sol's memory, centred on his reply.
   const zin = easeInOut(prog(t, T.zoomIn, T.zoomIn + 0.9));
   const zout = easeInOut(prog(t, T.zoomOut, T.zoomOut + 0.5));
-  const zoom = 1 + 0.13 * zin * (1 - zout);
-  const y = (1 - inP) * 1500 + outP * 1500;
-  css($("#phone"), { display: shown ? "" : "none", transform: `translateY(${y.toFixed(1)}px) scale(${zoom.toFixed(4)})`, transformOrigin: "50% 66%" });
+  const zoom = 1 + L.zoom * zin * (1 - zout);
+  const away = 1 - inP + outP;
+  css($("#phone"), {
+    display: shown ? "" : "none", transformOrigin: "50% 66%",
+    transform: `translate(${(away * L.slide.x).toFixed(1)}px, ${(away * L.slide.y).toFixed(1)}px) scale(${zoom.toFixed(4)})`,
+  });
 
   // The chip that cites the journal gets a soft ring.
   const ringP = prog(t, T.chip, T.chip + 0.35);
   const ringOut = prog(t, T.zoomOut - 0.2, T.zoomOut + 0.2);
+  const sw = $("#screen").offsetWidth;
+  const sh = sw * (1440 / 662);
   css($("#ring"), {
-    left: "102px", top: "940px", width: "360px", height: "64px",
+    left: `${(L.chip.left * sw).toFixed(1)}px`, top: `${(L.chip.top * sh).toFixed(1)}px`,
+    width: `${(L.chip.width * sw).toFixed(1)}px`, height: `${(L.chip.height * sh).toFixed(1)}px`,
     opacity: String(Math.min(1, ringP * 1.4) * (1 - ringOut)), transform: `scale(${lerp(1.25, 1, easeBack(ringP)).toFixed(3)})`,
   });
 
