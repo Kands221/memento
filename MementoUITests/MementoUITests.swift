@@ -90,6 +90,9 @@ final class MementoUITests: XCTestCase {
         let meta = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'Mentioned in 3 entries · 2 notebooks'")).firstMatch
         XCTAssertTrue(meta.waitForExistence(timeout: 2))
         XCTAssertTrue(app.buttons["Summarize these 3 entries"].exists)
+        app.buttons["Summarize these 3 entries"].tap()
+        XCTAssertTrue(app.staticTexts["New summary"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["3 selected"].exists)
     }
 
     func testNotebookFilterAndMove() {
@@ -143,5 +146,19 @@ final class MementoUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Your reflection"].waitForExistence(timeout: 5))
         app.buttons["Save to journal"].tap()
         XCTAssertTrue(app.staticTexts["Saved ✓"].waitForExistence(timeout: 4))
+    }
+
+    func testSummaryPreview() {
+        let app = launch()
+        app.buttons["tab.discover"].tap()
+        app.swipeUp()
+        app.swipeUp()
+        app.buttons["discover.summary"].tap()
+        XCTAssertTrue(app.staticTexts["5 selected"].waitForExistence(timeout: 2))
+        app.buttons["purpose.clinician"].tap()
+        app.swipeUp()
+        app.buttons["summary.preview"].tap()
+        XCTAssertTrue(app.staticTexts["Journal summary for my appointment"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["Export PDF…"].exists)
     }
 }
