@@ -17,6 +17,14 @@ const probeCtx = probe.getContext("2d", { willReadFrequently: true });
 
 const px = (a) => ({ x: a.x * WIDTH, y: a.y * HEIGHT });
 
+async function decodeRequiredImage(img) {
+  try {
+    await img.decode();
+  } catch (cause) {
+    throw new Error(`Required image failed to decode: ${img.src}`, { cause });
+  }
+}
+
 async function build() {
   frames = await (await fetch("build/frames.json")).json();
   speech = await fetch("build/vo-timing.json").then((r) => (r.ok ? r.json() : null)).catch(() => null)
@@ -38,7 +46,9 @@ async function build() {
   });
   await document.fonts.ready;
   await Promise.all(["500 64px Newsreader", "italic 500 62px Newsreader"].map((f) => document.fonts.load(f)));
-  await Promise.all($$("img").map((i) => i.decode().catch(() => {})));
+  await Promise.all($$("img")
+    .filter((img) => !(img.id === "screen" && !img.getAttribute("src")))
+    .map(decodeRequiredImage));
 }
 
 // ---------- paper world ----------
@@ -82,21 +92,23 @@ const GRADES = { night: [30, 36, 70, 0.3], dusk: [255, 170, 100, 0.1], dawn: [25
 
 function renderLight(t) {
   // Colour wash follows the dominant shot.
-  let r = 0, g = 0, b = 0, a = 0, total = 0;
+  let r = 0, g = 0, b = 0, a = 0, total = 0, nightWeight = 0, dawnWeight = 0;
   for (const s of shots) {
     const w = s.enter === "unfold" ? (t >= s.from && t < s.to ? easeInOut(prog(t, s.from, s.from + 0.8)) * (1 - easeInOut(prog(t, s.to - 0.6, s.to))) : 0) : shotWeight(s, t);
     if (!w) continue;
     const [gr, gg, gb, ga] = GRADES[s.grade];
     r += gr * w; g += gg * w; b += gb * w; a += ga * w; total += w;
+    if (s.grade === "night") nightWeight += w;
+    if (s.grade === "dawn") dawnWeight += w;
   }
   if (total) css($("#grade"), { background: `rgba(${(r / total) | 0}, ${(g / total) | 0}, ${(b / total) | 0}, ${(a / total).toFixed(3)})` });
-  const night = t < 22.2 || (t > 34.4 && t < 43.0);
+  const night = total ? nightWeight / total : 0;
   const moon = px(ANCHORS.moon);
-  css($("#moon"), { left: `${moon.x - 260}px`, top: `${moon.y - 260}px`, opacity: night ? (0.75 + Math.sin(t * 1.3) * 0.12).toFixed(3) : "0" });
-  const her = px(t < 5.6 ? ANCHORS.herNight : ANCHORS.herSitting);
-  const glowOn = night ? Math.min(1, prog(t, 0, 0.6) + (t >= 5 ? 1 : 0)) : 0;
+  css($("#moon"), { left: `${moon.x - 260}px`, top: `${moon.y - 260}px`, opacity: (night * (0.75 + Math.sin(t * 1.3) * 0.12)).toFixed(3) });
+  const her = px(t < T.clockOut ? ANCHORS.herNight : ANCHORS.herSitting);
+  const glowOn = PHONE.glow ? night * prog(t, SCENES[0].from, SCENES[0].from + 0.6) : 0;
   css($("#glow"), { left: `${her.x - 380}px`, top: `${her.y - 380}px`, opacity: (glowOn * (0.85 + Math.sin(t * 2.4) * 0.08)).toFixed(3) });
-  css($("#sunrise"), { opacity: (easeInOut(prog(t, 42.6, 44.4)) * (1 - prog(t, 47.0, 48.0))).toFixed(3) });
+  css($("#sunrise"), { opacity: (total ? dawnWeight / total : 0).toFixed(3) });
   const clock = px(ANCHORS.clock);
   css($("#clock"), { left: `${clock.x}px`, top: `${clock.y}px`, opacity: t < T.clockOut ? String(1 - prog(t, T.clockOut - 0.5, T.clockOut)) : "0" });
 }
@@ -136,7 +148,7 @@ function renderSol(t) {
   });
   css($("#sol-shadow"), { display: hidden ? "none" : "", left: `${(s.x - s.w * 0.4).toFixed(1)}px`, top: `${(s.y - s.w * 0.06).toFixed(1)}px`,
                           width: `${(s.w * 0.8).toFixed(1)}px`, height: `${(s.w * 0.12).toFixed(1)}px`, opacity: String(rise * 0.9) });
-  const f = prog(t, s.since, s.since + 0.18);
+  const f = s.pose === s.prevPose ? 1 : prog(t, s.since, s.since + 0.18);
   for (const img of $$("#sol img")) {
     const pose = img.dataset.pose;
     css(img, { opacity: String(pose === s.pose ? f : pose === s.prevPose && f < 1 ? 1 - f : 0) });
@@ -160,7 +172,8 @@ async function renderPhone(t) {
   const inP = easeOut(prog(t, PHONE.in, PHONE.in + 0.7));
   const outP = easeInOut(prog(t, PHONE.out, PHONE.out + 0.7));
   const shown = inP > 0 && outP < 1;
-  const zoom = 1 + 0.12 * easeInOut(prog(t, T.zoomIn, T.zoomIn + 0.8)) * (1 - easeInOut(prog(t, T.zoomOut, T.zoomOut + 0.5)));
+  const zoom = 1 + 0.12 * Math.max(0, ...T.zoomWindows.map((window) =>
+    easeInOut(prog(t, window.in, window.in + 0.8)) * (1 - easeInOut(prog(t, window.out, window.out + 0.5)))));
   const away = (1 - inP + outP) * 900;
   css($("#phone"), {
     display: shown ? "" : "none", width: `${w.toFixed(1)}px`, height: `${h.toFixed(1)}px`,
@@ -173,8 +186,9 @@ async function renderPhone(t) {
   const sh = sw * (1440 / 662);
   // The journal chip, as fractions of the screen (measured in v1).
   const ringP = prog(t, T.chip, T.chip + 0.35);
+  const ringOut = T.zoomWindows.find((window) => window.id === "journal").out;
   css($("#ring"), { left: `${(0.154 * sw).toFixed(1)}px`, top: `${(0.653 * sh).toFixed(1)}px`, width: `${(0.544 * sw).toFixed(1)}px`,
-                    height: `${(0.0444 * sh).toFixed(1)}px`, opacity: String(Math.min(1, ringP * 1.4) * (1 - prog(t, T.zoomOut - 0.2, T.zoomOut + 0.2))),
+                    height: `${(0.0444 * sh).toFixed(1)}px`, opacity: String(Math.min(1, ringP * 1.4) * (1 - prog(t, ringOut - 0.2, ringOut + 0.2))),
                     transform: `scale(${lerp(1.25, 1, easeBack(ringP)).toFixed(3)})` });
   // The status bar says 2:04, like the story: paint over the recorded 9:41 in the screen's own colour.
   // Recorded glyphs occupy x=116..184, y=54..80 in the 828×1800 extracted frames; include a small margin.
@@ -187,7 +201,7 @@ async function renderPhone(t) {
     const img = $("#screen");
     img.src = src;
     lastSrc = src;
-    await img.decode().catch(() => {});
+    await decodeRequiredImage(img);
     probeCtx.drawImage(img, img.naturalWidth * 0.02, img.naturalHeight * 0.008, 4, 4, 0, 0, 8, 8);
     const [r, g, b] = probeCtx.getImageData(4, 4, 1, 1).data;
     css($("#statusfix"), { background: `rgb(${r}, ${g}, ${b})`, color: r + g + b > 384 ? "#000" : "#fff" });

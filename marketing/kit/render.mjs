@@ -164,18 +164,19 @@ export async function writeCrops(tl, src, outFor) {
 
 const clock = (s) => `0:${s.toFixed(1).padStart(4, "0")}`;
 
-async function writeDocs(ad) {
+export async function writeDocs(ad) {
   const { tl, cuts } = ad;
   const hooks = tl.VARIANTS?.length > 1;
   const col = (e) => (hooks ? ` ${e.variant ?? "all"} |` : "");
   const crops = Object.keys(tl.CROPS ?? {});
+  const format = aspect(tl);
   const md = [
     `# ${tl.DOC.title}: voiceover script`,
     "",
     `Generated from \`timeline.mjs\` by \`kit/render.mjs\`. Edit the timeline, not this file.`,
     "",
-    `Total runtime ${tl.DURATION}s, 9:16${crops.length ? ` (plus ${crops.join(", ")} crops)` : ""}. \`kit/voice.mjs\` voices these lines`,
-    `with ElevenLabs (${tl.VOICES.model}) and mixes them over the SFX into ${cuts.map((c) => `\`out/${c.name}-9x16-vo.mp4\``).join(", ")}.`,
+    `Total runtime ${tl.DURATION}s, ${format.replace("x", ":")}${crops.length ? ` (plus ${crops.join(", ")} crops)` : ""}. \`kit/voice.mjs\` voices these lines`,
+    `with ElevenLabs (${tl.VOICES.model}) and mixes them over the SFX into ${cuts.map((c) => `\`out/${c.name}-${format}-vo.mp4\``).join(", ")}.`,
     "",
     `Voices: ${Object.entries(tl.VOICES).filter(([, v]) => v?.id).map(([who, v]) => `${who} is ${v.name}`).join("; ")}.`,
     ...(tl.DOC.notes ?? []),
@@ -184,12 +185,14 @@ async function writeDocs(ad) {
     `|---|${hooks ? "---|" : ""}---|---|---|`,
     ...tl.VO.map((v) => `| ${clock(v.from)} to ${clock(v.to)} |${col(v)} ${v.who} | ${v.text} | ${v.note} |`),
     "",
-    "## On-screen captions (already burned in)",
-    "",
-    `| Time |${hooks ? " Hook |" : ""} Caption |`,
-    `|---|${hooks ? "---|" : ""}---|`,
-    ...tl.CAPTIONS.map((c) => `| ${clock(c.from)} to ${clock(c.to)} |${col(c)} ${c.lines.map(plain).join(" / ")} |`),
-    "",
+    ...(tl.CAPTIONS ? [
+      "## On-screen captions (already burned in)",
+      "",
+      `| Time |${hooks ? " Hook |" : ""} Caption |`,
+      `|---|${hooks ? "---|" : ""}---|`,
+      ...tl.CAPTIONS.map((c) => `| ${clock(c.from)} to ${clock(c.to)} |${col(c)} ${c.lines.map(plain).join(" / ")} |`),
+      "",
+    ] : []),
     "## Copy rules this script follows",
     "",
     ...tl.DOC.rules.map((r) => `- ${r}`),

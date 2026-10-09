@@ -10,23 +10,116 @@ import { loadAd } from "../kit/render.mjs";
 import { cutout } from "../kit/art.mjs";
 
 // Opens the scene through the kit's static server and checks pure-function behaviour at given times.
-async function withScene(fn) {
+async function withScene(fn, { adName = "memento-story", beforeLoad, ready = true } = {}) {
   const { serveForTest } = await import("../kit/render.mjs");
-  const ad = await loadAd("memento-story");
+  const ad = await loadAd(adName);
   const { server, base } = await serveForTest(ad.folder);
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
+    await beforeLoad?.(page);
     await page.goto(`${base}?t=0`, { waitUntil: "networkidle" });
-    await page.evaluate(() => window.__ready);
-    await fn(page);
-    assert.deepEqual(errors, []);
+    if (ready) await page.evaluate(() => window.__ready);
+    await fn(page, ad);
+    if (ready) assert.deepEqual(errors, []);
   } finally {
     await browser.close();
     server.close();
   }
+}
+
+for (const [adName, boundary] of [["memento-story", 55], ["memento-story-30", 26.8]]) {
+  test(`${adName}: Sol stays opaque across a position-only keyframe`, async () => {
+    await withScene(async (page) => {
+      for (let frame = -6; frame <= 12; frame++) {
+        const t = (Math.round(boundary * 30) + frame) / 30;
+        await page.evaluate((t) => window.renderAt(t), t);
+        const opacity = await page.evaluate(() => [...document.querySelectorAll("#sol img")].reduce((sum, img) => {
+          let opacity = 1;
+          for (let el = img; el; el = el.parentElement) opacity *= Number(getComputedStyle(el).opacity);
+          return sum + opacity;
+        }, 0));
+        assert.ok(Math.abs(opacity - 1) < 0.000001, `Sol effective opacity at ${t}s: ${opacity}`);
+      }
+    }, { adName });
+  });
+}
+
+for (const [asset, status] of [["story-night.jpg", 404], ["sol-hello.png", 200]]) {
+  test(`required-art readiness rejects ${status === 404 ? "missing" : "corrupt"} ${asset} with its URL`, async () => {
+    await withScene(async (page) => {
+      await assert.rejects(page.evaluate(() => window.__ready), (error) => {
+        assert.match(error.message, /Required image failed to decode:/);
+        assert.ok(error.message.includes(`/build/art/${asset}`), error.message);
+        return true;
+      });
+    }, {
+      ready: false,
+      beforeLoad: (page) => page.route(`**/build/art/${asset}`, (route) => route.fulfill({ status, contentType: "image/png", body: "invalid image" })),
+    });
+  });
+}
+
+test("required-art readiness exempts only the empty initial phone image", async () => {
+  await withScene(async (page) => {
+    assert.equal(await page.locator("#screen").getAttribute("src"), null);
+    await assert.rejects(page.evaluate(() => window.renderAt(5.6)), /Required image failed to decode: .*\/build\/frames\/writeOpen\//);
+  }, { beforeLoad: (page) => page.route("**/build/frames/**", (route) => route.fulfill({ status: 404, body: "" })) });
+});
+
+for (const adName of ["memento-story", "memento-story-30"]) {
+  test(`${adName}: lighting follows the timeline's night and dawn scenes`, async () => {
+    await withScene(async (page, { tl }) => {
+      const lightsAt = async (t) => {
+        await page.evaluate((t) => window.renderAt(t), t);
+        return page.evaluate(() => Object.fromEntries(["moon", "glow", "sunrise"].map((id) => [id, Number(getComputedStyle(document.getElementById(id)).opacity)])));
+      };
+      for (const scene of tl.SCENES) {
+        const t = (scene.from + scene.to) / 2;
+        const lights = await lightsAt(t);
+        for (const light of ["moon", "glow"]) {
+          if (scene.grade === "night") assert.ok(lights[light] > 0, `${light} on during ${scene.id} at ${t}s`);
+          else assert.equal(lights[light], 0, `${light} off during ${scene.id} at ${t}s`);
+        }
+        if (scene.grade === "dawn") assert.ok(lights.sunrise > 0, `sunrise during ${scene.id}`);
+      }
+      const dawn = tl.SCENES.filter((scene) => scene.grade === "dawn");
+      const samples = new Set([...Array.from({ length: tl.DURATION * 2 }, (_, i) => i / 2), ...dawn.flatMap((s) => [s.from - 0.01, s.to, s.to + 0.01])]);
+      for (const t of samples) {
+        if (dawn.some((s) => t >= s.from && t < s.to)) continue;
+        assert.equal((await lightsAt(t)).sunrise, 0, `no sunrise outside a dawn scene at ${t}s`);
+      }
+      await page.evaluate((t) => window.renderAt(t), tl.T.clockOut + 0.2);
+      const glowLeft = await page.locator("#glow").evaluate((el) => parseFloat(el.style.left));
+      assert.ok(Math.abs(glowLeft - (tl.ANCHORS.herSitting.x * tl.WIDTH - 380)) < 0.01, "glow follows the seated writer after the opening scene");
+    }, { adName });
+  });
+}
+
+for (const adName of ["memento-story", "memento-story-30"]) {
+  test(`${adName}: phone pushes in only during tags and journal windows`, async () => {
+    await withScene(async (page, { tl }) => {
+      const zoomAt = async (t) => {
+        await page.evaluate((t) => window.renderAt(t), t);
+        return page.locator("#phone").evaluate((el) => Number(el.style.transform.match(/scale\(([^)]+)\)/)[1]));
+      };
+      const tags = tl.SEGMENTS.find((s) => s.id === "tags");
+      assert.ok(await zoomAt((tags.at + tags.to) / 2) > 1, "push in while the real tags are visible");
+      assert.deepEqual(tl.T.zoomWindows.map((w) => w.id), ["tags", "journal"]);
+      for (const window of tl.T.zoomWindows) {
+        for (const t of [window.in + 0.4, (window.in + window.out) / 2, window.out + 0.25]) {
+          assert.ok(await zoomAt(t) > 1, `${window.id} zoom inside its window at ${t}s`);
+        }
+        for (const t of [window.in - 0.1, window.in, window.out + 0.5, window.out + 0.6]) {
+          assert.equal(await zoomAt(t), 1, `${window.id} zoom outside its window at ${t}s`);
+        }
+      }
+      const tagWindow = tl.T.zoomWindows.find((w) => w.id === "tags");
+      assert.ok(tagWindow.in >= tags.at && tagWindow.out + 0.5 <= tags.to, "tags push-in stays within the measured tags footage");
+    }, { adName });
+  });
 }
 
 test("every voice line's subtitle shows at its middle", async () => {

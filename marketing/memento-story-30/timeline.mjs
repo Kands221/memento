@@ -37,7 +37,11 @@ export const CHIPS = [
   { from: 13.4, to: 20.4, text: "Sol remembers" },
 ];
 
-export const T = { clockOut: 4.4, wordmarkIn: 9.6, wordmarkOut: 12.6, chip: 17.6, zoomIn: 16.7, zoomOut: 20.0, end: 27.0 };
+export const T = {
+  clockOut: 4.4, wordmarkIn: 9.6, wordmarkOut: 12.6, chip: 17.6, end: 27.0,
+  // The cached tags segment shows all three suggestions throughout 6.0–9.4 s.
+  zoomWindows: [{ id: "tags", in: 6.0, out: 8.9 }, { id: "journal", in: 16.7, out: 20.0 }],
+};
 
 export const SFX = [
   ...[0.3, 1.3, 2.3, 3.3].map((t) => ({ t, kind: "tick", gain: 0.22 })),

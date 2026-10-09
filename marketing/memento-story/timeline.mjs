@@ -91,7 +91,12 @@ export const CHIPS = [
   { from: 40.0, to: 42.6, text: "A reflection in your words" },
 ];
 
-export const T = { clockOut: 5.6, wordmarkIn: 16.4, wordmarkOut: 21.0, chip: 26.8, zoomIn: 25.9, zoomOut: 28.8, end: 55.2 };
+export const T = {
+  clockOut: 5.6, wordmarkIn: 16.4, wordmarkOut: 21.0, chip: 26.8, end: 55.2,
+  // Each push-in eases in for 0.8 s and returns over 0.5 s from `out`.
+  // Cached tags frames show all three suggestions throughout 11.8–16.2 s.
+  zoomWindows: [{ id: "tags", in: 11.8, out: 15.7 }, { id: "journal", in: 25.9, out: 28.8 }],
+};
 
 // kind: tap | pop | bloop | receive | whoosh | buzz | ding | sparkle | tick | check
 export const SFX = [
