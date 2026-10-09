@@ -10,6 +10,7 @@ struct DesignGallery: View {
     var body: some View {
         Screen {
             PageTitle("Design system")
+            AnnotatedPreview()
             Eyebrow("Chips")
             ForEach(TagKind.allCases, id: \.self) { kind in
                 FlowLayout {
@@ -36,8 +37,19 @@ struct DesignGallery: View {
 }
 
 private struct AnnotatedPreview: View {
+    @State private var active: UUID?
+    private let marks = [
+        QuoteMark(id: UUID(), kind: .feeling, status: .suggested, quote: "I felt drained"),
+        QuoteMark(id: UUID(), kind: .situation, status: .kept, quote: "back-to-back deadlines"),
+        QuoteMark(id: UUID(), kind: .helped, status: .kept, quote: "A short walk helped me settle"),
+    ]
+
     var body: some View {
-        Text("AnnotatedText arrives in Task 13").font(.ui(13)).foregroundStyle(Color.mMut)
+        let text = "I felt drained after back-to-back deadlines today.\nA short walk helped me settle."
+        AnnotatedText(segments: TextSegments.build(text: text, marks: marks), activeID: active ?? marks[2].id) { id in
+            active = id
+        }
+        .paperCard()
     }
 }
 #endif
