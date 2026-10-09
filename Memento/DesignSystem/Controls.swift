@@ -111,12 +111,13 @@ struct PillButtonStyle: ButtonStyle {
     var border: Color? = .mLine
     var dashed = false
     var height: CGFloat = 44
+    var horizontalPadding: CGFloat = 16
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.ui(15, relativeTo: .subheadline, weight: .semibold))
             .lineLimit(1)
-            .padding(.horizontal, 16)
+            .padding(.horizontal, horizontalPadding)
             .frame(minHeight: height)
             .foregroundStyle(foreground)
             .background(Capsule().fill(fill))

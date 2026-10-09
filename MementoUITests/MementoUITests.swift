@@ -45,4 +45,12 @@ final class MementoUITests: XCTestCase {
         app.buttons["onb.primary"].tap()                        // finish
         XCTAssertTrue(app.buttons["tab.journal"].waitForExistence(timeout: 3))
     }
+
+    func testJournalShowsSampleState() {
+        let app = launch()
+        XCTAssertTrue(app.staticTexts["journal.streak"].waitForExistence(timeout: 3))
+        XCTAssertEqual(app.staticTexts["journal.streak"].label, "3")
+        XCTAssertTrue(app.staticTexts["2 suggestions waiting in 2 entries"].exists)
+        XCTAssertTrue(app.staticTexts["REVISIT"].exists)
+    }
 }
