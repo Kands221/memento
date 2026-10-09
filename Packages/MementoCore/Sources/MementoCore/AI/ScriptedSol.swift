@@ -4,8 +4,8 @@ import Foundation
 @MainActor
 public final class ScriptedSol: SolEngine {
     public static let replies = [
-        "That sounds like a lot to carry into the evening. If you picture saying no to one thing this week, what comes up first?",
-        "So part of you worries that saying no lets people down — and part of you already knows what you need. Would you like to turn this into a reflection you can keep?",
+        "Deadlines have a way of shouting louder than everything else, don’t they? But they come and go, and you’re still here, carrying all of it. If you picture saying no to just one thing this week, what comes up first?",
+        "Ah, the fear of letting people down. It usually means you care a great deal about them, and that’s a good thing, not a flaw. But caring for others works best when you leave a little room to care for yourself too. Would you like to turn this into a reflection you can keep?",
     ]
     public static let followUps: [[String]] = [["That I'll let Dana down", "Relief, honestly"], []]
     public static let closing = "Would you like to turn this into a reflection you can keep?"

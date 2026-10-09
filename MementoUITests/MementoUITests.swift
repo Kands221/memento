@@ -134,7 +134,7 @@ final class MementoUITests: XCTestCase {
         // "Sol is thinking…" is visible for ~0.7 s (verified in the screen recording); the contract
         // under test is that the reply arrives and the UI returns to idle.
         XCTAssertTrue(app.textFields["sol.input"].waitForExistence(timeout: 2))
-        let reply = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'That sounds like a lot'")).firstMatch
+        let reply = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'Deadlines have a way'")).firstMatch
         XCTAssertTrue(reply.waitForExistence(timeout: 8))
         // The stream has finished once its follow-up chips appear; then the UI must be idle.
         XCTAssertTrue(app.buttons["Relief, honestly"].waitForExistence(timeout: 8))

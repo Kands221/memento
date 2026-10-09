@@ -9,7 +9,7 @@ import Foundation
     }
 
     @Test func openingChangesWithTimeOfDay() {
-        #expect(SolCharacter.opening(at: at(8)).hasPrefix("Morning."))
+        #expect(SolCharacter.opening(at: at(8)).hasPrefix("Good morning, friend."))
         #expect(SolCharacter.opening(at: at(14)).contains("this afternoon"))
         #expect(SolCharacter.opening(at: at(21)).contains("tonight"))
         #expect(SolCharacter.opening(at: at(1)).hasPrefix("Still up?"))
@@ -19,7 +19,10 @@ import Foundation
     @Test func personaCarriesVoiceRulesAndExamples() {
         let p = SolCharacter.persona
         #expect(p.contains("You are Sol"))
-        #expect(p.contains("At most two short sentences"))
+        #expect(p.contains("Write 3 to 5 sentences"))
+        #expect(p.contains("an old soul"))
+        #expect(p.contains("Never quote books, films or real people"))
+        #expect(p.contains("Don't bring up death, dying or illness unless the writer does"))
         #expect(p.contains("Never diagnose"))
         #expect(p.contains("point toward people they trust"))
         #expect(p.contains("no memory of earlier conversations"))
@@ -52,5 +55,42 @@ import Foundation
         for i in 0..<SolConversation.softCap { await c.send("Message \(i)") }
         #expect(c.mood == .resting)
         #expect(SolConversation.fallbackReply == SolCharacter.fallbackReply)
+    }
+}
+
+@Suite struct SolTurnPlanningTests {
+    @Test func promptCarriesMessageThemesAndAskedQuestions() {
+        let p = SolTurnPlanner.prompt(for: "Work has been chaotic", askedQuestions: ["What's on your heart?"],
+                                      usedThemes: ["busyness and what really matters"], steerTowardReflection: false)
+        #expect(p.contains("The writer says: \"Work has been chaotic\""))
+        #expect(p.contains("What's on your heart?"))
+        #expect(p.contains("busyness and what really matters"))
+        #expect(!p.contains("written reflection"))
+    }
+
+    @Test func steeringAsksToOfferAReflection() {
+        let p = SolTurnPlanner.prompt(for: "ok", askedQuestions: [], usedThemes: [], steerTowardReflection: true)
+        #expect(p.contains("written reflection"))
+    }
+
+    @Test func composesPartsIntoOneReply() {
+        #expect(SolTurnPlanner.compose(reflection: " Busy weeks pile up. ", perspective: nil, question: "What would you let go of?")
+                == "Busy weeks pile up. What would you let go of?")
+        #expect(SolTurnPlanner.compose(reflection: nil, perspective: nil, question: nil) == "")
+        #expect(SolCharacter.themes.count >= 6)
+    }
+}
+
+@Suite struct SolSmallTalkTests {
+    @Test func detectsGreetingsAndTinyReplies() {
+        for t in ["hi", "Hello!", "hey there", "ok", "good evening", "yo"] { #expect(SolTurnPlanner.isSmallTalk(t), "\(t)") }
+        for t in ["Work has been chaotic", "I'm tired of my manager", "not sure what to do about Dana"] { #expect(!SolTurnPlanner.isSmallTalk(t), "\(t)") }
+    }
+
+    @Test func softensRememberOpeners() {
+        #expect(SolTurnPlanner.soften("Remember, you can't control everything.") == "You can't control everything.")
+        #expect(SolTurnPlanner.soften("Remember that your pace is your own.") == "Your pace is your own.")
+        #expect(SolTurnPlanner.soften("Remember to pause.") == "It can help to pause.")
+        #expect(SolTurnPlanner.soften("Small things add up.") == "Small things add up.")
     }
 }

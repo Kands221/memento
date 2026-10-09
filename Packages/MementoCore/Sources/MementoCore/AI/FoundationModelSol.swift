@@ -1,11 +1,27 @@
 import Foundation
 import FoundationModels
 
+/// One Sol turn in three parts, so a small on-device model keeps the shape of a wise, warm reply:
+/// mirror the writer, offer one fresh perspective, ask one new question.
 @Generable
 struct SolTurnContent {
-    @Guide(description: "Sol's reply to the writer's latest message: at most two short sentences, ending with one open question")
+    @Guide(description: "1 or 2 warm sentences reflecting the writer's own words back to them, specifically. Don't start with 'That sounds' or 'I'm sorry'.")
+    var reflection: String
+    @Guide(description: "The theme for your perspective this turn; choose one that fits what the writer said and that you haven't used", .anyOf(SolCharacter.themes))
+    var theme: String
+    @Guide(description: "1 or 2 sentences of gentle perspective on the chosen theme, the way a wise old teacher would say it, tied to what the writer said. Plain words, not generic advice; never start with 'Remember'.")
+    var perspective: String
+    @Guide(description: "One open, caring question that moves the conversation forward and is different from every question already asked")
+    var question: String
+    @Guide(description: "Two short answers the writer (not Sol) could tap to answer your question, written as the writer, 2 to 6 words each. Never questions, never advice.", .count(2))
+    var suggestions: [String]
+}
+
+@Generable
+struct SolGreetingContent {
+    @Guide(description: "A warm greeting of one or two sentences in Sol's voice that ends by asking what's on the writer's heart")
     var reply: String
-    @Guide(description: "Two short answers the writer (not Sol) could tap to answer Sol's question, written as the writer, 2 to 6 words each, e.g. \"Work, mostly\" or \"Honestly, sleep\". Never questions, never advice, never Sol's words.", .count(2))
+    @Guide(description: "Two short things the writer (not Sol) might answer, 2 to 6 words each, e.g. \"Work, mostly\"", .count(2))
     var suggestions: [String]
 }
 
@@ -27,6 +43,8 @@ public final class FoundationModelSol: SolEngine {
     """
 
     private var session: LanguageModelSession?
+    private var askedQuestions: [String] = []
+    private var usedThemes: [String] = []
 
     public init() {}
 
@@ -46,12 +64,16 @@ public final class FoundationModelSol: SolEngine {
         s.prewarm()
     }
 
-    public func reset() { session = nil }
+    public func reset() {
+        session = nil
+        askedQuestions = []
+        usedThemes = []
+    }
 
     public func reply(to text: String, history: [SolMessage], steerTowardReflection: Bool) -> AsyncThrowingStream<SolTurn, any Error> {
-        let prompt = steerTowardReflection
-            ? text + "\n\n(Gently offer to turn this conversation into a written reflection the writer can keep.)"
-            : text
+        if askedQuestions.isEmpty, let opening = history.first(where: { $0.role == .sol })?.text { askedQuestions = [opening] }
+        let prompt = SolTurnPlanner.prompt(for: text, askedQuestions: askedQuestions, usedThemes: usedThemes,
+                                           steerTowardReflection: steerTowardReflection)
         return AsyncThrowingStream { continuation in
             let task = Task { @MainActor in
                 do {
@@ -77,9 +99,23 @@ public final class FoundationModelSol: SolEngine {
     private func stream(_ prompt: String, into continuation: AsyncThrowingStream<SolTurn, any Error>.Continuation) async throws {
         let session = self.session ?? makeSession(earlier: [])
         self.session = session
-        for try await snapshot in session.streamResponse(to: prompt, generating: SolTurnContent.self) {
-            continuation.yield(SolTurn(reply: snapshot.content.reply ?? "", suggestions: snapshot.content.suggestions ?? []))
+        if prompt.contains(SolTurnPlanner.smallTalkMarker) {
+            for try await snapshot in session.streamResponse(to: prompt, generating: SolGreetingContent.self,
+                                                             options: GenerationOptions(temperature: 0.7)) {
+                continuation.yield(SolTurn(reply: snapshot.content.reply ?? "", suggestions: snapshot.content.suggestions ?? []))
+            }
+            return
         }
+        var last: SolTurnContent.PartiallyGenerated?
+        for try await snapshot in session.streamResponse(to: prompt, generating: SolTurnContent.self,
+                                                         options: GenerationOptions(temperature: 0.7)) {
+            let c = snapshot.content
+            last = c
+            continuation.yield(SolTurn(reply: SolTurnPlanner.compose(reflection: c.reflection, perspective: c.perspective, question: c.question),
+                                       suggestions: c.suggestions ?? []))
+        }
+        if let question = last?.question?.trimmingCharacters(in: .whitespacesAndNewlines), !question.isEmpty { askedQuestions.append(question) }
+        if let theme = last?.theme, !theme.isEmpty { usedThemes.append(theme) }
     }
 
     public func draftReflection(from userMessages: [String]) async throws -> String {
