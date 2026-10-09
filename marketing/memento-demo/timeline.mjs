@@ -128,7 +128,7 @@ export const VO = [
   { from: 30.8, to: 36.4, who: "Sol", note: "remembering fondly",
     text: "On Sep 13, you wrote: “Long walk with Priya after work.”",
     say: "On September thirteenth, you wrote: long walk with Priya, after work." },
-  { from: 37.0, to: 45.8, who: "Sol", note: "kind, steady",
+  { from: 37.0, to: 45.6, who: "Sol", note: "kind, steady",
     text: "When you're ready, I'll turn our talk into a reflection in your own words, or write you a gentle look back.",
     say: "When you're ready, I'll turn our talk into a reflection in your own words, or write you a gentle look back." },
   { from: 45.7, to: 54.9, who: "Sol", note: "sincere, the heart of it",
