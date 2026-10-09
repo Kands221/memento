@@ -1,6 +1,6 @@
 # Memento story video (v2): design
 
-**Date:** Oct 10, 2026. **Status:** design approved in conversation, spec awaiting review.
+**Date:** Oct 10, 2026. **Status:** Built Oct 10, 2026
 
 ## Purpose and success
 
