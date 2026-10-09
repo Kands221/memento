@@ -177,11 +177,17 @@ struct OnboardingView: View {
             PaperArt(name: "onb-private", height: 160, radius: 22).padding(.top, 8)
             Text("Private by design.").font(.serif(34, relativeTo: .largeTitle)).foregroundStyle(Color.mInk)
             VStack(alignment: .leading, spacing: 14) {
-                bullet("Tagging runs on this iPhone. Your journal text isn’t sent to Memento or any server to be tagged.")
-                bullet("If on-device AI isn’t available, nothing switches to the cloud. You can always tag by hand.")
-                bullet("Writing only leaves your phone when you export or share it yourself.")
+                if services.taggingUsesCloud {
+                    bullet("This iPhone can’t run on-device AI, so tagging and Sol use cloud AI. Entry text is sent to get suggestions and isn’t kept by the AI provider.")
+                    bullet("You can turn cloud AI off in You → On-device AI and tag by hand.")
+                    bullet("Otherwise, writing only leaves your phone when you export or share it yourself.")
+                } else {
+                    bullet("Tagging runs on this iPhone. Your journal text isn’t sent to Memento or any server to be tagged.")
+                    bullet("If on-device AI isn’t available, nothing switches to the cloud. You can always tag by hand.")
+                    bullet("Writing only leaves your phone when you export or share it yourself.")
+                }
             }
-            AIStateCard(availability: services.ai.availability)
+            AIStateCard(availability: services.ai.availability, cloud: services.taggingUsesCloud)
         }
     }
 

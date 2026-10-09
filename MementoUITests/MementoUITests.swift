@@ -6,6 +6,17 @@ final class MementoUITests: XCTestCase {
 
     let demoArgs = ["-uiTesting", "-seedSampleData", "-skipOnboarding", "-taggingEngine", "demo", "-solEngine", "demo"]
 
+    /// Scrolls until the element sits fully on screen above the custom tab bar (simulator sizes differ).
+    func reveal(_ element: XCUIElement, in app: XCUIApplication, swipe: (XCUIApplication) -> Void = { $0.swipeUp() }) {
+        let window = app.windows.firstMatch.frame
+        let visible = CGRect(x: window.minX, y: window.minY + 60, width: window.width, height: window.height - 60 - 110)
+        var tries = 0
+        while !(element.exists && visible.contains(element.frame)) && tries < 6 {
+            swipe(app)
+            tries += 1
+        }
+    }
+
     func launch(_ extra: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = demoArgs + extra
@@ -100,7 +111,10 @@ final class MementoUITests: XCTestCase {
         app.buttons["tab.notebooks"].tap()
         XCTAssertTrue(app.buttons["notebook.daily"].waitForExistence(timeout: 3))
         app.buttons["notebook.daily"].tap()
-        app.buttons["filter.Walking helped"].tap()
+        let walking = app.buttons["filter.Walking helped"]
+        XCTAssertTrue(walking.waitForExistence(timeout: 3))
+        reveal(walking, in: app) { app in app.scrollViews["notebook.filters"].swipeLeft() }
+        walking.tap()
         XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'tagged Walking helped'")).firstMatch.waitForExistence(timeout: 2))
         app.buttons["Move"].firstMatch.tap()
         app.buttons["notebook.option.work"].tap()
@@ -134,7 +148,7 @@ final class MementoUITests: XCTestCase {
         // "Sol is thinking…" is visible for ~0.7 s (verified in the screen recording); the contract
         // under test is that the reply arrives and the UI returns to idle.
         XCTAssertTrue(app.textFields["sol.input"].waitForExistence(timeout: 2))
-        let reply = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'Deadlines have a way'")).firstMatch
+        let reply = app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Deadlines have a way'")).firstMatch
         XCTAssertTrue(reply.waitForExistence(timeout: 8))
         // The stream has finished once its follow-up chips appear; then the UI must be idle.
         XCTAssertTrue(app.buttons["Relief, honestly"].waitForExistence(timeout: 8))
@@ -151,12 +165,11 @@ final class MementoUITests: XCTestCase {
     func testSummaryPreview() {
         let app = launch()
         app.buttons["tab.discover"].tap()
-        app.swipeUp()
-        app.swipeUp()
+        reveal(app.buttons["discover.summary"], in: app)
         app.buttons["discover.summary"].tap()
         XCTAssertTrue(app.staticTexts["5 selected"].waitForExistence(timeout: 2))
         app.buttons["purpose.clinician"].tap()
-        app.swipeUp()
+        reveal(app.buttons["summary.preview"], in: app)
         app.buttons["summary.preview"].tap()
         XCTAssertTrue(app.staticTexts["Journal summary for my appointment"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.buttons["Export PDF…"].exists)

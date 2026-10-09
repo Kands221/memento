@@ -46,6 +46,7 @@ struct NotebookDetailView: View {
                     }
                     .scrollIndicators(.hidden)
                     .padding(.horizontal, -20)
+                    .accessibilityIdentifier("notebook.filters")
                     ForEach(list) { EntryCard(entry: $0, showsMove: true) }
                     if list.isEmpty {
                         VStack(spacing: 12) {

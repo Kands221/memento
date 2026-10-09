@@ -13,6 +13,8 @@ struct EntryDetailView: View {
     @Query(sort: \Entry.createdAt, order: .reverse) private var all: [Entry]
     @State private var activeID: UUID?
     @State private var editingKept = false
+    @State private var painting = false
+    @State private var paintError: String?
 
     init(entryID: UUID) {
         self.entryID = entryID
@@ -55,6 +57,7 @@ struct EntryDetailView: View {
                     .overlay { Image(uiImage: image).resizable().scaledToFill() }
                     .clipShape(RoundedRectangle(cornerRadius: 16))
             }
+            paintedArt(entry)
             AnnotatedText(segments: TextSegments.build(text: entry.text, marks: entry.quoteMarks), activeID: activeID,
                           font: .serif(21, relativeTo: .body), lineSpacing: 12) { id in
                 activeID = activeID == id ? nil : id
@@ -63,6 +66,69 @@ struct EntryDetailView: View {
                 .padding(.top, 14)
                 .overlay(alignment: .top) { Rectangle().fill(Color.mLine).frame(height: 1).padding(.horizontal, -6) }
                 .padding(.top, 12)
+        }
+    }
+
+    // MARK: Paint this day
+
+    @ViewBuilder
+    private func paintedArt(_ entry: Entry) -> some View {
+        if let data = entry.artData, let image = UIImage(data: data) {
+            Image(uiImage: image).resizable().scaledToFill()
+                .frame(height: 240).frame(maxWidth: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 18))
+                .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Color.mLine, lineWidth: 1))
+                .overlay(alignment: .topTrailing) {
+                    Menu {
+                        Button("Paint again", systemImage: "paintbrush.pointed") { paint(entry) }
+                        Button("Remove painting", systemImage: "trash", role: .destructive) {
+                            entry.artData = nil
+                            try? context.save()
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis").font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.mInk)
+                            .frame(width: 34, height: 34).background(Circle().fill(.ultraThinMaterial))
+                    }
+                    .padding(10)
+                    .accessibilityLabel("Painting options")
+                }
+                .accessibilityLabel("A painting of this day, made on this iPhone")
+        } else if painting {
+            HStack(spacing: 10) {
+                ProgressView().tint(Color.mTer)
+                Text("Painting this day on this iPhone…").font(.ui(14).italic()).foregroundStyle(Color.mMut)
+            }
+            .frame(maxWidth: .infinity, minHeight: 120)
+            .dashedBorder(radius: 18, color: .mLine)
+        } else if services.canPaint && entry.photoData == nil && !entry.text.isEmpty {
+            Button { paint(entry) } label: {
+                Label("Paint this day", systemImage: "paintbrush.pointed")
+                    .font(.ui(15, weight: .semibold)).foregroundStyle(Color.mTer)
+                    .frame(maxWidth: .infinity, minHeight: 46)
+                    .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.mTer.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Makes an illustration from your words, on this iPhone")
+            .accessibilityIdentifier("entry.paint")
+        }
+        if let paintError {
+            Text(paintError).font(.ui(13)).foregroundStyle(Color.mDanger)
+        }
+    }
+
+    private func paint(_ entry: Entry) {
+        painting = true
+        paintError = nil
+        let text = entry.text
+        Task {
+            do {
+                let data = try await EntryArtist.paint(text)
+                entry.artData = data
+                try? context.save()
+            } catch {
+                paintError = "Couldn’t paint this one. Try again in a moment."
+            }
+            painting = false
         }
     }
 
@@ -124,7 +190,7 @@ struct EntryDetailView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 10) {
                     Dot()
-                    Text("Finding details on this iPhone…").font(.ui(15, weight: .semibold)).foregroundStyle(Color.mInk)
+                    Text(services.taggingUsesCloud ? "Finding details with cloud AI…" : "Finding details on this iPhone…").font(.ui(15, weight: .semibold)).foregroundStyle(Color.mInk)
                 }
                 Text("Your entry is already saved. You can leave — suggestions will be waiting.")
                     .font(.ui(13.5)).foregroundStyle(Color.mMut)

@@ -36,4 +36,12 @@ import Foundation
         #expect(await recorder.takeHits().count == 1)
         #expect(await recorder.takeHits().isEmpty)
     }
+
+    @Test func citesWhenTheReplyUsesANameOrTheMomentsTags() {
+        let priya = hit("Long walk with Priya after work.", daysAgo: 27, tags: ["Talking to a friend", "Walking helped"])
+        let byName = "It's wonderful that you found a friend in Priya to share your thoughts with. How does that help?"
+        #expect(SolTurnPlanner.citations(for: byName, hits: [priya], calendar: Fixtures.calendar).count == 1)
+        let unrelated = "Busy weeks happen to everyone. What would you let go of?"
+        #expect(SolTurnPlanner.citations(for: unrelated, hits: [priya], calendar: Fixtures.calendar).isEmpty)
+    }
 }

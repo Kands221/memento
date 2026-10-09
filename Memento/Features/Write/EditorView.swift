@@ -7,7 +7,7 @@ struct EditorView: View {
     @Environment(AppModel.self) private var app
     @Environment(AppServices.self) private var services
     @Environment(\.modelContext) private var context
-    @State private var dictation = DictationService()
+    @State private var speech = SpeechInput()
     @State private var dictationBase = ""
     @State private var showNotebookPicker = false
     @State private var showCamera = false
@@ -25,7 +25,7 @@ struct EditorView: View {
                 .padding(.top, 4)
             modeHeader
             textArea
-            if dictation.isListening {
+            if speech.isListening {
                 Text("Listening… speak naturally.")
                     .font(.ui(15, weight: .medium)).foregroundStyle(Color.mTer)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -33,7 +33,7 @@ struct EditorView: View {
                     .background(RoundedRectangle(cornerRadius: 14).fill(Color.mTerT))
                     .padding(.horizontal, 16).padding(.bottom, 10)
             }
-            if let note = saveError ?? dictation.errorText {
+            if let note = saveError ?? speech.errorText {
                 Text(note).font(.ui(14)).foregroundStyle(Color.mDanger)
                     .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 20).padding(.bottom, 8)
             }
@@ -58,7 +58,7 @@ struct EditorView: View {
                 photoItem = nil
             }
         }
-        .onDisappear { dictation.stop() }
+        .onDisappear { stopSpeech() }
     }
 
     private var topBar: some View {
@@ -164,6 +164,10 @@ struct EditorView: View {
             .accessibilityIdentifier("editor.text")
     }
 
+    private func stopSpeech() {
+        Task { await speech.stop() }
+    }
+
     private var placeholder: String {
         switch app.draft.mode {
         case .dump: "Just keep going…"
@@ -175,19 +179,20 @@ struct EditorView: View {
 
     private var bottomBar: some View {
         HStack(spacing: 8) {
-            if dictation.isAvailable {
+            if speech.isAvailable {
                 Button {
-                    if dictation.isListening { dictation.stop(); return }
+                    if speech.isListening { stopSpeech(); return }
                     dictationBase = app.draft.text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let apply: @MainActor (String) -> Void = { transcript in
+                        app.draft.text = dictationBase.isEmpty ? transcript : dictationBase + " " + transcript
+                    }
                     Task {
-                        await dictation.start { transcript in
-                            app.draft.text = dictationBase.isEmpty ? transcript : dictationBase + " " + transcript
-                        }
+                        await speech.start(onText: apply)
                     }
                 } label: {
-                    Label(dictation.isListening ? "Stop" : "Speak", systemImage: dictation.isListening ? "stop.fill" : "mic")
+                    Label(speech.isListening ? "Stop" : "Speak", systemImage: speech.isListening ? "stop.fill" : "mic")
                 }
-                .buttonStyle(PillButtonStyle(fill: dictation.isListening ? .mTerT : .mCard, foreground: dictation.isListening ? .mTer : .mInk))
+                .buttonStyle(PillButtonStyle(fill: speech.isListening ? .mTerT : .mCard, foreground: speech.isListening ? .mTer : .mInk))
             }
             Button("Use example") { app.draft.text = EditorExamples.text(for: app.draft.mode) }
                 .buttonStyle(PillButtonStyle(fill: .clear, foreground: .mMut, dashed: true, horizontalPadding: 14))
@@ -210,7 +215,7 @@ struct EditorView: View {
     private func save() {
         let draft = app.draft
         guard draft.canSave else { return }
-        dictation.stop()
+        stopSpeech()
         let entry = Entry(notebookID: draft.notebookID, mode: draft.mode,
                           prompt: draft.mode == .guided ? draft.prompt : nil,
                           text: draft.text.trimmingCharacters(in: .whitespacesAndNewlines),

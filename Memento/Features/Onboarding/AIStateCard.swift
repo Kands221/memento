@@ -7,11 +7,18 @@ struct AIStateCard: View {
 
     let availability: AIAvailability
     var style: Style = .onboarding
+    /// Ready because the cloud fallback is in use, not the on-device model.
+    var cloud = false
     @Environment(\.openURL) private var openURL
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             switch availability {
+            case .ready where cloud:
+                heading(style == .settings ? "READY · CLOUD AI" : "Ready with cloud AI", .mSage)
+                body(style == .settings
+                     ? "This iPhone can’t run on-device AI, so tag suggestions and Sol use cloud AI through OpenRouter. Entry text and Sol messages are sent over the internet to get answers, routed only to providers with zero-data-retention policies. Needs a connection."
+                     : "This iPhone can’t run on-device AI, so suggestions and Sol use cloud AI. Your words are sent to get answers and aren’t kept by the AI provider.")
             case .ready:
                 heading(style == .settings ? "READY · WORKS OFFLINE" : "Ready on this iPhone", .mSage)
                 body(style == .settings ? "Tag suggestions run on this iPhone, even in airplane mode." : "Tagging is set up and works offline.")

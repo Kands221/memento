@@ -11,6 +11,8 @@ enum SettingsKey {
     static let demoAIState = "demoAIState"
     static let demoTaggingEngine = "demoTaggingEngine"
     static let demoSolEngine = "demoSolEngine"
+    /// Use cloud AI (OpenRouter) when this iPhone can't run on-device AI.
+    static let cloudFallback = "cloudFallback"
 }
 
 enum Appearance: String, CaseIterable {

@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 import SwiftData
 @testable import MementoCore
 
@@ -55,5 +56,14 @@ import SwiftData
         e.applyEdit(to: rest, label: "drained", kind: .feeling)
         #expect(e.visibleTags.map(\.label) == ["Drained"])
         #expect(rest.status == .removed)
+    }
+
+    @Test func entryKeepsPaintedArt() throws {
+        let store = try TestStore()
+        let e = store.entry(text: "A walk.")
+        #expect(e.artData == nil)
+        e.artData = Data([1, 2, 3])
+        try store.context.save()
+        #expect(try store.all().first?.artData == Data([1, 2, 3]))
     }
 }

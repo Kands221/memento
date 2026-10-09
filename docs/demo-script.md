@@ -9,6 +9,13 @@
 - [ ] Battery is above 50%, and screen mirroring has been tested.
 - [ ] Warm up the model once: write "test", save, wait for suggestions, then delete that entry or leave it.
 
+## On an iPhone without Apple Intelligence (e.g. iPhone 12)
+
+- Build with `Memento/Resources/CloudAI.plist` in place (see README). **You → On-device AI** should say **READY · CLOUD AI**.
+- Wi-Fi or cellular is required. Skip the airplane-mode step (5), and skip Paint this day (it needs Apple Intelligence).
+- Sol's header reads "Cloud AI · not saved unless you choose". Voice in and out still works: speech is transcribed and spoken on the phone.
+- If the network is bad, switch to the backup engines (table below).
+
 ## The flow
 
 1. **Onboarding, 30 s.** Go to **You → Replay welcome**.

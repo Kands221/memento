@@ -81,14 +81,8 @@ public final class FoundationModelSol: SolEngine {
         let asked = askedQuestions, themes = usedThemes
         return AsyncThrowingStream { continuation in
             let task = Task { @MainActor in
-                var memory: String?
-                self.remembered = []
-                if let journal = self.journal, !SolTurnPlanner.isSmallTalk(text) {
-                    let hits = await journal.search(text, limit: 1, minimumScore: JournalIndex.strongMatch)
-                    let alreadyCited = Set(history.flatMap(\.citations).map(\.entryID))
-                    self.remembered = hits.filter { !alreadyCited.contains($0.snippet.entryID) }
-                    if !self.remembered.isEmpty { memory = SearchJournalTool.describe(self.remembered, calendar: .current) }
-                }
+                let (memory, hits) = await SolTurnPlanner.recall(text, history: history, journal: self.journal)
+                self.remembered = hits
                 let prompt = SolTurnPlanner.prompt(for: text, askedQuestions: asked, usedThemes: themes,
                                                    steerTowardReflection: steerTowardReflection, memory: memory)
                 do {

@@ -3,6 +3,7 @@ import MementoCore
 
 /// Edit the reflection Sol drafted from the writer's own words (prototype L523–536).
 struct SolDraftView: View {
+    @Environment(AppServices.self) private var services
     @Binding var text: String
     var onBack: () -> Void
     var onSave: () -> Void
@@ -25,7 +26,7 @@ struct SolDraftView: View {
                         Spacer()
                         SolCharacterView(mood: .reflect, size: 80, showsEffects: false)
                     }
-                    Text("Drafted on this iPhone from your own words. Change anything — what you save is yours. Saves to Reflections and counts toward your streak.")
+                    Text("\(services.solUsesCloud ? "Drafted with cloud AI" : "Drafted on this iPhone") from your own words. Change anything — what you save is yours. Saves to Reflections and counts toward your streak.")
                         .font(.ui(14)).foregroundStyle(Color.mMut).fixedSize(horizontal: false, vertical: true)
                     TextEditor(text: $text)
                         .font(.serif(20, relativeTo: .body))

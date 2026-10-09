@@ -63,18 +63,41 @@ public struct SearchJournalTool: Tool {
 }
 
 extension SolTurnPlanner {
-    /// Cites a past moment only when the reply clearly used it: by its date, or by sharing several of its words.
+    /// "Sol remembers": the one closely related journal moment for this message, skipping small talk
+    /// and moments already cited in this conversation. Retrieval runs on device for every engine.
+    public static func recall(_ text: String, history: [SolMessage], journal: JournalIndex?) async -> (memory: String?, hits: [JournalHit]) {
+        guard let journal, !isSmallTalk(text) else { return (nil, []) }
+        let alreadyCited = Set(history.flatMap(\.citations).map(\.entryID))
+        let hits = await journal.search(text, limit: 1, minimumScore: JournalIndex.strongMatch)
+            .filter { !alreadyCited.contains($0.snippet.entryID) }
+        return (hits.isEmpty ? nil : SearchJournalTool.describe(hits, calendar: .current), hits)
+    }
+
+    private static let citationStopwords: Set<String> = ["with", "after", "that", "this", "have", "just", "about", "what", "when",
+        "your", "they", "from", "were", "been", "into", "there", "their", "would", "could", "really", "felt", "feel", "like", "some"]
+
+    /// Cites a past moment only when the reply clearly used it: by its date, a name from it,
+    /// or at least two of its meaningful words (including its kept tags).
     public static func citations(for reply: String, hits: [JournalHit], calendar: Calendar = .current) -> [SolCitation] {
         let labels = DateLabels(calendar: calendar)
         let replyLower = reply.lowercased()
-        let replyWords = Set(replyLower.split { !$0.isLetter }.map(String.init).filter { $0.count > 3 })
+        let replyWords = contentWords(replyLower)
         var seen = Set<UUID>()
         return hits.compactMap { hit in
             guard seen.insert(hit.snippet.entryID).inserted else { return nil }
             let date = labels.short(hit.snippet.date)
-            let words = Set(hit.snippet.text.lowercased().split { !$0.isLetter }.map(String.init).filter { $0.count > 3 })
-            let used = replyLower.contains(date.lowercased()) || replyWords.intersection(words).count >= 3
+            let momentWords = contentWords((hit.snippet.text + " " + hit.snippet.tags.joined(separator: " ")).lowercased())
+            let names = hit.snippet.text.split(separator: " ").dropFirst()
+                .map { $0.trimmingCharacters(in: .punctuationCharacters) }
+                .filter { $0.count > 2 && $0.first?.isUppercase == true && $0 != "I" }
+            let used = replyLower.contains(date.lowercased())
+                || names.contains { reply.contains($0) }
+                || replyWords.intersection(momentWords).count >= 2
             return used ? SolCitation(entryID: hit.snippet.entryID, label: date) : nil
         }
+    }
+
+    private static func contentWords(_ text: String) -> Set<String> {
+        Set(text.split { !$0.isLetter }.map(String.init).filter { $0.count > 3 && !citationStopwords.contains($0) })
     }
 }

@@ -21,7 +21,7 @@ struct EntryCard: View {
                 .font(.ui(12.5, relativeTo: .caption1))
                 .foregroundStyle(Color.mMut)
                 .padding(.trailing, showsMove ? 64 : 0)
-                if let data = entry.photoData, let image = UIImage(data: data) {
+                if let data = entry.photoData ?? entry.artData, let image = UIImage(data: data) {
                     Color.clear.frame(height: 120)
                         .overlay { Image(uiImage: image).resizable().scaledToFill() }
                         .clipShape(RoundedRectangle(cornerRadius: 12))

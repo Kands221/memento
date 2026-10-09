@@ -5,8 +5,10 @@ import MementoCore
 /// Every kept tag, grouped by kind, plus search and summaries (prototype L348–370).
 struct DiscoverView: View {
     @Environment(AppModel.self) private var app
+    @Environment(AppServices.self) private var services
     @Query(sort: \Entry.createdAt, order: .reverse) private var entries: [Entry]
     @State private var query = ""
+    @State private var related: [JournalHit] = []
 
     var body: some View {
         let index = TagIndex(entries: entries)
@@ -68,6 +70,23 @@ struct DiscoverView: View {
                 Eyebrow("Entries mentioning “\(q)”").padding(.top, 6)
                 ForEach(results) { EntryCard(entry: $0) }
             }
+            let literal = Set(results.map(\.id))
+            let extra = related.filter { !literal.contains($0.snippet.entryID) }
+            if !extra.isEmpty {
+                Eyebrow("Related moments · found on this iPhone").padding(.top, 6)
+                ForEach(extra, id: \.snippet.entryID) { hit in
+                    Button { app.openEntry(hit.snippet.entryID) } label: {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("\(DateLabels().relativeDay(hit.snippet.date)) · \(hit.snippet.notebook)")
+                                .font(.ui(12.5, relativeTo: .caption1)).foregroundStyle(Color.mMut)
+                            Text("“\(hit.snippet.text)”").font(.serif(17, relativeTo: .body, italic: true)).foregroundStyle(Color.mInk)
+                                .multilineTextAlignment(.leading)
+                        }
+                        .paperCard(radius: 18, padding: 14)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
             Button { app.push(.summary(SummarySeed(ids: nil))) } label: {
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 3) {
@@ -82,6 +101,14 @@ struct DiscoverView: View {
             .buttonStyle(.plain)
             .padding(.top, 8)
             .accessibilityIdentifier("discover.summary")
+        }
+        .task(id: query) {
+            let q = query.trimmingCharacters(in: .whitespaces)
+            guard q.count >= 3 else { related = []; return }
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled else { return }
+            await services.refreshJournal()
+            related = await services.journalIndex.search(q, limit: 3)
         }
     }
 }

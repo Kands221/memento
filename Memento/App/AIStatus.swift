@@ -5,7 +5,13 @@ import MementoCore
 /// Live Apple Intelligence state with the Demo override layered on top (spec D23).
 @Observable
 final class AIStatus {
-    private(set) var live: AIAvailability = AIAvailability.live()
+    private(set) var live: AIAvailability = AIStatus.probe()
+
+    /// `-simulateNoOnDeviceAI` makes this device behave like one without Apple Intelligence (e.g. iPhone 12),
+    /// to exercise the cloud fallback in the simulator.
+    private static func probe() -> AIAvailability {
+        ProcessInfo.processInfo.arguments.contains("-simulateNoOnDeviceAI") ? .unsupported : AIAvailability.live()
+    }
     var demoState: DemoAIState {
         didSet {
             UserDefaults.standard.set(demoState.rawValue, forKey: SettingsKey.demoAIState)
@@ -14,6 +20,8 @@ final class AIStatus {
     }
     /// True when the deterministic demo engines are selected; they need no model.
     @ObservationIgnored var isDemoEngine: () -> Bool = { false }
+    /// True when tagging runs on the cloud fallback; it needs no on-device model either.
+    @ObservationIgnored var isCloudEngine: () -> Bool = { false }
     /// Bumped when engine choices change so views re-read `availability`.
     var revision = 0
     @ObservationIgnored var onChange: (() -> Void)?
@@ -28,7 +36,7 @@ final class AIStatus {
     /// What tagging can do (the demo rules engine needs no model).
     var availability: AIAvailability {
         _ = revision
-        return AIResolution.tagging(live: live, override: demoState, demoTagging: isDemoEngine())
+        return AIResolution.tagging(live: live, override: demoState, demoTagging: isDemoEngine(), cloud: isCloudEngine())
     }
 
     var label: String {
@@ -42,7 +50,7 @@ final class AIStatus {
 
     func refresh() {
         let previous = availability
-        live = AIAvailability.live()
+        live = Self.probe()
         if availability != previous { onChange?() }
         poll?.cancel()
         guard live == .preparing else { return }

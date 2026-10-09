@@ -43,6 +43,17 @@ public enum SolCharacter {
     public static let windDown = "We’ve covered a lot of ground together. This is a good place to pause — turn it into a reflection and keep what matters."
     public static let drafting = "Gathering your words…"
     public static let disclaimer = "I’m Sol, an old tortoise. I ask questions to help you think things through, all on this iPhone. I’m not a therapist and I can misunderstand. When you’re ready, we’ll turn this into a reflection you edit and keep."
+    public static let cloudDisclaimer = "I’m Sol, an old tortoise. I ask questions to help you think things through. This iPhone can’t run on-device AI, so I’m using cloud AI and your messages are sent to answer you. I’m not a therapist and I can misunderstand."
+
+    /// The same Sol for the cloud fallback, without claiming to run on the iPhone.
+    public static var cloudPersona: String {
+        persona.replacingOccurrences(of: "You run entirely on this iPhone and you talk with", with: "You talk with")
+            + """
+
+            - Write plain prose in the JSON fields asked for: no stage directions, asterisks, emoji, lists or headings.
+            - Never start with "That sounds" or "I'm sorry".
+            """
+    }
 
     public static func opening(at date: Date = .now, calendar: Calendar = .current) -> String {
         switch calendar.component(.hour, from: date) {

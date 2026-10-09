@@ -11,6 +11,8 @@ public final class Entry {
     public var prompt: String?
     public var text: String
     @Attribute(.externalStorage) public var photoData: Data?
+    /// An on-device Image Playground illustration of the entry ("Paint this day").
+    @Attribute(.externalStorage) public var artData: Data?
     public var taggingRaw: String
     @Relationship(deleteRule: .cascade, inverse: \TagMark.entry)
     public var tags: [TagMark] = []

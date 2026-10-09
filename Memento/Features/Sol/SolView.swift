@@ -15,6 +15,8 @@ struct SolView: View {
     @State private var draft = ""
     @State private var drafting = false
     @State private var showDraft = false
+    @State private var voice = SolVoice()
+    @State private var listener = SpeechInput()
 
     var body: some View {
         NavigationStack {
@@ -34,6 +36,7 @@ struct SolView: View {
         }
         .task {
             guard conversation == nil else { return }
+            await services.refreshJournal()
             let engine = services.makeSolEngine()
             self.engine = engine
             let conversation = SolConversation(engine: engine)
@@ -56,11 +59,18 @@ struct SolView: View {
                     avatar(size: 24)
                     Text("Sol").font(.serif(19, relativeTo: .headline)).foregroundStyle(Color.mInk)
                 }
-                Text("On this iPhone · not saved unless you choose").font(.ui(11, relativeTo: .caption2)).foregroundStyle(Color.mMut)
+                Text(services.solUsesCloud ? "Cloud AI · not saved unless you choose" : "On this iPhone · not saved unless you choose").font(.ui(11, relativeTo: .caption2)).foregroundStyle(Color.mMut)
                     .lineLimit(2).minimumScaleFactor(0.8).multilineTextAlignment(.center)
             }
             Spacer(minLength: 4)
-            Color.clear.frame(width: 56, height: 1)
+            Button { voice.isEnabled.toggle() } label: {
+                Image(systemName: voice.isEnabled ? "speaker.wave.2.fill" : "speaker.slash")
+                    .font(.system(size: 17)).foregroundStyle(voice.isEnabled ? Color.mTer : Color.mMut)
+                    .frame(width: 56, height: 44, alignment: .trailing)
+            }
+            .accessibilityLabel(voice.isEnabled ? "Sol's voice is on" : "Sol's voice is off")
+            .accessibilityHint("Sol reads his replies aloud")
+            .accessibilityIdentifier("sol.voiceToggle")
         }
         .padding(.horizontal, 12)
         .frame(minHeight: 56)
@@ -114,7 +124,7 @@ struct SolView: View {
                         SolCharacterView(mood: c.input.isEmpty ? .hello : .listening, size: 160, nudge: c.input.split(separator: " ").count)
                             .frame(maxWidth: .infinity).padding(.top, 4)
                     }
-                    Text(SolCharacter.disclaimer)
+                    Text(services.solUsesCloud ? SolCharacter.cloudDisclaimer : SolCharacter.disclaimer)
                         .font(.ui(13)).foregroundStyle(Color.mMut).lineSpacing(2)
                         .paperCard(radius: 14, padding: 14)
                     ForEach(c.messages) { message in messageView(message, isLatest: message.id == c.messages.last?.id && c.userTurns > 0, c: c) }
@@ -149,7 +159,13 @@ struct SolView: View {
                 .padding(.bottom, 8)
             }
             .scrollDismissesKeyboard(.interactively)
-            .onChange(of: c.messages.last?.text) { _, _ in proxy.scrollTo("bottom", anchor: .bottom) }
+            .onChange(of: c.messages.last?.text) { _, text in
+                proxy.scrollTo("bottom", anchor: .bottom)
+                if c.isResponding, c.messages.last?.role == .sol, let text { voice.feed(text, final: false) }
+            }
+            .onChange(of: c.isResponding) { _, responding in
+                if !responding, let last = c.messages.last, last.role == .sol { voice.feed(last.text, final: true) }
+            }
             .onChange(of: c.suggestions) { _, _ in proxy.scrollTo("bottom", anchor: .bottom) }
             .onChange(of: c.isAwaitingFirstToken) { _, _ in proxy.scrollTo("bottom", anchor: .bottom) }
             .safeAreaInset(edge: .bottom) { composer(c) }
@@ -165,18 +181,29 @@ struct SolView: View {
                     if isLatest {
                         // The latest reply's avatar nods along as words stream in.
                         SolCharacterView(mood: .speaking, size: 40,
-                                         nudge: c.isResponding ? message.text.split(separator: " ").count / 4 : 0,
+                                         nudge: voice.wordTick + (c.isResponding ? message.text.split(separator: " ").count / 4 : 0),
                                          showsEffects: false)
                     } else {
                         SolArt(name: "sol-mark", size: 22).padding(.top, 3)
                     }
                 }
-                Text(message.text).font(.serif(20, relativeTo: .body)).foregroundStyle(Color.mInk).lineSpacing(4)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .textSelection(.enabled)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(message.text).font(.serif(20, relativeTo: .body)).foregroundStyle(Color.mInk).lineSpacing(4)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+                        .accessibilityLabel("Sol: \(message.text)")
+                    ForEach(message.citations, id: \.self) { citation in
+                        Button { openCitation(citation) } label: {
+                            Label("From your journal · \(citation.label)", systemImage: "book.closed")
+                                .font(.ui(13, weight: .medium)).foregroundStyle(Color.mSage)
+                                .padding(.vertical, 6).padding(.horizontal, 11)
+                                .background(Capsule().fill(Color.mSageT))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint("Opens that entry")
+                    }
+                }
             }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Sol: \(message.text)")
         case .me:
             HStack {
                 Spacer(minLength: 60)
@@ -199,20 +226,37 @@ struct SolView: View {
                     FlowLayout(spacing: 8) { chips(c) }
                 }
             }
+            if let note = listener.errorText {
+                Text(note).font(.ui(13)).foregroundStyle(Color.mDanger)
+            }
             if !c.reachedCap {
                 HStack(spacing: 8) {
-                    TextField("Reply to Sol…", text: $c.input, axis: .vertical)
+                    if listener.isAvailable {
+                        Button { toggleListening(c) } label: {
+                            Image(systemName: listener.isListening ? "stop.fill" : (listener.isPreparing ? "ellipsis" : "mic.fill"))
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundStyle(listener.isListening ? Color.mOnTer : Color.mTer)
+                                .frame(width: 44, height: 44)
+                                .background(Circle().fill(listener.isListening ? Color.mTer : Color.mTerT))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(c.isResponding || listener.isPreparing)
+                        .accessibilityLabel(listener.isListening ? "Stop and send" : "Talk to Sol")
+                        .accessibilityIdentifier("sol.mic")
+                    }
+                    TextField(listener.isListening ? "Listening…" : "Reply to Sol…", text: $c.input, axis: .vertical)
                         .font(.ui(16))
                         .lineLimit(1...4)
                         .padding(.horizontal, 16).padding(.vertical, 11)
                         .background(RoundedRectangle(cornerRadius: 22).fill(Color.mCard))
                         .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(Color.mLine, lineWidth: 1))
                         .submitLabel(.send)
-                        .onSubmit { Task { await c.send() } }
+                        .onSubmit { send(c) }
                         .accessibilityIdentifier("sol.input")
-                    Button("Send") { Task { await c.send() } }
+                    Button("Send") { send(c) }
                         .buttonStyle(PillButtonStyle(fill: .mInk, foreground: .mBg, border: nil))
                         .disabled(!c.canSend || c.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .accessibilityValue(c.isResponding ? "Sol is replying" : "Ready")
                         .accessibilityIdentifier("sol.send")
                 }
             }
@@ -225,13 +269,42 @@ struct SolView: View {
 
     private func chips(_ c: SolConversation) -> some View {
         ForEach(c.suggestions, id: \.self) { suggestion in
-            Button(suggestion) { Task { await c.send(suggestion) } }
+            Button(suggestion) { send(c, suggestion) }
                 .buttonStyle(PillButtonStyle(fill: .mCard, height: 38, horizontalPadding: 14))
                 .font(.ui(14, weight: .regular))
         }
     }
 
     // MARK: Actions
+
+    private func send(_ c: SolConversation, _ text: String? = nil) {
+        voice.stop()
+        Task { await c.send(text) }
+    }
+
+    /// Voice mode: talking to Sol turns his voice on so he answers aloud.
+    private func toggleListening(_ c: SolConversation) {
+        Task {
+            if listener.isListening {
+                await listener.stop()
+                if !c.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { send(c) }
+            } else {
+                voice.stop()
+                voice.isEnabled = true
+                c.input = ""
+                await listener.start { c.input = $0 }
+            }
+        }
+    }
+
+    private func openCitation(_ citation: SolCitation) {
+        voice.stop()
+        app.isSolPresented = false
+        Task {
+            try? await Task.sleep(for: .milliseconds(450))
+            app.openEntry(citation.entryID)
+        }
+    }
 
     private func makeReflection(_ c: SolConversation) {
         guard let engine else { return }
@@ -257,12 +330,15 @@ struct SolView: View {
     }
 
     private func discard() {
+        voice.stop()
         conversation?.reset()
         app.isSolPresented = false
         app.select(.you)
     }
 
     private func close() {
+        voice.stop()
+        Task { await listener.stop() }
         conversation?.reset()
         app.isSolPresented = false
     }

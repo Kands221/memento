@@ -1,7 +1,7 @@
 import Foundation
 import MementoCore
 
-enum EngineChoice: String, CaseIterable { case onDevice, demo }
+enum EngineChoice: String, CaseIterable { case onDevice, demo, cloud }
 
 /// Process arguments used by UI tests, screenshot runs and stage demos.
 struct LaunchOptions {

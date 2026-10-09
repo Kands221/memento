@@ -48,6 +48,7 @@ struct RootView: View {
             services.ai.refresh()
             services.tagging.resumePending()
         }
+        .task { await services.checkPainting() }
     }
 
     @ViewBuilder

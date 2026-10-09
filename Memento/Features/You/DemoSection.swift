@@ -25,16 +25,21 @@ struct DemoSection: View {
                         Button(state.title) { services.ai.demoState = state }
                     }
                 }
-                menuRow("Suggestion engine", value: services.taggingChoice == .demo ? "Built-in rules" : "On-device model", id: "demo.taggingEngine") {
+                menuRow("Suggestion engine", value: engineName(services.taggingChoice, backup: "Built-in rules", cloud: services.taggingUsesCloud),
+                        id: "demo.taggingEngine") {
                     Button("On-device model") { services.setEngine(tagging: .onDevice) }
+                    if services.cloud != nil { Button("Cloud AI (OpenRouter)") { services.setEngine(tagging: .cloud) } }
                     Button("Built-in rules (backup)") { services.setEngine(tagging: .demo) }
                 }
-                menuRow("Sol engine", value: services.solChoice == .demo ? "Scripted" : "On-device model", id: "demo.solEngine") {
+                menuRow("Sol engine", value: engineName(services.solChoice, backup: "Scripted", cloud: services.solUsesCloud), id: "demo.solEngine") {
                     Button("On-device model") { services.setEngine(sol: .onDevice) }
+                    if services.cloud != nil { Button("Cloud AI (OpenRouter)") { services.setEngine(sol: .cloud) } }
                     Button("Scripted (backup)") { services.setEngine(sol: .demo) }
                 }
             }
-            Text("For demos: preview every AI state and switch to backup engines. Nothing here sends data anywhere.")
+            Text(services.cloud == nil
+                 ? "For demos: preview every AI state and switch to backup engines. Nothing here sends data anywhere."
+                 : "For demos: preview every AI state and switch engines. Cloud AI sends entry text and Sol messages to OpenRouter; the backups stay on this iPhone.")
                 .font(.ui(13)).foregroundStyle(Color.mMut).padding(.horizontal, 4)
         }
         .confirmationDialog("Delete every entry on this iPhone?", isPresented: $confirmClear, titleVisibility: .visible) {
@@ -42,6 +47,14 @@ struct DemoSection: View {
                 try? SampleJournal.clear(from: context)
                 app.showToast("Journal cleared")
             }
+        }
+    }
+
+    private func engineName(_ choice: EngineChoice, backup: String, cloud: Bool) -> String {
+        switch choice {
+        case .demo: backup
+        case .cloud: "Cloud AI"
+        case .onDevice: cloud ? "Cloud AI (automatic)" : "On-device model"
         }
     }
 

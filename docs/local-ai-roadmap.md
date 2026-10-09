@@ -2,13 +2,14 @@
 
 Every item here runs **on the iPhone**. There are no servers, no API keys, and nothing leaves the device unless the writer exports it. The APIs were verified against the iOS 26.5 SDK installed with Xcode 26.6.
 
-**Shipped today:**
+**Shipped:**
 - Foundation Models for tag suggestions and for Sol, the tortoise companion.
-- `SFSpeechRecognizer` (on-device only) for dictation in the editor.
+- Items 1–3 below (Oct 2026): voice Sol, Sol remembers plus Discover related moments, and Paint this day.
+- Exception to "never fall back to the cloud": for the iPhone 12 demo, builds with a `CloudAI.plist` key fall back to OpenRouter on devices that can't run on-device AI. It is labelled everywhere and can be turned off. See the README.
 
 ## Recommended for the hackathon (in order)
 
-### 1. Talk with Sol: voice in, voice out
+### 1. Talk with Sol: voice in, voice out ✅ shipped
 **What:** hold a button and speak to Sol. He answers aloud in a slow, warm voice (he's a tortoise), and the text still streams on screen. Editor dictation is upgraded too: long-form, punctuated, with no one-minute limit.
 
 **How:**
@@ -20,7 +21,8 @@ Every item here runs **on the iPhone**. There are no servers, no API keys, and n
 
 **Effort:** about half a day. **Demo impact:** very high, since it's a live conversation with a character.
 
-### 2. Sol remembers: "Ask your journal"
+### 2. Sol remembers: "Ask your journal" ✅ shipped
+*As built:* retrieval is done by the app (a hybrid on-device index), not by a model tool call. The model didn't call the tool reliably, while app-side retrieval cited the right entry 3/3 times in live tests.
 **What:**
 - Sol can draw on what the writer has kept, for example: *"Last month you wrote that a long walk with Priya helped. Might that help now?"*
 - Discover gains a semantic search ("times I felt stuck") that finds entries even when they don't use those words.
@@ -37,7 +39,7 @@ Every item here runs **on the iPhone**. There are no servers, no API keys, and n
 
 **Effort:** about 1 day. **Demo impact:** very high, because it's the feature that makes the AI personal and useful.
 
-### 3. Paint this day: on-device image generation
+### 3. Paint this day: on-device image generation ✅ shipped
 **What:** one tap turns an entry into an illustration, used as the entry's cover and in Journal cards. Optionally, a weekly "memory card" collage.
 
 **How:**

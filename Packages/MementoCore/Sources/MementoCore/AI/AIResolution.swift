@@ -28,11 +28,12 @@ public enum AIResolution {
         }
     }
 
-    public static func tagging(live: AIAvailability, override: DemoAIState, demoTagging: Bool) -> AIAvailability {
-        overridden(override) ?? (demoTagging ? .ready : live)
+    /// `cloud`: the cloud fallback engine is in use, so no on-device model is needed.
+    public static func tagging(live: AIAvailability, override: DemoAIState, demoTagging: Bool, cloud: Bool = false) -> AIAvailability {
+        overridden(override) ?? (demoTagging || cloud ? .ready : live)
     }
 
-    public static func sol(live: AIAvailability, override: DemoAIState, demoSol: Bool) -> AIAvailability {
-        overridden(override) ?? (demoSol ? .ready : live)
+    public static func sol(live: AIAvailability, override: DemoAIState, demoSol: Bool, cloud: Bool = false) -> AIAvailability {
+        overridden(override) ?? (demoSol || cloud ? .ready : live)
     }
 }
