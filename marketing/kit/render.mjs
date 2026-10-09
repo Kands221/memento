@@ -93,6 +93,9 @@ async function serve(folder) {
 
 export const aspect = (tl) => (tl.WIDTH > tl.HEIGHT ? "16x9" : "9x16");
 
+// Lets a scene's tests open it the way the renderer does.
+export const serveForTest = serve;
+
 // ---------- capture ----------
 
 const query = (variant, extra) => `?${new URLSearchParams({ ...(variant ? { variant } : {}), ...extra })}`;

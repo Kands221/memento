@@ -22,18 +22,19 @@ export const DOC = {
 export const TAGS_ON_SCREEN = ["Drained", "Walking helped", "Work"];
 export const MEMORY_DATE = "Sep 13";
 
-// Paper-world anchors, as fractions of the frame (from design-assets/briefs/wave5-story.md, 1536×864 crop).
+// Paper-world anchors, as fractions of the frame. Journal and path checked against the accepted 1920×1080 crops.
+// Journal crease: (267, 700) in the writing crop, approximately (238, 705) after the drift at the peek.
 export const ANCHORS = {
-  journal: { x: 0.150, y: 0.655 },
+  journal: { x: 0.125, y: 0.653 },
   clock: { x: 0.189, y: 0.607 },
   moon: { x: 0.300, y: 0.115 },
   herNight: { x: 0.280, y: 0.590 },
   herSitting: { x: 0.312, y: 0.405 },
   besideHer: { x: 0.235, y: 0.700 },
-  flashCorner: { x: 0.110, y: 0.930 },
-  pathStart: { x: 0.080, y: 0.880 },
-  pathEnd: { x: 0.260, y: 0.880 },
-  endSol: { x: 0.300, y: 0.860 },
+  flashCorner: { x: 0.110, y: 0.910 },
+  pathStart: { x: 0.080, y: 0.850 },
+  pathEnd: { x: 0.260, y: 0.850 },
+  endSol: { x: 0.265, y: 0.760 },
 };
 
 // Paper-world shots. `enter`/`exit`: "fade" or the flashback's "unfold"/"fold" (from the open journal).
@@ -62,7 +63,8 @@ export const SEGMENTS = [
   { id: "solHold", clip: "Scene4SolC", at: 29.0, to: 33.6, src: 37.3, rate: 0.45 },
   { id: "solSecond", clip: "Scene4SolC", at: 33.6, to: 37.4, src: 39.4, rate: 1 },
   { id: "solReply2", clip: "Scene4SolC", at: 37.4, to: 40.0, src: 53.5, rate: 1 },
-  { id: "reflection", clip: "Scene4SolC", at: 40.0, to: 42.6, src: 65.4, rate: 1 },
+  // One continuous cut: draft, save tap, then the real Saved confirmation at source 70 s.
+  { id: "reflection", clip: "Scene4SolC", at: 40.0, to: 42.6, src: 67.0, rate: 2 },
 ];
 
 // Sol in the world: keyframes, interpolated between `t`s. `mode`: "hidden", "peek" (rising from the journal), "idle",
@@ -76,7 +78,7 @@ export const SOL = [
   { t: 22.4, mode: "idle", pose: "reflect", at: "flashCorner", w: 0.13 },
   { t: 34.4, mode: "idle", pose: "listening", at: "besideHer", w: 0.115 },
   { t: 37.6, mode: "idle", pose: "mark", at: "besideHer", w: 0.115 },
-  { t: 42.4, mode: "idle", pose: "resting", at: "journal", w: 0.10 },
+  { t: 42.4, mode: "idle", pose: "listening", at: "journal", w: 0.10 },
   { t: 47.4, mode: "walk", pose: "mark", at: "pathStart", w: 0.095 },
   { t: 55.0, mode: "walk", pose: "mark", at: "pathEnd", w: 0.095 },
   { t: 55.4, mode: "idle", pose: "hello", at: "endSol", w: 0.21 },
