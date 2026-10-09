@@ -11,7 +11,7 @@ Run: `run_a9cf74431017`
 | 2C UI accents | — | ctx_f386773402bb | succeeded; release reported `retained` (recheck at close-out) |
 | 1 redo: sol-mark-v2 | — | ctx_1b6e9f7cdbb3 | succeeded; released |
 
-| 3 Sol character | — | ctx_4f1525d16a9d | running (user: "add character to the AI") |
+| 3 Sol character | — | ctx_4f1525d16a9d | succeeded (answered 1 question: no post-processing needed) |
 
 ## Verdicts
 - onb-hero: accepted (style anchor; paper fibre, palette, no text)
@@ -25,3 +25,4 @@ Run: `run_a9cf74431017`
 - mode-free / mode-dump / mode-guided / mode-photo / kind-feeling / kind-situation / kind-helped / kind-topic / streak-sprout / tonight-ornament: accepted (bold single shapes, read at 28–40 pt)
 - reminder-scene: accepted (quiet upper third for the clock)
 - paper-grain: dropped — so low-contrast it adds nothing at 25% opacity (spec §8 allows dropping)
+- sol-hello / sol-thinking / sol-listening / sol-reflect / sol-resting: accepted — same sun, character through pose only, reads at small size

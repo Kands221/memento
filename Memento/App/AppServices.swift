@@ -62,6 +62,14 @@ final class AppServices {
         tagging.engine = ai.demoState == .failing ? FailingOnceEngine(base: base) : base
     }
 
+    func setEngine(tagging: EngineChoice? = nil, sol: EngineChoice? = nil) {
+        if let tagging { UserDefaults.standard.set(tagging.rawValue, forKey: SettingsKey.demoTaggingEngine) }
+        if let sol { UserDefaults.standard.set(sol.rawValue, forKey: SettingsKey.demoSolEngine) }
+        rebuildTaggingEngine()
+        ai.revision += 1
+        if ai.availability == .ready { self.tagging.resumePending() }
+    }
+
     func makeSolEngine() -> any SolEngine {
         solChoice == .demo ? ScriptedSol() : FoundationModelSol()
     }

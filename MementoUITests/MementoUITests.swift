@@ -103,4 +103,19 @@ final class MementoUITests: XCTestCase {
         app.buttons["notebook.option.work"].tap()
         XCTAssertTrue(app.staticTexts["Moved to Work"].waitForExistence(timeout: 2))
     }
+
+    func testYouDemoControlsAndAIStates() {
+        let app = launch()
+        app.buttons["tab.you"].tap()
+        XCTAssertTrue(app.staticTexts["3-day streak"].waitForExistence(timeout: 3))
+        app.buttons["row.onDeviceAI"].tap()
+        XCTAssertTrue(app.staticTexts["READY · WORKS OFFLINE"].waitForExistence(timeout: 2))
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.swipeUp()
+        app.buttons["demo.aiState"].tap()
+        app.buttons["Unsupported"].tap()
+        app.swipeDown()
+        app.buttons["row.onDeviceAI"].tap()
+        XCTAssertTrue(app.staticTexts["NOT AVAILABLE ON THIS IPHONE"].waitForExistence(timeout: 2))
+    }
 }

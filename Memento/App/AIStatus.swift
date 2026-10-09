@@ -14,6 +14,8 @@ final class AIStatus {
     }
     /// True when the deterministic demo engines are selected; they need no model.
     @ObservationIgnored var isDemoEngine: () -> Bool = { false }
+    /// Bumped when engine choices change so views re-read `availability`.
+    var revision = 0
     @ObservationIgnored var onChange: (() -> Void)?
     @ObservationIgnored private var poll: Task<Void, Never>?
 
@@ -24,7 +26,8 @@ final class AIStatus {
     }
 
     var availability: AIAvailability {
-        switch demoState {
+        _ = revision
+        return switch demoState {
         case .live: live != .ready && isDemoEngine() ? .ready : live
         case .needsAppleIntelligence: .needsAppleIntelligence
         case .preparing: .preparing
