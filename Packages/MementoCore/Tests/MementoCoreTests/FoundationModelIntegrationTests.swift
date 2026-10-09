@@ -18,11 +18,19 @@ struct FoundationModelIntegrationTests {
 struct FoundationModelSolIntegrationTests {
     @Test func solStreamsAReplyAndReturnsToIdle() async {
         let conversation = SolConversation(engine: FoundationModelSol())
-        await conversation.send("Work has been a lot this week and I keep saying yes to things.")
+        await conversation.send("My manager moved the deadline again and I stayed late.")
         #expect(conversation.messages.last?.role == .sol)
         #expect(!(conversation.messages.last?.text.isEmpty ?? true))
         #expect(conversation.messages.last?.text != SolConversation.fallbackReply)
         #expect(!conversation.isResponding)
+        print("SOL-VOICE:", conversation.messages.last?.text ?? "", "| chips:", conversation.suggestions)
+    }
+
+    @Test func solVoiceOnALightDay() async {
+        let conversation = SolConversation(engine: FoundationModelSol())
+        await conversation.send("Honestly a nice day. Made pancakes and the sun came out.")
+        print("SOL-VOICE:", conversation.messages.last?.text ?? "", "| chips:", conversation.suggestions)
+        #expect(conversation.messages.last?.role == .sol)
     }
 
     @Test func draftsAReflectionFromUserWords() async throws {

@@ -5,7 +5,7 @@ import FoundationModels
 struct SolTurnContent {
     @Guide(description: "Sol's reply: warm, at most two short sentences, reflecting the writer's words and ending with one open question")
     var reply: String
-    @Guide(description: "Two short first-person replies the writer might tap next, each under seven words", .count(2))
+    @Guide(description: "Two different answers the WRITER might give to Sol's question, in the writer's own first-person voice, 2 to 6 words each, e.g. \"More time for me\" or \"Honestly, sleep\". Never instructions, never addressed to the writer, never Sol speaking.", .count(2))
     var suggestions: [String]
 }
 
@@ -18,17 +18,7 @@ struct ReflectionContent {
 /// Sol on Apple's on-device model, one session per conversation (spec §5.3).
 @MainActor
 public final class FoundationModelSol: SolEngine {
-    static let persona = """
-    You are Sol, a gentle reflection companion inside Memento, a private journal that runs \
-    entirely on this iPhone. Help the writer think things through.
-    - Reply in at most two short sentences.
-    - Reflect the writer's own words back, then ask one open question.
-    - Never diagnose, never name conditions, never give medical, legal or financial advice, \
-    and never claim to be a therapist.
-    - Do not encourage the writer to rely on you; when it fits, point them toward people they trust.
-    - Do not invent facts about the writer's life.
-    - Suggestions are two short first-person replies the writer could tap.
-    """
+    static var persona: String { SolCharacter.persona }
 
     static let reflectionInstructions = """
     Turn the writer's own messages into a short private journal reflection written in the first \

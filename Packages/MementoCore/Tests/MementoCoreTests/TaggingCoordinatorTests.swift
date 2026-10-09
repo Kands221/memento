@@ -55,7 +55,7 @@ actor RecordingEngine: TaggingEngine {
         await c.drain()
         #expect(c.phase(for: e) == .failed)
         #expect(e.tagging == .failed)
-        await engine.setResult(.success([SuggestedTagDraft(label: "Drained", kind: .feeling, quote: nil)]))
+        await engine.setResult(.success([SuggestedTagDraft(label: "Drained", kind: .feeling, quote: "I felt drained")]))
         c.retry(e)
         await c.drain()
         #expect(c.phase(for: e) == .done)
@@ -76,7 +76,7 @@ actor RecordingEngine: TaggingEngine {
     }
 
     @Test func resumePendingTagsLeftoverEntries() async throws {
-        let engine = RecordingEngine(.success([SuggestedTagDraft(label: "Calm", kind: .feeling, quote: nil)]))
+        let engine = RecordingEngine(.success([SuggestedTagDraft(label: "Calm", kind: .feeling, quote: "Quiet day")]))
         let (store, c) = try make(engine)
         let e = store.entry(text: "Quiet day."); e.tagging = .pending
         try store.context.save()

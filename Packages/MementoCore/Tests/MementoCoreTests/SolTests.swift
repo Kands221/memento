@@ -25,8 +25,8 @@ final class ThrowingSol: SolEngine {
     @Test func opensWithStaticGreeting() {
         let c = scripted()
         #expect(c.messages.map(\.role) == [.sol])
-        #expect(c.messages[0].text == SolConversation.opening)
-        #expect(c.suggestions == SolConversation.openingSuggestions)
+        #expect(c.messages[0].text == SolCharacter.opening(at: .now))
+        #expect(c.suggestions == SolCharacter.openingSuggestions(at: .now))
         #expect(!c.canMakeReflection)
     }
 

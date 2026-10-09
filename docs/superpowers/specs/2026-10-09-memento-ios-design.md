@@ -20,7 +20,7 @@ Recreate the Memento HTML prototype as a native SwiftUI iPhone app that a real p
 
 | # | Decision | Chosen | Alternatives considered | Why |
 |---|---|---|---|---|
-| D1 | Local AI runtime | **Apple Foundation Models** (iOS 26), `SystemLanguageModel(useCase: .contentTagging)` for tags, `.general` for Sol | MLX + downloaded open model; Core ML custom classifier | First-party, no 1.1 GB app-managed download, private by construction, structured output via `@Generable`. The SDK confirms the `.contentTagging` adapter exists. |
+| D1 | Local AI runtime | **Apple Foundation Models** (iOS 26), the system model for both tags and Sol. Tags use a **per-kind slot schema with constrained labels** (`@Guide(.anyOf(TagVocabulary…))`); the `.contentTagging` adapter was evaluated on real entries and rejected because it produced generic, ungrounded labels | MLX + downloaded open model; Core ML custom classifier | First-party, no 1.1 GB app-managed download, private by construction, structured output via `@Generable`. The SDK confirms the `.contentTagging` adapter exists. |
 | D2 | Model download UX | Map the prototype's download flow onto the **system's real states**: ready / Apple Intelligence off / model preparing / device not eligible | Keep a fake download bar | Apple manages the model, so a fake progress bar would be dishonest. "Remove model" is replaced by a "Managed by Apple Intelligence" row. |
 | D3 | Minimum OS | **iOS 26.0**, iPhone only | iOS 18 with AI disabled on older OSes | Foundation Models needs iOS 26, and the prototype's AI-unsupported states still cover ineligible iPhones. |
 | D4 | UI framework | **SwiftUI**, Swift 6 language mode, `@Observable`, MainActor default isolation in the app target | UIKit | Native, concise, and matches the declarative prototype. |
@@ -133,7 +133,7 @@ design-assets/                    style bible, per-asset prompts; generated/ (gi
 
 ### 5.2 Tagging
 
-- **Engine:** `FoundationModelTagger` creates a fresh `LanguageModelSession(model: SystemLanguageModel(useCase: .contentTagging), instructions: …)` per entry and calls `respond(to:generating: TagSuggestions.self)`.
+- **Engine (as built):** `FoundationModelTagger` asks the system model (temperature 0.2) for `EntryDetails`, which has one optional slot per kind (feeling, situation, helped, topic). Each slot holds a verbatim quote and a label constrained to the curated `TagVocabulary` list for that kind. Model tags must be grounded, except topics: the sanitizer drops any tag whose quote can't be found and drops generic labels. This takes about 3–4 s per entry on device.
 - **Schema:**
   ```swift
   @Generable struct TagSuggestions { @Guide(.maximumCount(5)) var tags: [SuggestedTag] }

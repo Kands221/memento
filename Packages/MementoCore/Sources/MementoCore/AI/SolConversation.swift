@@ -5,9 +5,7 @@ import Observation
 @MainActor
 @Observable
 public final class SolConversation {
-    public static let opening = "Hi. What’s taking up the most room in your head tonight?"
-    public static let openingSuggestions = ["Work, mostly", "Something someone said", "Honestly, I’m not sure"]
-    public static let fallbackReply = "I lost my train of thought for a second. Could you say that another way?"
+    public static var fallbackReply: String { SolCharacter.fallbackReply }
     public static let softCap = 12
     public static let steerFrom = 8
 
@@ -17,10 +15,21 @@ public final class SolConversation {
     public private(set) var isAwaitingFirstToken = false
     public var input = ""
     @ObservationIgnored private let engine: any SolEngine
+    @ObservationIgnored private let startedAt: Date
 
-    public init(engine: any SolEngine) {
+    public init(engine: any SolEngine, now: Date = .now) {
         self.engine = engine
+        self.startedAt = now
         reset()
+    }
+
+    /// Which Sol expression to show.
+    public var mood: SolMood {
+        if reachedCap { return .resting }
+        if isAwaitingFirstToken { return .thinking }
+        if isResponding { return .speaking }
+        if !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return .listening }
+        return userTurns == 0 ? .hello : .speaking
     }
 
     public var userTurns: Int { messages.filter { $0.role == .me }.count }
@@ -30,8 +39,8 @@ public final class SolConversation {
     public var canMakeReflection: Bool { userTurns >= 1 && !isResponding }
 
     public func reset() {
-        messages = [SolMessage(role: .sol, text: Self.opening)]
-        suggestions = Self.openingSuggestions
+        messages = [SolMessage(role: .sol, text: SolCharacter.opening(at: startedAt))]
+        suggestions = SolCharacter.openingSuggestions(at: startedAt)
         input = ""
         engine.reset()
     }

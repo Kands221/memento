@@ -118,4 +118,30 @@ final class MementoUITests: XCTestCase {
         app.buttons["row.onDeviceAI"].tap()
         XCTAssertTrue(app.staticTexts["NOT AVAILABLE ON THIS IPHONE"].waitForExistence(timeout: 2))
     }
+
+    func testSolStreamsAndReturnsToIdle() {
+        let app = launch()
+        app.buttons["tab.you"].tap()
+        app.buttons["row.sol"].tap()
+        let input = app.textFields["sol.input"]
+        XCTAssertTrue(input.waitForExistence(timeout: 3))
+        input.tap()
+        input.typeText("The launch date at work")
+        app.buttons["sol.send"].tap()
+        // "Sol is thinking…" is visible for ~0.7 s (verified in the screen recording); the contract
+        // under test is that the reply arrives and the UI returns to idle.
+        XCTAssertTrue(app.textFields["sol.input"].waitForExistence(timeout: 2))
+        let reply = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'That sounds like a lot'")).firstMatch
+        XCTAssertTrue(reply.waitForExistence(timeout: 8))
+        // The stream has finished once its follow-up chips appear; then the UI must be idle.
+        XCTAssertTrue(app.buttons["Relief, honestly"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts["sol.thinking"].exists)
+        XCTAssertTrue(app.buttons["sol.send"].exists)
+        XCTAssertTrue(app.buttons["sol.makeReflection"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.buttons["sol.makeReflection"].isEnabled)
+        app.buttons["sol.makeReflection"].tap()
+        XCTAssertTrue(app.staticTexts["Your reflection"].waitForExistence(timeout: 5))
+        app.buttons["Save to journal"].tap()
+        XCTAssertTrue(app.staticTexts["Saved ✓"].waitForExistence(timeout: 4))
+    }
 }
