@@ -64,7 +64,8 @@ enum PDFComposer {
         out.append(line(doc.title, .serif(21), ink, after: 4))
         out.append(line(doc.who, .ui(10), muted, after: 2))
         out.append(line([doc.range, doc.countLine].filter { !$0.isEmpty }.joined(separator: " · "), .ui(10), muted, after: 14))
-        out.append(line(doc.narrative, .ui(11), ink, after: 14, lineSpacing: 3))
+        out.append(line(doc.narrative, .ui(11), ink, after: doc.narrativeCredit == nil ? 14 : 4, lineSpacing: 3))
+        if let credit = doc.narrativeCredit { out.append(line(credit, .ui(9), muted, after: 14)) }
         for group in doc.groups {
             out.append(line(group.name.uppercased(), .ui(8.5, weight: .semibold), muted, after: 2, kern: 0.7))
             out.append(line(group.items, .ui(11), ink, after: 10, lineSpacing: 2))
