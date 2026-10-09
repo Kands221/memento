@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;-webkit-font-smoothing:antialiased;--page:#E9E2D5;--bg:#F6F1E7;--card:#FFFCF6;--sheet:#FBF7EF;--ink:#2B2723;--mut:#6F675D;--line:#E3DACA;--ter:#A85A38;--onTer:#FFFFFF;--terT:#F2E1D4;--sage:#56724F;--sageT:#DFE7D8;--umb:#765F4A;--umbT:#ECE2D6;--slate:#56616C;--slateT:#E2E5E7;--bar:rgba(246,241,231,.94);background:var(--page)}
+a{color:#A85A38}a:hover{color:#7E4126}
+textarea,input,button{font-family:inherit;color:inherit}
+textarea:focus,input:focus{outline:none}
+*{scrollbar-width:none}*::-webkit-scrollbar{width:0;height:0;display:none}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-wrap:wrap;gap:56px;justify-content:center;align-items:flex-start;padding:48px 28px 64px;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',system-ui,sans-serif;color:var(--ink)">
+
+<aside style="flex:1 1 340px;max-width:440px;display:flex;flex-direction:column;gap:28px;padding-top:12px">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <span style="font:500 11px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.08em;color:var(--mut)">MEMENTO · IPHONE PROTOTYPE</span>
+    <h1 style="margin:0;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:42px;line-height:1.05;letter-spacing:-.02em;text-wrap:balance">Write naturally. Notice gently. Find it again.</h1>
+    <p style="margin:0;font-size:15px;line-height:1.55;color:var(--mut);text-wrap:pretty">The journal leads; on-device tagging quietly connects it. Sol and summaries sit one level down, reached from the things you wrote.</p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <span style="font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">Navigation · five tabs</span>
+    <div style="display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px 14px;font-size:14.5px;line-height:1.45">
+      <strong style="font-weight:600">Journal</strong><span style="color:var(--mut)">Today, streak, recent entries. Unreviewed suggestions are marked, never hidden.</span>
+      <strong style="font-weight:600">Discover</strong><span style="color:var(--mut)">Every kept tag, grouped as feelings, situations, what helped, topics. Leads to tag detail and summaries.</span>
+      <strong style="font-weight:600;color:var(--ter)">Write +</strong><span style="color:var(--mut)">One sheet for every mode. Sol lives here, below the writing modes, as an option.</span>
+      <strong style="font-weight:600">Notebooks</strong><span style="color:var(--mut)">Collections with search, tag filters and moving entries.</span>
+      <strong style="font-weight:600">You</strong><span style="color:var(--mut)">Reminders and streak, summaries, Sol, on-device AI, appearance.</span>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <span style="font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">The core journey</span>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:14px"><span style="font-family:'Newsreader',Georgia,serif;font-size:26px;line-height:1;color:var(--ter);width:20px">1</span><div style="font-size:14.5px;line-height:1.5"><strong style="font-weight:600">Write.</strong> <span style="color:var(--mut)">Saving is instant and never waits for AI. Switching modes keeps your words.</span></div></div>
+      <div style="display:flex;gap:14px"><span style="font-family:'Newsreader',Georgia,serif;font-size:26px;line-height:1;color:var(--ter);width:20px">2</span><div style="font-size:14.5px;line-height:1.5"><strong style="font-weight:600">Notice.</strong> <span style="color:var(--mut)">On this iPhone, Memento suggests details, each linked to the words behind it. Dashed = suggested, filled = kept. Keep, edit, remove, undo, or leave for later.</span></div></div>
+      <div style="display:flex;gap:14px"><span style="font-family:'Newsreader',Georgia,serif;font-size:26px;line-height:1;color:var(--ter);width:20px">3</span><div style="font-size:14.5px;line-height:1.5"><strong style="font-weight:600">Find again.</strong> <span style="color:var(--mut)">A kept tag opens every related moment across notebooks, then lets you select them for a summary.</span></div></div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <span style="font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)">Jump to a screen</span>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <sc-for list="{{ jumps }}" as="j" hint-placeholder-count="12"><button onClick="{{ j.tap }}" style="padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px;cursor:pointer;color:var(--ink)">{{ j.label }}</button></sc-for>
+    </div>
+    <p style="margin:4px 0 0;font-size:13px;line-height:1.5;color:var(--mut)">Try: Write → Free → “Use example” → Save. Tweaks switch AI states (needs download, interrupted, failing, unsupported), dark mode, larger text and reduced motion.</p>
+  </div>
+</aside>
+
+<div style="flex:none;width:414px;height:868px;border-radius:66px;background:#1A1816;padding:12px;box-sizing:border-box;box-shadow:0 50px 90px -40px rgba(50,35,20,.55),inset 0 0 0 1.5px #3a3632">
+<div style="position:relative;width:390px;height:844px;border-radius:54px;overflow:hidden;background:var(--bg);color:var(--ink)">
+
+<div ref="{{ scrollRef }}" style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;zoom:{{ zoom }}">
+<div style="height:54px"></div>
+
+<sc-if value="{{ isOnb }}" hint-placeholder-val="{{ true }}">
+<sc-if value="{{ onb0 }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;min-height:780px;padding:8px 24px 40px;box-sizing:border-box">
+  <div style="height:320px;border-radius:28px;background:repeating-linear-gradient(135deg,var(--line) 0 1px,transparent 1px 9px),var(--card);border:1px solid var(--line);display:flex;align-items:flex-end;padding:16px;box-sizing:border-box"><span style="font:11px/1.45 'JetBrains Mono',ui-monospace,monospace;color:var(--mut)">paper-cut illustration — an olive sprig laid across an open notebook</span></div>
+  <span style="margin-top:30px;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ter)">Memento</span>
+  <h2 style="margin:12px 0 0;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:40px;line-height:1.05;letter-spacing:-.02em;text-wrap:balance">A journal that helps you notice.</h2>
+  <p style="margin:14px 0 0;font-size:17px;line-height:1.45;color:var(--mut);text-wrap:pretty">Write the way you talk to yourself. Memento suggests what’s in there — how you felt, what was hard, what helped — so you can find those moments again.</p>
+  <div style="flex:1;min-height:24px"></div>
+  <div style="display:flex;gap:6px;justify-content:center;margin-bottom:18px"><sc-for list="{{ onbDots }}" as="d"><span style="{{ d.st }}"></span></sc-for></div>
+  <button onClick="{{ nextOnb }}" style="height:54px;border-radius:16px;border:none;background:var(--ter);color:var(--onTer);font-size:17px;font-weight:600;cursor:pointer">See how it works</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ onb1 }}">
+<div style="display:flex;flex-direction:column;min-height:780px;padding:8px 24px 40px;box-sizing:border-box;gap:16px">
+  <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)">An example</span><button onClick="{{ skipOnb }}" style="background:none;border:none;color:var(--mut);font-size:15px;cursor:pointer;min-height:44px">Skip</button></div>
+  <h2 style="margin:0;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1.08;letter-spacing:-.015em">Write naturally.</h2>
+  <div style="background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:10px">
+    <span style="font-size:12.5px;color:var(--mut)">Today, 9:12 PM · Daily</span>
+    <div style="font-family:'Newsreader',Georgia,serif;font-size:22px;line-height:1.5;white-space:pre-wrap"><sc-for list="{{ demoSegs }}" as="g"><span onClick="{{ g.tap }}" style="{{ g.st }}">{{ g.text }}</span></sc-for></div>
+  </div>
+  <sc-if value="{{ demoP0 }}" hint-placeholder-val="{{ true }}">
+    <button onClick="{{ demoFind }}" style="height:50px;border-radius:14px;border:1.5px solid var(--ter);background:transparent;color:var(--ter);font-size:16px;font-weight:600;cursor:pointer">Find the details</button>
+    <p style="margin:0;font-size:14px;line-height:1.5;color:var(--mut);text-wrap:pretty">After setup, this happens on your iPhone. Your entry isn’t sent to a server to be tagged.</p>
+  </sc-if>
+  <sc-if value="{{ demoP1 }}">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 4px;color:var(--mut);font-size:15px"><span style="width:8px;height:8px;border-radius:50%;background:var(--sage)"></span>Reading the entry…</div>
+  </sc-if>
+  <sc-if value="{{ demoP2 }}">
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <span style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:4px">Memento noticed</span>
+      <sc-for list="{{ demoSugg }}" as="t">
+        <div onClick="{{ t.focus }}" style="{{ t.rowSt }}">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+            <span style="{{ t.st }}">{{ t.label }}</span>
+            <span style="font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:15px;color:var(--mut)">{{ t.quote }}</span>
+          </div>
+          <sc-if value="{{ t.pending }}">
+            <button onClick="{{ t.remove }}" aria-label="Remove" style="width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--mut);font-size:15px;cursor:pointer">✕</button>
+            <button onClick="{{ t.keep }}" style="height:44px;padding:0 16px;border-radius:999px;border:none;background:var(--sageT);color:var(--sage);font-size:15px;font-weight:600;cursor:pointer">Keep</button>
+          </sc-if>
+          <sc-if value="{{ t.kept }}"><span style="font-size:14px;color:var(--sage);font-weight:600">Kept ✓</span></sc-if>
+          <sc-if value="{{ t.removed }}"><button onClick="{{ t.undo }}" style="background:none;border:none;color:var(--ter);font-size:14px;font-weight:600;cursor:pointer;min-height:44px">Undo</button></sc-if>
+        </div>
+      </sc-for>
+      <p style="margin:6px 0 0;font-size:14px;line-height:1.5;color:var(--mut);text-wrap:pretty">Suggestions, not facts. Each points to the words behind it — tap one to see them. Keep only what feels true.</p>
+    </div>
+  </sc-if>
+  <div style="flex:1"></div>
+  <div style="display:flex;gap:6px;justify-content:center"><sc-for list="{{ onbDots }}" as="d"><span style="{{ d.st }}"></span></sc-for></div>
+  <button onClick="{{ nextOnb }}" disabled="{{ demoLocked }}" style="{{ demoNextSt }}">Continue</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ onb2 }}">
+<div style="display:flex;flex-direction:column;min-height:780px;padding:8px 24px 40px;box-sizing:border-box;gap:16px">
+  <div style="height:44px"></div>
+  <h2 style="margin:0;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1.08;letter-spacing:-.015em;text-wrap:balance">…and find that part of your life again.</h2>
+  <p style="margin:0;font-size:16px;line-height:1.5;color:var(--mut);text-wrap:pretty">Tap any kept tag to see every moment it appears, across all your notebooks.</p>
+  <div style="background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between"><span style="display:inline-flex;padding:7px 13px;border-radius:999px;background:var(--sageT);color:var(--sage);font-size:15px;font-weight:600">Walking helped</span><span style="font-size:13px;color:var(--mut)">{{ walkLabel }}</span></div>
+    <sc-for list="{{ findList }}" as="f">
+      <div style="display:flex;flex-direction:column;gap:3px;padding-top:12px;border-top:1px solid var(--line)">
+        <span style="font-size:12px;color:var(--mut)">{{ f.date }}</span>
+        <span style="font-family:'Newsreader',Georgia,serif;font-size:17px;line-height:1.4"><span style="background-image:linear-gradient(transparent 60%,var(--sageT) 60%)">{{ f.quote }}</span></span>
+      </div>
+    </sc-for>
+  </div>
+  <p style="margin:0;font-size:14px;line-height:1.5;color:var(--mut)">Memento counts how often you’ve written about something. It won’t tell you what causes what.</p>
+  <div style="flex:1"></div>
+  <div style="display:flex;gap:6px;justify-content:center"><sc-for list="{{ onbDots }}" as="d"><span style="{{ d.st }}"></span></sc-for></div>
+  <button onClick="{{ nextOnb }}" style="height:54px;border-radius:16px;border:none;background:var(--ter);color:var(--onTer);font-size:17px;font-weight:600;cursor:pointer">Continue</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ onb3 }}">
+<div style="display:flex;flex-direction:column;min-height:780px;padding:8px 24px 40px;box-sizing:border-box;gap:18px">
+  <div style="height:44px"></div>
+  <h2 style="margin:0;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1.08;letter-spacing:-.015em">Private by design.</h2>
+  <div style="display:flex;flex-direction:column;gap:14px;font-size:15.5px;line-height:1.45">
+    <div style="display:flex;gap:12px"><span style="flex:none;width:8px;height:8px;border-radius:50%;background:var(--sage);margin-top:7px"></span><span>Tagging runs on this iPhone. Your journal text isn’t sent to Memento or any server to be tagged.</span></div>
+    <div style="display:flex;gap:12px"><span style="flex:none;width:8px;height:8px;border-radius:50%;background:var(--sage);margin-top:7px"></span><span>If on-device AI isn’t available, nothing switches to the cloud. You can always tag by hand.</span></div>
+    <div style="display:flex;gap:12px"><span style="flex:none;width:8px;height:8px;border-radius:50%;background:var(--sage);margin-top:7px"></span><span>Writing only leaves your phone when you export or share it yourself.</span></div>
+  </div>
+  <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px">
+    <sc-if value="{{ ai.ready }}"><span style="font-size:13px;font-weight:600;color:var(--sage)">Ready on this iPhone</span><span style="font-size:15px;line-height:1.45">Tagging is set up and works offline.</span></sc-if>
+    <sc-if value="{{ ai.none }}" hint-placeholder-val="{{ true }}">
+      <span style="font-size:13px;font-weight:600;color:var(--ter)">One-time setup</span>
+      <span style="font-size:15px;line-height:1.45">This iPhone can tag entries on-device after a 1.1 GB download. Wi‑Fi recommended; you have 41 GB free.</span>
+      <button onClick="{{ ai.start }}" style="height:46px;border-radius:13px;border:none;background:var(--ink);color:var(--bg);font-size:15px;font-weight:600;cursor:pointer">Download now</button>
+    </sc-if>
+    <sc-if value="{{ ai.downloading }}">
+      <div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:600">Downloading…</span><span style="color:var(--mut)">{{ ai.got }}</span></div>
+      <div style="height:6px;border-radius:3px;background:var(--line);overflow:hidden"><div style="{{ ai.barSt }}"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:var(--mut)">You can start writing meanwhile.</span><button onClick="{{ ai.cancel }}" style="background:none;border:none;color:var(--ter);font-size:14px;font-weight:600;cursor:pointer;min-height:44px">Cancel</button></div>
+    </sc-if>
+    <sc-if value="{{ ai.interrupted }}">
+      <span style="font-size:13px;font-weight:600;color:var(--ter)">Download paused at {{ ai.pct }}</span>
+      <span style="font-size:15px;line-height:1.45">The connection dropped. What’s downloaded so far is kept.</span>
+      <div style="display:flex;gap:10px"><button onClick="{{ ai.retry }}" style="flex:1;height:44px;border-radius:12px;border:none;background:var(--ink);color:var(--bg);font-size:15px;font-weight:600;cursor:pointer">Retry</button><button onClick="{{ ai.cancel }}" style="flex:1;height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;font-size:15px;cursor:pointer">Cancel</button></div>
+    </sc-if>
+    <sc-if value="{{ ai.unsupported }}">
+      <span style="font-size:13px;font-weight:600;color:var(--umb)">Not available on this iPhone</span>
+      <span style="font-size:15px;line-height:1.45">This model can’t run on-device tagging. Journaling, notebooks, reminders and tags you add yourself all work fully.</span>
+    </sc-if>
+  </div>
+  <div style="flex:1"></div>
+  <div style="display:flex;gap:6px;justify-content:center"><sc-for list="{{ onbDots }}" as="d"><span style="{{ d.st }}"></span></sc-for></div>
+  <button onClick="{{ finishOnb }}" style="height:54px;border-radius:16px;border:none;background:var(--ter);color:var(--onTer);font-size:17px;font-weight:600;cursor:pointer">{{ finishLabel }}</button>
+</div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ isJournal }}">
+<div style="padding:6px 20px 120px;display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;flex-direction:column;gap:4px;padding-top:4px">
+    <span style="font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)">{{ J.date }}</span>
+    <h1 style="margin:0;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:36px;line-height:1.1;letter-spacing:-.015em">Good evening, Maya</h1>
+  </div>
+  <div onClick="{{ J.openRem }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer">
+    <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'Newsreader',Georgia,serif;font-size:34px;line-height:1;color:var(--ter)">{{ J.streak }}</span><span style="font-size:14px;color:var(--mut)">{{ J.streakUnit }}</span></div>
+    <div style="display:flex;gap:4px"><sc-for list="{{ J.week }}" as="w"><span style="{{ w.st }}">{{ w.l }}</span></sc-for></div>
+  </div>
+  <div style="background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px;display:flex;flex-direction:column;gap:14px">
+    <span style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)">Tonight</span>
+    <span style="font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:24px;line-height:1.25;text-wrap:balance">What took up the most room in your head today?</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onClick="{{ J.wFree }}" style="height:44px;padding:0 16px;border-radius:999px;border:none;background:var(--ter);color:var(--onTer);font-size:15px;font-weight:600;cursor:pointer">Write freely</button>
+      <button onClick="{{ J.wDump }}" style="height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;font-size:15px;cursor:pointer">Brain dump · 3 min</button>
+      <button onClick="{{ J.wGuided }}" style="height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;font-size:15px;cursor:pointer">Guided</button>
+    </div>
+  </div>
+  <sc-if value="{{ J.hasPending }}">
+    <div onClick="{{ J.review }}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;border:1px dashed var(--mut);cursor:pointer">
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:600">{{ J.pendingLabel }}</span><span style="font-size:13px;color:var(--mut)">Review whenever you like. They aren’t counted until kept.</span></div>
+      <span style="font-size:22px;color:var(--mut)">›</span>
+    </div>
+  </sc-if>
+  <sc-if value="{{ J.revisit.has }}">
+    <div onClick="{{ J.revisit.open }}" style="display:flex;flex-direction:column;gap:6px;padding:18px;border-radius:22px;background:var(--sageT);cursor:pointer">
+      <span style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--sage)">Revisit</span>
+      <span style="font-family:'Newsreader',Georgia,serif;font-size:21px;line-height:1.3">You’ve written about <em>{{ J.revisit.label }}</em> in {{ J.revisit.n }} entries.</span>
+      <span style="font-size:14px;color:var(--sage);font-weight:600">See those moments ›</span>
+    </div>
+  </sc-if>
+  <span style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-top:6px">Recent</span>
+  <sc-for list="{{ J.cards }}" as="c" hint-placeholder-count="3">
+    <div onClick="{{ c.open }}" style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 16px 14px;cursor:pointer;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--mut)"><span>{{ c.date }}</span><span>{{ c.mode }}</span></div>
+      <sc-if value="{{ c.photo }}"><div style="height:120px;border-radius:12px;background:repeating-linear-gradient(135deg,var(--line) 0 1px,transparent 1px 8px),var(--bg);display:flex;align-items:flex-end;padding:10px;box-sizing:border-box"><span style="font:10.5px 'JetBrains Mono',monospace;color:var(--mut)">photo — {{ c.photoLabel }}</span></div></sc-if>
+      <div style="font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.4;text-wrap:pretty">{{ c.excerpt }}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+        <sc-for list="{{ c.chips }}" as="ch"><span style="{{ ch.st }}">{{ ch.label }}</span></sc-for>
+        <sc-if value="{{ c.hasMore }}"><span style="font-size:12px;color:var(--mut)">{{ c.more }}</span></sc-if>
+        <sc-if value="{{ c.hasPending }}"><span style="font-size:12px;padding:4px 9px;border-radius:999px;border:1px dashed var(--mut);color:var(--mut)">{{ c.pending }}</span></sc-if>
+      </div>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ isEditor }}">
+<div style="display:flex;flex-direction:column;min-height:790px;padding:0 0 20px">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:48px">
+    <button onClick="{{ back }}" style="background:none;border:none;color:var(--ter);font-size:17px;cursor:pointer;min-height:44px;padding:0 6px">Cancel</button>
+    <button onClick="{{ ED.pickNb }}" style="height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;cursor:pointer">{{ ED.nb }} ▾</button>
+    <button onClick="{{ ED.save }}" disabled="{{ ED.cantSave }}" style="{{ ED.saveSt }}">Save</button>
+  </div>
+  <div style="margin:4px 16px 0;padding:3px;border-radius:12px;background:var(--line);display:flex;gap:2px"><sc-for list="{{ ED.tabs }}" as="m"><button onClick="{{ m.tap }}" style="{{ m.st }}">{{ m.label }}</button></sc-for></div>
+  <sc-if value="{{ ED.isDump }}">
+    <div style="margin:16px 20px 0;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:500 34px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:-.02em">{{ ED.timer }}</span><button onClick="{{ ED.toggleTimer }}" style="height:40px;padding:0 18px;border-radius:999px;border:none;background:var(--terT);color:var(--ter);font-size:15px;font-weight:600;cursor:pointer">{{ ED.timerBtn }}</button></div>
+      <div style="height:4px;border-radius:2px;background:var(--line);overflow:hidden"><div style="{{ ED.timerBar }}"></div></div>
+      <span style="font-size:14px;color:var(--mut)">{{ ED.timerNote }}</span>
+    </div>
+  </sc-if>
+  <sc-if value="{{ ED.isGuided }}">
+    <div style="position:sticky;top:0;z-index:2;margin:14px 16px 0;padding:16px;border-radius:18px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:6px;overflow-x:auto"><sc-for list="{{ ED.pcats }}" as="p"><button onClick="{{ p.tap }}" style="{{ p.st }}">{{ p.label }}</button></sc-for></div>
+      <span style="font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:21px;line-height:1.3">{{ ED.prompt }}</span>
+      <button onClick="{{ ED.nextPrompt }}" style="align-self:flex-start;background:none;border:none;padding:0;color:var(--ter);font-size:14px;font-weight:600;cursor:pointer;min-height:32px">Another prompt</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ ED.isPhoto }}">
+    <sc-if value="{{ ED.noPhoto }}">
+      <div style="margin:14px 16px 0;height:170px;border-radius:18px;border:1.5px dashed var(--line);display:flex;align-items:center;justify-content:center;gap:10px">
+        <button onClick="{{ ED.pickPhoto }}" style="height:44px;padding:0 18px;border-radius:999px;border:none;background:var(--ink);color:var(--bg);font-size:15px;font-weight:600;cursor:pointer">Camera</button>
+        <button onClick="{{ ED.pickPhoto }}" style="height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:15px;cursor:pointer">Photo library</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ ED.photo }}">
+      <div style="margin:14px 16px 0;height:210px;border-radius:18px;background:repeating-linear-gradient(135deg,var(--line) 0 1px,transparent 1px 8px),var(--card);border:1px solid var(--line);display:flex;align-items:flex-end;justify-content:space-between;padding:12px;box-sizing:border-box">
+        <span style="font:11px 'JetBrains Mono',monospace;color:var(--mut)">your photo</span>
+        <button onClick="{{ ED.clearPhoto }}" style="height:32px;padding:0 12px;border-radius:999px;border:none;background:var(--bg);font-size:13px;cursor:pointer">Replace</button>
+      </div>
+    </sc-if>
+  </sc-if>
+  <textarea value="{{ ED.text }}" onChange="{{ ED.onText }}" placeholder="{{ ED.ph }}" style="flex:1;min-height:300px;margin:16px 20px 0;padding:0;border:none;background:transparent;resize:none;font-family:'Newsreader',Georgia,serif;font-size:21px;line-height:1.55;color:var(--ink)"></textarea>
+  <sc-if value="{{ ED.listening }}"><div style="margin:0 16px 10px;padding:12px 16px;border-radius:14px;background:var(--terT);color:var(--ter);font-size:15px;font-weight:500">Listening… speak naturally.</div></sc-if>
+  <div style="display:flex;align-items:center;gap:8px;padding:10px 16px 0;border-top:1px solid var(--line);margin-top:8px">
+    <button onClick="{{ ED.dictate }}" style="height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:15px;cursor:pointer;display:flex;align-items:center;gap:8px"><span style="width:8px;height:14px;border-radius:4px;border:1.8px solid currentColor"></span>Speak</button>
+    <button onClick="{{ ED.example }}" style="height:44px;padding:0 14px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--mut);font-size:14px;cursor:pointer">Use example</button>
+    <span style="flex:1;text-align:right;font-size:13px;color:var(--mut)">{{ ED.words }}</span>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isEntry }}">
+<div style="padding:0 0 130px">
+  <div style="display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 12px">
+    <button onClick="{{ back }}" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--ter);font-size:17px;cursor:pointer;min-height:44px"><span style="font-size:28px;line-height:1;margin-top:-4px">‹</span>Back</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <sc-if value="{{ EV.justSaved }}"><span style="padding:6px 12px;border-radius:999px;background:var(--sageT);color:var(--sage);font-size:13px;font-weight:600">Saved ✓</span></sc-if>
+      <button onClick="{{ EV.move }}" style="height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;cursor:pointer">Move</button>
+    </div>
+  </div>
+  <div style="padding:8px 22px 0;display:flex;flex-direction:column;gap:12px">
+    <span style="font-size:13px;color:var(--mut)">{{ EV.date }} · {{ EV.nb }} · {{ EV.mode }}</span>
+    <sc-if value="{{ EV.hasPrompt }}"><span style="font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:17px;color:var(--mut);line-height:1.35">{{ EV.prompt }}</span></sc-if>
+    <sc-if value="{{ EV.photo }}"><div style="height:200px;border-radius:16px;background:repeating-linear-gradient(135deg,var(--line) 0 1px,transparent 1px 8px),var(--card);border:1px solid var(--line);display:flex;align-items:flex-end;padding:12px;box-sizing:border-box"><span style="font:11px 'JetBrains Mono',monospace;color:var(--mut)">photo — {{ EV.photoLabel }}</span></div></sc-if>
+    <div style="font-family:'Newsreader',Georgia,serif;font-size:21px;line-height:1.6;white-space:pre-wrap;text-wrap:pretty"><sc-for list="{{ EV.segs }}" as="g"><span onClick="{{ g.tap }}" style="{{ g.st }}">{{ g.text }}</span></sc-for></div>
+  </div>
+  <div style="margin:26px 16px 0;padding:18px 6px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 8px"><span style="font-family:'Newsreader',Georgia,serif;font-size:22px">Details</span><button onClick="{{ EV.add }}" style="background:none;border:none;color:var(--ter);font-size:15px;font-weight:600;cursor:pointer;min-height:44px">+ Add a tag</button></div>
+    <sc-if value="{{ EV.running }}"><div style="margin:0 8px;padding:16px;border-radius:16px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;gap:4px"><span style="display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600"><span style="width:8px;height:8px;border-radius:50%;background:var(--sage)"></span>Finding details on this iPhone…</span><span style="font-size:13.5px;color:var(--mut);line-height:1.4">Your entry is already saved. You can leave — suggestions will be waiting.</span></div></sc-if>
+    <sc-if value="{{ EV.failed }}"><div style="margin:0 8px;padding:16px;border-radius:16px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px"><span style="font-size:15px;font-weight:600">Couldn’t finish finding details.</span><span style="font-size:13.5px;color:var(--mut);line-height:1.4">Your entry is saved exactly as written. This sometimes happens when the phone is low on memory.</span><button onClick="{{ EV.retry }}" style="align-self:flex-start;height:40px;padding:0 18px;border-radius:999px;border:none;background:var(--ink);color:var(--bg);font-size:14px;font-weight:600;cursor:pointer">Try again</button></div></sc-if>
+    <sc-if value="{{ EV.none }}"><div style="margin:0 8px;padding:16px;border-radius:16px;border:1px dashed var(--line);font-size:14.5px;line-height:1.45;color:var(--mut)">Nothing stood out to tag this time — that doesn’t mean nothing happened. Add your own if you like.</div></sc-if>
+    <sc-if value="{{ EV.unavailable }}"><div style="margin:0 8px;padding:16px;border-radius:16px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px"><span style="font-size:14.5px;line-height:1.45">On-device tagging isn’t set up yet, so nothing was suggested. Your entry is saved.</span><button onClick="{{ EV.setup }}" style="align-self:flex-start;background:none;border:none;padding:0;color:var(--ter);font-size:14px;font-weight:600;cursor:pointer;min-height:32px">Set up on-device AI ›</button></div></sc-if>
+    <sc-if value="{{ EV.unsupported }}"><div style="margin:0 8px;padding:16px;border-radius:16px;border:1px dashed var(--line);font-size:14.5px;line-height:1.45;color:var(--mut)">Suggestions aren’t available on this iPhone. Tags you add work everywhere — in Discover, notebooks and summaries.</div></sc-if>
+    <sc-if value="{{ EV.hasSug }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 8px"><span style="font-size:13px;font-weight:600;color:var(--mut)">SUGGESTED · {{ EV.sugCount }}</span><button onClick="{{ EV.keepAll }}" style="background:none;border:none;color:var(--sage);font-size:14px;font-weight:600;cursor:pointer;min-height:40px">Keep all</button></div>
+      <sc-for list="{{ EV.sug }}" as="t">
+        <div onClick="{{ t.focus }}" style="{{ t.rowSt }}">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+            <div style="display:flex;align-items:center;gap:8px"><span onClick="{{ t.edit }}" style="{{ t.st }}">{{ t.label }}</span><span style="font-size:12px;color:var(--mut)">{{ t.cat }}</span></div>
+            <sc-if value="{{ t.hasQuote }}"><span style="font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:15px;line-height:1.35;color:var(--mut)">{{ t.quote }}</span></sc-if>
+          </div>
+          <button onClick="{{ t.remove }}" aria-label="Remove" style="flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--mut);font-size:15px;cursor:pointer">✕</button>
+          <button onClick="{{ t.keep }}" style="flex:none;height:44px;padding:0 16px;border-radius:999px;border:none;background:var(--sageT);color:var(--sage);font-size:15px;font-weight:600;cursor:pointer">Keep</button>
+        </div>
+      </sc-for>
+    </sc-if>
+    <sc-if value="{{ EV.hasKept }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 8px;margin-top:4px"><span style="font-size:13px;font-weight:600;color:var(--mut)">KEPT</span><button onClick="{{ EV.toggleEdit }}" style="background:none;border:none;color:var(--ter);font-size:14px;font-weight:600;cursor:pointer;min-height:40px">{{ EV.editLabel }}</button></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;padding:0 8px">
+        <sc-for list="{{ EV.kept }}" as="k"><span onClick="{{ k.tap }}" style="{{ k.st }}">{{ k.label }}<sc-if value="{{ k.hasN }}"><span style="opacity:.7;font-weight:400">· {{ k.n }}</span></sc-if></span></sc-for>
+      </div>
+      <span style="padding:0 8px;font-size:13px;color:var(--mut);line-height:1.4">{{ EV.keptHint }}</span>
+    </sc-if>
+    <span style="padding:6px 8px 0;font-size:12.5px;line-height:1.45;color:var(--mut)">Dashed tags are suggestions from your words and aren’t counted anywhere until you keep them. Your edits are saved as yours.</span>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isTag }}">
+<div style="padding:0 0 130px">
+  <div style="display:flex;align-items:center;height:44px;padding:0 12px"><button onClick="{{ back }}" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--ter);font-size:17px;cursor:pointer;min-height:44px"><span style="font-size:28px;line-height:1;margin-top:-4px">‹</span>Back</button></div>
+  <div style="padding:6px 22px 0;display:flex;flex-direction:column;gap:8px">
+    <span style="{{ TG.catSt }}">{{ TG.cat }}</span>
+    <h1 style="margin:0;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:40px;line-height:1.05;letter-spacing:-.02em">{{ TG.label }}</h1>
+    <span style="font-size:15px;color:var(--mut)">{{ TG.meta }}</span>
+  </div>
+  <div style="margin:22px 22px 0;display:flex;flex-direction:column;gap:6px">
+    <div style="position:relative;height:16px"><div style="position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line)"></div><div style="position:absolute;left:50%;top:3px;bottom:3px;width:1px;background:var(--line)"></div><sc-for list="{{ TG.marks }}" as="m"><span style="{{ m.st }}"></span></sc-for></div>
+    <div style="display:flex;justify-content:space-around;font-size:12px;color:var(--mut)"><span>September</span><span>October</span></div>
+  </div>
+  <div style="padding:22px 16px 0;display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{ TG.entries }}" as="e">
+      <div onClick="{{ e.open }}" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:6px;cursor:pointer">
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--mut)"><span>{{ e.date }}</span><span>{{ e.nb }}</span></div>
+        <span style="font-family:'Newsreader',Georgia,serif;font-size:19px;line-height:1.4"><span style="{{ e.qSt }}">{{ e.quote }}</span></span>
+      </div>
+    </sc-for>
+  </div>
+  <sc-if value="{{ TG.hasCo }}">
+    <div style="padding:24px 22px 0;display:flex;flex-direction:column;gap:10px">
+      <span style="font-family:'Newsreader',Georgia,serif;font-size:20px">Also kept in these entries</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ TG.co }}" as="c"><span onClick="{{ c.open }}" style="{{ c.st }}">{{ c.label }} <span style="opacity:.7;font-weight:400">{{ c.n }}</span></span></sc-for></div>
+    </div>
+  </sc-if>
+  <p style="margin:18px 22px 0;font-size:13px;line-height:1.5;color:var(--mut);text-wrap:pretty">This shows what appears together in what you’ve written, not what causes what. Entries without this tag may still be about it.</p>
+  <div style="padding:20px 16px 0"><button onClick="{{ TG.summarize }}" style="width:100%;height:52px;border-radius:16px;border:1.5px solid var(--ink);background:transparent;font-size:16px;font-weight:600;cursor:pointer">{{ TG.sumLabel }}</button></div>
+</div>
+</sc-if>
+<sc-if value="{{ tgEmpty }}"><div style="padding:20px 22px;display:flex;flex-direction:column;gap:12px"><button onClick="{{ back }}" style="align-self:flex-start;background:none;border:none;color:var(--ter);font-size:17px;cursor:pointer;min-height:44px">‹ Back</button><span style="font-size:16px;color:var(--mut)">No entries have this tag right now.</span></div></sc-if>
+
+<sc-if value="{{ isDiscover }}">
+<div style="padding:6px 20px 130px;display:flex;flex-direction:column;gap:18px">
+  <h1 style="margin:4px 0 0;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:36px;line-height:1.1;letter-spacing:-.015em">Discover</h1>
+  <input value="{{ DC.q }}" onChange="{{ DC.onQ }}" placeholder="Search entries and tags" style="height:44px;border-radius:12px;border:none;background:var(--line);padding:0 14px;font-size:16px">
+  <span style="font-size:14px;color:var(--mut);line-height:1.45">{{ DC.basis }}</span>
+  <sc-if value="{{ DC.hasPending }}"><div onClick="{{ DC.review }}" style="padding:12px 14px;border-radius:14px;border:1px dashed var(--mut);font-size:14px;cursor:pointer;display:flex;justify-content:space-between"><span>{{ DC.pendingLabel }}</span><span style="color:var(--mut)">Review ›</span></div></sc-if>
+  <sc-for list="{{ DC.groups }}" as="g" hint-placeholder-count="4">
+    <div style="display:flex;flex-direction:column;gap:10px;padding-top:6px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><span style="font-family:'Newsreader',Georgia,serif;font-size:23px">{{ g.name }}</span><span style="font-size:13px;color:var(--mut)">{{ g.count }}</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ g.chips }}" as="c"><span onClick="{{ c.open }}" style="{{ c.st }}">{{ c.label }} <span style="opacity:.7;font-weight:400">{{ c.n }}</span></span></sc-for></div>
+    </div>
+  </sc-for>
+  <sc-if value="{{ DC.hasResults }}">
+    <span style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-top:6px">Entries mentioning “{{ DC.q }}”</span>
+    <sc-for list="{{ DC.results }}" as="c">
+      <div onClick="{{ c.open }}" style="background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;cursor:pointer;display:flex;flex-direction:column;gap:6px"><span style="font-size:12.5px;color:var(--mut)">{{ c.date }}</span><span style="font-family:'Newsreader',Georgia,serif;font-size:17px;line-height:1.4">{{ c.excerpt }}</span></div>
+    </sc-for>
+  </sc-if>
+  <div onClick="{{ DC.summary }}" style="margin-top:8px;padding:18px;border-radius:20px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;gap:12px;cursor:pointer">
+    <div style="flex:1;display:flex;flex-direction:column;gap:3px"><span style="font-family:'Newsreader',Georgia,serif;font-size:20px">Make a summary</span><span style="font-size:13.5px;color:var(--mut)">For yourself, or to bring to an appointment.</span></div><span style="font-size:22px;color:var(--mut)">›</span>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isNotebooks }}">
+<div style="padding:6px 20px 130px;display:flex;flex-direction:column;gap:6px">
+  <h1 style="margin:4px 0 0;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:36px;line-height:1.1;letter-spacing:-.015em">Notebooks</h1>
+  <span style="font-size:14px;color:var(--mut)">{{ NBS.total }}</span>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px 18px;margin-top:18px">
+    <sc-for list="{{ NBS.list }}" as="n" hint-placeholder-count="4">
+      <div onClick="{{ n.open }}" style="display:flex;flex-direction:column;gap:10px;cursor:pointer">
+        <div style="{{ n.coverSt }}"><div style="background:#F7F1E6;padding:12px 14px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.15);display:flex;flex-direction:column;align-items:center;gap:6px;min-width:84px"><span style="font-family:'Newsreader',Georgia,serif;font-size:18px;color:#2B2723">{{ n.name }}</span><span style="width:40px;height:1px;background:#C9BBA5"></span></div></div>
+        <div style="display:flex;flex-direction:column;gap:1px;padding-left:2px"><span style="font-size:15px;font-weight:600">{{ n.name }}</span><span style="font-size:13px;color:var(--mut)">{{ n.count }}</span></div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isNotebook }}">
+<div style="padding:0 0 130px">
+  <div style="{{ NV.bandSt }}"><button onClick="{{ back }}" style="position:absolute;left:12px;top:8px;height:36px;padding:0 14px;border-radius:999px;border:none;background:rgba(247,241,230,.92);color:#2B2723;font-size:15px;cursor:pointer">‹ Notebooks</button><div style="background:#F7F1E6;padding:10px 18px;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,.15)"><span style="font-family:'Newsreader',Georgia,serif;font-size:22px;color:#2B2723">{{ NV.name }}</span></div></div>
+  <div style="padding:16px 20px 0;display:flex;flex-direction:column;gap:14px">
+    <span style="font-size:14px;color:var(--mut)">{{ NV.count }}</span>
+    <input value="{{ NV.q }}" onChange="{{ NV.onQ }}" placeholder="Search this notebook" style="height:44px;border-radius:12px;border:none;background:var(--line);padding:0 14px;font-size:16px">
+    <div style="display:flex;gap:8px;overflow-x:auto;margin:0 -20px;padding:0 20px"><sc-for list="{{ NV.filters }}" as="f"><button onClick="{{ f.tap }}" style="{{ f.st }}">{{ f.label }}</button></sc-for></div>
+    <sc-for list="{{ NV.cards }}" as="c">
+      <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--mut)"><span>{{ c.date }}</span><button onClick="{{ c.move }}" style="height:30px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:transparent;font-size:12.5px;color:var(--ink);cursor:pointer">Move</button></div>
+        <div onClick="{{ c.open }}" style="font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.4;cursor:pointer">{{ c.excerpt }}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ c.chips }}" as="ch"><span style="{{ ch.st }}">{{ ch.label }}</span></sc-for><sc-if value="{{ c.hasPending }}"><span style="font-size:12px;padding:4px 9px;border-radius:999px;border:1px dashed var(--mut);color:var(--mut)">{{ c.pending }}</span></sc-if></div>
+      </div>
+    </sc-for>
+    <sc-if value="{{ NV.empty }}"><span style="padding:20px 0;font-size:15px;color:var(--mut);text-align:center">No entries match. Try another tag or search.</span></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isYou }}">
+<div style="padding:6px 16px 130px;display:flex;flex-direction:column;gap:22px">
+  <h1 style="margin:4px 4px 0;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:36px;line-height:1.1;letter-spacing:-.015em">You</h1>
+  <div style="padding:18px;border-radius:20px;background:var(--terT);display:flex;flex-direction:column;gap:4px"><span style="font-family:'Newsreader',Georgia,serif;font-size:24px;color:var(--ter)">{{ Y.streak }}</span><span style="font-size:14px;color:var(--ink);line-height:1.4">Saved entries and Sol reflections both count. Missed days never erase what you’ve written.</span></div>
+  <div style="background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+    <div onClick="{{ Y.rem }}" style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;cursor:pointer"><span style="flex:1;font-size:17px">Daily reminder</span><span style="color:var(--mut);font-size:16px">{{ Y.remLabel }}</span><span style="color:var(--mut);font-size:20px">›</span></div>
+    <div style="height:1px;background:var(--line);margin-left:16px"></div>
+    <div onClick="{{ Y.sum }}" style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;cursor:pointer"><span style="flex:1;font-size:17px">Summaries</span><span style="color:var(--mut);font-size:20px">›</span></div>
+    <div style="height:1px;background:var(--line);margin-left:16px"></div>
+    <div onClick="{{ Y.sol }}" style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;cursor:pointer"><span style="flex:1;font-size:17px">Reflect with Sol</span><span style="color:var(--mut);font-size:20px">›</span></div>
+  </div>
+  <div style="background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+    <div onClick="{{ Y.ai }}" style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;cursor:pointer"><span style="flex:1;font-size:17px">On-device AI</span><span style="color:var(--mut);font-size:16px">{{ Y.aiLabel }}</span><span style="color:var(--mut);font-size:20px">›</span></div>
+    <div style="height:1px;background:var(--line);margin-left:16px"></div>
+    <div style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px"><span style="flex:1;font-size:17px">Dark appearance</span><button onClick="{{ Y.toggleDark }}" aria-label="Dark appearance" style="{{ Y.darkSw.track }}"><span style="{{ Y.darkSw.knob }}"></span></button></div>
+    <div style="height:1px;background:var(--line);margin-left:16px"></div>
+    <div onClick="{{ Y.exportAll }}" style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;cursor:pointer"><span style="flex:1;font-size:17px">Export journal</span><span style="color:var(--mut);font-size:20px">›</span></div>
+    <div style="height:1px;background:var(--line);margin-left:16px"></div>
+    <div onClick="{{ Y.replay }}" style="display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px;cursor:pointer"><span style="flex:1;font-size:17px">Replay welcome</span><span style="color:var(--mut);font-size:20px">›</span></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isReminders }}">
+<div style="padding:0 0 130px">
+  <div style="display:flex;align-items:center;height:44px;padding:0 12px"><button onClick="{{ back }}" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--ter);font-size:17px;cursor:pointer;min-height:44px"><span style="font-size:28px;line-height:1;margin-top:-4px">‹</span>Back</button></div>
+  <div style="padding:4px 16px 0;display:flex;flex-direction:column;gap:20px">
+    <h1 style="margin:0 4px;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1.1">Daily reminder</h1>
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:0 16px"><span style="flex:1;font-size:17px;font-weight:500">Remind me to write</span><button onClick="{{ RM.toggle }}" aria-label="Daily reminder" style="{{ RM.sw.track }}"><span style="{{ RM.sw.knob }}"></span></button></div>
+      <sc-if value="{{ RM.on }}">
+        <div style="height:1px;background:var(--line);margin-left:16px"></div>
+        <div style="display:flex;align-items:center;gap:12px;min-height:56px;padding:0 16px"><span style="flex:1;font-size:17px">Time</span><input type="time" value="{{ RM.time }}" onChange="{{ RM.onTime }}" style="height:36px;border-radius:9px;border:none;background:var(--line);padding:0 10px;font-size:17px"></div>
+        <div style="display:flex;gap:8px;padding:0 16px 16px;flex-wrap:wrap"><sc-for list="{{ RM.presets }}" as="p"><button onClick="{{ p.tap }}" style="{{ p.st }}">{{ p.label }}</button></sc-for></div>
+      </sc-if>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <span style="margin:0 4px;font-size:13px;font-weight:600;color:var(--mut)">PREVIEW</span>
+      <div style="{{ RM.previewSt }}">
+        <div style="border-radius:24px;padding:22px 14px 18px;background:linear-gradient(170deg,#CDBFA8,#9C8C74);display:flex;flex-direction:column;align-items:center;gap:16px">
+          <span style="font-size:52px;font-weight:300;color:#fff;letter-spacing:-.02em;line-height:1">{{ RM.clock }}</span>
+          <div style="align-self:stretch;display:flex;gap:12px;padding:12px 14px;border-radius:18px;background:rgba(255,252,246,.82);color:#2B2723">
+            <span style="flex:none;width:38px;height:38px;border-radius:9px;background:#A85A38;color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Newsreader',Georgia,serif;font-size:22px">m</span>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px"><div style="display:flex;justify-content:space-between;font-size:13px"><strong style="font-weight:600">Memento</strong><span style="color:#6F675D">now</span></div><span style="font-size:14px;line-height:1.35">A few lines tonight? Even one sentence counts.</span></div>
+          </div>
+        </div>
+      </div>
+      <span style="margin:0 4px;font-size:13.5px;color:var(--mut);line-height:1.45">{{ RM.caption }}</span>
+    </div>
+    <div style="padding:16px;border-radius:16px;border:1px solid var(--line);display:flex;flex-direction:column;gap:6px"><span style="font-family:'Newsreader',Georgia,serif;font-size:19px">How streaks work</span><span style="font-size:14px;line-height:1.5;color:var(--mut)">Each day with a saved entry or saved Sol reflection counts. If a day slips by, a new streak simply begins — your entries stay exactly where they are.</span></div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAI }}">
+<div style="padding:0 0 130px">
+  <div style="display:flex;align-items:center;height:44px;padding:0 12px"><button onClick="{{ back }}" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--ter);font-size:17px;cursor:pointer;min-height:44px"><span style="font-size:28px;line-height:1;margin-top:-4px">‹</span>Back</button></div>
+  <div style="padding:4px 16px 0;display:flex;flex-direction:column;gap:20px">
+    <h1 style="margin:0 4px;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1.1">On-device AI</h1>
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:12px">
+      <sc-if value="{{ ai.ready }}"><span style="font-size:13px;font-weight:600;color:var(--sage)">READY · WORKS OFFLINE</span><span style="font-size:15.5px;line-height:1.45">Tag suggestions run on this iPhone, even in airplane mode.</span></sc-if>
+      <sc-if value="{{ ai.none }}"><span style="font-size:13px;font-weight:600;color:var(--ter)">NOT SET UP</span><span style="font-size:15.5px;line-height:1.45">Download Memento’s tagging model to get suggestions after you save. 1.1 GB · needs 2.4 GB free while installing.</span><button onClick="{{ ai.start }}" style="height:46px;border-radius:13px;border:none;background:var(--ink);color:var(--bg);font-size:15px;font-weight:600;cursor:pointer">Download · 1.1 GB</button></sc-if>
+      <sc-if value="{{ ai.downloading }}"><div style="display:flex;justify-content:space-between;font-size:14px"><span style="font-weight:600">Downloading {{ ai.pct }}</span><span style="color:var(--mut)">{{ ai.got }}</span></div><div style="height:6px;border-radius:3px;background:var(--line);overflow:hidden"><div style="{{ ai.barSt }}"></div></div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:var(--mut)">Keep Memento open on Wi‑Fi.</span><button onClick="{{ ai.cancel }}" style="background:none;border:none;color:var(--ter);font-size:14px;font-weight:600;cursor:pointer;min-height:44px">Cancel</button></div></sc-if>
+      <sc-if value="{{ ai.interrupted }}"><span style="font-size:13px;font-weight:600;color:var(--ter)">PAUSED AT {{ ai.pct }}</span><span style="font-size:15.5px;line-height:1.45">The connection dropped. Downloaded parts are kept, so retrying picks up where it stopped.</span><div style="display:flex;gap:10px"><button onClick="{{ ai.retry }}" style="flex:1;height:44px;border-radius:12px;border:none;background:var(--ink);color:var(--bg);font-size:15px;font-weight:600;cursor:pointer">Retry</button><button onClick="{{ ai.cancel }}" style="flex:1;height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;font-size:15px;cursor:pointer">Cancel</button></div></sc-if>
+      <sc-if value="{{ ai.unsupported }}"><span style="font-size:13px;font-weight:600;color:var(--umb)">NOT AVAILABLE ON THIS IPHONE</span><span style="font-size:15.5px;line-height:1.45">On-device tagging needs a newer iPhone. Memento won’t send your entries elsewhere instead. Manual tags power Discover, notebooks and summaries just the same.</span></sc-if>
+    </div>
+    <sc-if value="{{ ai.supported }}">
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 16px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:17px">Suggest tags after saving</span><span style="font-size:13px;color:var(--mut)">Feelings, situations, what helped, topics</span></div><button onClick="{{ ai.toggleSuggest }}" aria-label="Suggest tags" style="{{ ai.sugSw.track }}"><span style="{{ ai.sugSw.knob }}"></span></button></div>
+      <div style="height:1px;background:var(--line);margin-left:16px"></div>
+      <div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 16px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:17px">Sol conversations</span><span style="font-size:13px;color:var(--mut)">Early — quality varies by device</span></div><button onClick="{{ ai.toggleSol }}" aria-label="Sol" style="{{ ai.solSw.track }}"><span style="{{ ai.solSw.knob }}"></span></button></div>
+      <sc-if value="{{ ai.ready }}">
+        <div style="height:1px;background:var(--line);margin-left:16px"></div>
+        <div style="display:flex;align-items:center;gap:12px;min-height:56px;padding:0 16px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:17px">Tagging model</span><span style="font-size:13px;color:var(--mut)">1.1 GB on this iPhone</span></div><button onClick="{{ ai.askRemove }}" style="background:none;border:none;color:#B3402E;font-size:16px;cursor:pointer;min-height:44px">Remove</button></div>
+      </sc-if>
+    </div>
+    </sc-if>
+    <div style="display:flex;flex-direction:column;gap:10px;padding:0 4px">
+      <span style="font-family:'Newsreader',Georgia,serif;font-size:20px">What happens to your writing</span>
+      <span style="font-size:14px;line-height:1.55;color:var(--mut)">Entries are read by the model on this iPhone to make suggestions. Journal text isn’t sent to Memento or third parties for tagging, and there is no cloud fallback if on-device processing fails.</span>
+      <span style="font-size:14px;line-height:1.55;color:var(--mut)">Content leaves your phone only when you choose to — for example, exporting a summary PDF. Suggestions can be wrong; they take time and use some battery.</span>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSol }}">
+<div style="display:flex;flex-direction:column;min-height:790px">
+  <div style="display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 12px;border-bottom:1px solid var(--line)">
+    <button onClick="{{ back }}" style="background:none;border:none;color:var(--ter);font-size:17px;cursor:pointer;min-height:44px">Close</button>
+    <div style="display:flex;flex-direction:column;align-items:center"><span style="font-family:'Newsreader',Georgia,serif;font-size:19px">Sol</span><span style="font-size:11px;color:var(--mut)">On this iPhone · not saved unless you choose</span></div>
+    <span style="width:52px"></span>
+  </div>
+  <sc-if value="{{ SV.gated }}">
+    <div style="padding:30px 24px;display:flex;flex-direction:column;gap:14px">
+      <span style="font-family:'Newsreader',Georgia,serif;font-size:26px;line-height:1.2">{{ SV.gateTitle }}</span>
+      <span style="font-size:15.5px;line-height:1.5;color:var(--mut)">{{ SV.gateBody }}</span>
+      <button onClick="{{ SV.gateAction }}" style="height:50px;border-radius:14px;border:none;background:var(--ink);color:var(--bg);font-size:16px;font-weight:600;cursor:pointer">{{ SV.gateCta }}</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ SV.open }}">
+    <div style="margin:14px 16px 0;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:13px;line-height:1.45;color:var(--mut)">Sol asks questions to help you think things through. It isn’t a therapist and can misunderstand. When you’re ready, turn the conversation into a reflection you edit and keep.</div>
+    <div style="flex:1;padding:18px 18px 8px;display:flex;flex-direction:column;gap:16px">
+      <sc-for list="{{ SV.msgs }}" as="m"><div style="{{ m.wrapSt }}"><div style="{{ m.bSt }}">{{ m.text }}</div></div></sc-for>
+      <sc-if value="{{ SV.typing }}"><span style="font-size:14px;color:var(--mut);font-style:italic">Sol is thinking…</span></sc-if>
+      <sc-if value="{{ SV.canMake }}">
+        <button onClick="{{ SV.make }}" style="margin-top:6px;height:52px;border-radius:16px;border:none;background:var(--ter);color:var(--onTer);font-size:16px;font-weight:600;cursor:pointer">Turn this into a reflection</button>
+      </sc-if>
+    </div>
+    <div style="padding:8px 16px 26px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><sc-for list="{{ SV.quick }}" as="q"><button onClick="{{ q.tap }}" style="padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;cursor:pointer">{{ q.label }}</button></sc-for></div>
+      <sc-if value="{{ SV.canChat }}"><div style="display:flex;gap:8px"><input value="{{ SV.input }}" onChange="{{ SV.onIn }}" placeholder="Reply to Sol…" style="flex:1;height:44px;border-radius:22px;border:1px solid var(--line);background:var(--card);padding:0 16px;font-size:16px"><button onClick="{{ SV.send }}" style="height:44px;padding:0 16px;border-radius:22px;border:none;background:var(--ink);color:var(--bg);font-size:15px;font-weight:600;cursor:pointer">Send</button></div></sc-if>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSolDraft }}">
+<div style="display:flex;flex-direction:column;min-height:790px">
+  <div style="display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 12px">
+    <button onClick="{{ back }}" style="background:none;border:none;color:var(--ter);font-size:17px;cursor:pointer;min-height:44px">Back</button>
+    <button onClick="{{ SD.save }}" style="background:none;border:none;color:var(--ter);font-size:17px;font-weight:600;cursor:pointer;min-height:44px">Save to journal</button>
+  </div>
+  <div style="padding:6px 22px 0;display:flex;flex-direction:column;gap:8px">
+    <h1 style="margin:0;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:32px;line-height:1.1">Your reflection</h1>
+    <span style="font-size:14px;line-height:1.45;color:var(--mut)">Drafted on this iPhone from your own words. Change anything — what you save is yours. Saves to Reflections and counts toward your streak.</span>
+  </div>
+  <textarea value="{{ SD.text }}" onChange="{{ SD.onText }}" style="flex:1;min-height:420px;margin:18px 22px 0;padding:18px;border-radius:18px;border:1px solid var(--line);background:var(--card);resize:none;font-family:'Newsreader',Georgia,serif;font-size:20px;line-height:1.55;color:var(--ink)"></textarea>
+  <button onClick="{{ SD.discard }}" style="margin:14px auto 30px;background:none;border:none;color:var(--mut);font-size:15px;cursor:pointer;min-height:44px">Discard conversation</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSummary }}">
+<div style="padding:0 0 130px">
+  <div style="display:flex;align-items:center;height:44px;padding:0 12px"><button onClick="{{ SU.backBtn }}" style="display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--ter);font-size:17px;cursor:pointer;min-height:44px"><span style="font-size:28px;line-height:1;margin-top:-4px">‹</span>{{ SU.backLabel }}</button></div>
+  <sc-if value="{{ SU.step0 }}">
+  <div style="padding:4px 16px 0;display:flex;flex-direction:column;gap:18px">
+    <h1 style="margin:0 4px;font-family:'Newsreader',Georgia,serif;font-weight:400;font-size:34px;line-height:1.1">New summary</h1>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div onClick="{{ SU.setMe }}" style="{{ SU.meSt }}"><span style="font-size:16px;font-weight:600">For me</span><span style="font-size:14px;color:var(--mut);line-height:1.4">Look back, notice patterns, remember what helped.</span></div>
+      <div onClick="{{ SU.setClin }}" style="{{ SU.clinSt }}"><span style="font-size:16px;font-weight:600">For my psychologist or psychiatrist</span><span style="font-size:14px;color:var(--mut);line-height:1.4">A plain, factual page to bring to an appointment.</span></div>
+    </div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin:6px 4px 0"><span style="font-family:'Newsreader',Georgia,serif;font-size:21px">Entries</span><span style="font-size:14px;color:var(--mut)">{{ SU.count }}</span></div>
+    <div style="display:flex;gap:8px;overflow-x:auto;margin:-6px -16px 0;padding:0 16px"><sc-for list="{{ SU.presets }}" as="p"><button onClick="{{ p.tap }}" style="{{ p.st }}">{{ p.label }}</button></sc-for></div>
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+      <sc-for list="{{ SU.list }}" as="r">
+        <div onClick="{{ r.tap }}" style="display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer">
+          <span style="{{ r.boxSt }}">{{ r.mark }}</span>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><span style="font-size:12.5px;color:var(--mut)">{{ r.date }} · {{ r.tags }}</span><span style="font-size:15px;line-height:1.4">{{ r.excerpt }}</span></div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 16px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:16px">Include my original words</span><span style="font-size:13px;color:var(--mut)">Short quotes behind each tag</span></div><button onClick="{{ SU.toggleQuotes }}" aria-label="Quotes" style="{{ SU.qSw.track }}"><span style="{{ SU.qSw.knob }}"></span></button></div>
+      <div style="height:1px;background:var(--line);margin-left:16px"></div>
+      <div style="display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 16px"><div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:16px">Only tags I’ve kept</span><span style="font-size:13px;color:var(--mut)">Unreviewed suggestions are never included</span></div><span style="font-size:14px;color:var(--sage);font-weight:600">Always</span></div>
+    </div>
+    <sc-if value="{{ SU.clin }}"><div style="display:flex;flex-direction:column;gap:8px"><span style="margin:0 4px;font-size:13px;font-weight:600;color:var(--mut)">ANYTHING YOU WANT TO RAISE? (OPTIONAL)</span><textarea value="{{ SU.note }}" onChange="{{ SU.onNote }}" placeholder="e.g. Sleep has been worse since the launch moved." style="min-height:90px;border-radius:14px;border:1px solid var(--line);background:var(--card);padding:12px 14px;font-size:15px;line-height:1.45;resize:none"></textarea></div></sc-if>
+    <button onClick="{{ SU.preview }}" disabled="{{ SU.cantPreview }}" style="{{ SU.prevSt }}">Preview summary</button>
+  </div>
+  </sc-if>
+  <sc-if value="{{ SU.step1 }}">
+  <div style="padding:4px 16px 0;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin:0 4px"><span style="font-family:'Newsreader',Georgia,serif;font-size:24px">Preview</span><span style="font-size:13px;color:var(--mut)">PDF · 1 page</span></div>
+    <div style="background:#FFFDF8;color:#2B2723;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.12),0 14px 30px -14px rgba(40,25,10,.35);padding:26px 22px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-direction:column;gap:4px;padding-bottom:12px;border-bottom:1px solid #E6DDCE"><span style="font-family:'Newsreader',Georgia,serif;font-size:21px;line-height:1.2">{{ SU.pdf.title }}</span><span style="font-size:12px;color:#6F675D">{{ SU.pdf.who }}</span><span style="font-size:12px;color:#6F675D">{{ SU.pdf.range }} · {{ SU.pdf.countLine }}</span></div>
+      <span style="font-size:13px;line-height:1.55">{{ SU.pdf.narrative }}</span>
+      <sc-for list="{{ SU.pdf.groups }}" as="g"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6F675D">{{ g.name }}</span><span style="font-size:13px;line-height:1.45">{{ g.items }}</span></div></sc-for>
+      <sc-if value="{{ SU.pdf.showQuotes }}"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6F675D">In my words</span><sc-for list="{{ SU.pdf.quotes }}" as="q"><div style="display:flex;gap:10px;font-size:12.5px;line-height:1.45"><span style="flex:none;width:44px;color:#6F675D">{{ q.date }}</span><span style="font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:14px">“{{ q.text }}”</span></div></sc-for></div></sc-if>
+      <sc-if value="{{ SU.pdf.hasNote }}"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6F675D">I’d like to talk about</span><span style="font-size:13px;line-height:1.45">{{ SU.pdf.note }}</span></div></sc-if>
+      <span style="padding-top:10px;border-top:1px solid #E6DDCE;font-size:11px;line-height:1.5;color:#6F675D">Made in Memento from entries I selected. Tags are my own reviewed labels and counts of what I wrote — not a diagnosis or assessment.</span>
+    </div>
+    <span style="margin:0 4px;font-size:13.5px;line-height:1.45;color:var(--mut)">Nothing is shared until you choose where it goes.</span>
+    <button onClick="{{ SU.export }}" style="height:54px;border-radius:16px;border:none;background:var(--ter);color:var(--onTer);font-size:17px;font-weight:600;cursor:pointer">Export PDF…</button>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+</div>
+
+<div style="position:absolute;top:0;left:0;right:0;height:54px;background:var(--bg);display:flex;align-items:center;justify-content:space-between;padding:0 34px 0 40px;box-sizing:border-box;z-index:20;font-size:16px;font-weight:600;pointer-events:none">
+  <span>9:41</span>
+  <div style="position:absolute;left:50%;top:11px;width:124px;height:36px;margin-left:-62px;border-radius:20px;background:#000"></div>
+  <div style="display:flex;align-items:center;gap:6px"><div style="display:flex;align-items:flex-end;gap:2px;height:11px"><span style="width:3px;height:4px;background:currentColor;border-radius:1px"></span><span style="width:3px;height:6px;background:currentColor;border-radius:1px"></span><span style="width:3px;height:8px;background:currentColor;border-radius:1px"></span><span style="width:3px;height:11px;background:currentColor;border-radius:1px"></span></div><div style="width:24px;height:11px;border:1.5px solid currentColor;border-radius:4px;padding:1.5px;box-sizing:border-box;opacity:.9"><div style="width:70%;height:100%;background:currentColor;border-radius:1.5px"></div></div></div>
+</div>
+
+<sc-if value="{{ showTabs }}">
+<div style="position:absolute;left:0;right:0;bottom:0;height:86px;background:var(--bar);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-around;padding:8px 8px 0;box-sizing:border-box;z-index:15">
+  <button onClick="{{ goJ }}" style="{{ tabJ }}"><span style="width:15px;height:19px;border:1.8px solid currentColor;border-left-width:4px;border-radius:3px;box-sizing:border-box"></span>Journal</button>
+  <button onClick="{{ goD }}" style="{{ tabD }}"><span style="width:20px;height:20px;border:1.8px solid currentColor;border-radius:50%;box-sizing:border-box;display:flex;align-items:center;justify-content:center"><span style="width:6px;height:6px;border-radius:50%;background:currentColor"></span></span>Discover</button>
+  <button onClick="{{ openWriteSheet }}" aria-label="Write" style="width:64px;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--ter);font-size:10.5px;font-weight:600;margin-top:-4px"><span style="width:46px;height:46px;border-radius:50%;background:var(--ter);color:var(--onTer);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:300;line-height:1;box-shadow:0 6px 14px -6px rgba(120,60,30,.6)">+</span></button>
+  <button onClick="{{ goN }}" style="{{ tabN }}"><span style="position:relative;width:20px;height:20px"><span style="position:absolute;left:0;top:4px;width:14px;height:16px;border:1.8px solid currentColor;border-radius:2px;box-sizing:border-box"></span><span style="position:absolute;left:5px;top:0;width:14px;height:16px;border-top:1.8px solid currentColor;border-right:1.8px solid currentColor;border-radius:2px;box-sizing:border-box"></span></span>Notebooks</button>
+  <button onClick="{{ goY }}" style="{{ tabY }}"><span style="display:flex;flex-direction:column;align-items:center;gap:2px;height:20px"><span style="width:8px;height:8px;border:1.8px solid currentColor;border-radius:50%"></span><span style="width:16px;height:7px;border:1.8px solid currentColor;border-bottom:none;border-radius:8px 8px 0 0"></span></span>You</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasToast }}">
+<div style="position:absolute;left:16px;right:16px;bottom:100px;z-index:40;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--ink);color:var(--bg);font-size:15px;box-shadow:0 10px 30px -10px rgba(0,0,0,.4)"><span style="flex:1">{{ toast.text }}</span><sc-if value="{{ toast.hasUndo }}"><button onClick="{{ toast.undo }}" style="background:none;border:none;color:var(--terT);font-size:15px;font-weight:700;cursor:pointer;min-height:32px">Undo</button></sc-if></div>
+</sc-if>
+
+<sc-if value="{{ hasSheet }}">
+<div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(20,15,10,.32);z-index:50"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:51;background:var(--sheet);border-radius:28px 28px 0 0;padding:8px 20px 38px;display:flex;flex-direction:column;gap:14px;max-height:760px;overflow-y:auto;box-shadow:0 -10px 30px rgba(0,0,0,.12)">
+  <span style="align-self:center;width:38px;height:5px;border-radius:3px;background:var(--line)"></span>
+
+  <sc-if value="{{ SH.write }}">
+    <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'Newsreader',Georgia,serif;font-size:26px">Start writing</span><button onClick="{{ closeSheet }}" style="background:none;border:none;color:var(--ter);font-size:16px;cursor:pointer;min-height:44px">Cancel</button></div>
+    <sc-for list="{{ SH.modes }}" as="m">
+      <div onClick="{{ m.tap }}" style="display:flex;align-items:center;gap:14px;padding:14px;border-radius:18px;background:var(--card);border:1px solid var(--line);cursor:pointer">
+        <span style="{{ m.iconSt }}"></span>
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:16.5px;font-weight:600">{{ m.label }}</span><span style="font-size:14px;color:var(--mut)">{{ m.desc }}</span></div>
+      </div>
+    </sc-for>
+    <div onClick="{{ SH.sol }}" style="display:flex;align-items:center;gap:14px;padding:14px;border-radius:18px;border:1px dashed var(--line);cursor:pointer;margin-top:4px">
+      <span style="flex:none;width:40px;height:40px;border-radius:50%;background:var(--sageT);display:flex;align-items:center;justify-content:center"><span style="width:14px;height:14px;border-radius:50%;background:var(--sage)"></span></span>
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font-size:16.5px;font-weight:600">Reflect with Sol</span><span style="font-size:14px;color:var(--mut)">Talk it through, then save a reflection. Optional.</span></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ SH.tagForm }}">
+    <div style="display:flex;justify-content:space-between;align-items:center"><button onClick="{{ closeSheet }}" style="background:none;border:none;color:var(--ter);font-size:16px;cursor:pointer;min-height:44px;padding:0">Cancel</button><span style="font-size:17px;font-weight:600">{{ SH.formTitle }}</span><button onClick="{{ SH.save }}" style="background:none;border:none;color:var(--ter);font-size:16px;font-weight:700;cursor:pointer;min-height:44px;padding:0">{{ SH.saveLabel }}</button></div>
+    <input value="{{ SH.label }}" onChange="{{ SH.onLabel }}" placeholder="e.g. Hopeful, poor sleep, cooking" style="height:50px;border-radius:14px;border:1px solid var(--line);background:var(--card);padding:0 16px;font-size:18px">
+    <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600;color:var(--mut)">KIND</span><div style="padding:3px;border-radius:12px;background:var(--line);display:flex;gap:2px"><sc-for list="{{ SH.cats }}" as="c"><button onClick="{{ c.tap }}" style="{{ c.st }}">{{ c.label }}</button></sc-for></div></div>
+    <sc-if value="{{ SH.hasQuote }}"><div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:600;color:var(--mut)">BASED ON YOUR WORDS</span><span style="padding:14px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-family:'Newsreader',Georgia,serif;font-style:italic;font-size:17px;line-height:1.4">“{{ SH.quote }}”</span></div></sc-if>
+    <sc-if value="{{ SH.hasQuick }}"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600;color:var(--mut)">YOUR TAGS</span><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ SH.quick }}" as="q"><span onClick="{{ q.tap }}" style="{{ q.st }}">{{ q.label }}</span></sc-for></div></div></sc-if>
+    <sc-if value="{{ SH.canRemove }}"><button onClick="{{ SH.remove }}" style="height:48px;border-radius:14px;border:1px solid var(--line);background:transparent;color:#B3402E;font-size:16px;cursor:pointer">Remove tag</button></sc-if>
+    <span style="font-size:13px;color:var(--mut);line-height:1.45">Your edits are saved as your own and won’t be overwritten by later suggestions.</span>
+  </sc-if>
+
+  <sc-if value="{{ SH.move }}">
+    <span style="font-family:'Newsreader',Georgia,serif;font-size:24px">{{ SH.moveTitle }}</span>
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+      <sc-for list="{{ SH.moveOpts }}" as="o"><div onClick="{{ o.tap }}" style="display:flex;align-items:center;gap:12px;min-height:54px;padding:0 16px;border-bottom:1px solid var(--line);cursor:pointer"><span style="{{ o.sw }}"></span><span style="flex:1;font-size:17px">{{ o.name }}</span><sc-if value="{{ o.on }}"><span style="color:var(--ter);font-size:17px;font-weight:700">✓</span></sc-if></div></sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ SH.share }}">
+    <div style="display:flex;align-items:center;gap:12px"><span style="width:40px;height:50px;border-radius:4px;background:#FFFDF8;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:16px;font-weight:600">{{ SH.shareName }}</span><span style="font-size:13px;color:var(--mut)">PDF document</span></div></div>
+    <div style="background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden">
+      <sc-for list="{{ SH.shareOpts }}" as="o"><div onClick="{{ o.tap }}" style="display:flex;align-items:center;min-height:52px;padding:0 16px;border-bottom:1px solid var(--line);font-size:17px;cursor:pointer">{{ o.label }}</div></sc-for>
+    </div>
+    <button onClick="{{ closeSheet }}" style="height:50px;border-radius:14px;border:none;background:var(--card);font-size:17px;font-weight:600;cursor:pointer">Cancel</button>
+  </sc-if>
+
+  <sc-if value="{{ SH.remove }}">
+    <span style="font-family:'Newsreader',Georgia,serif;font-size:24px">Remove tagging model?</span>
+    <span style="font-size:15px;line-height:1.5;color:var(--mut)">Frees 1.1 GB. Your entries and every tag you’ve kept stay. New entries won’t get suggestions until you download it again.</span>
+    <button onClick="{{ ai.remove }}" style="height:50px;border-radius:14px;border:none;background:#B3402E;color:#fff;font-size:16px;font-weight:600;cursor:pointer">Remove model</button>
+    <button onClick="{{ closeSheet }}" style="height:50px;border-radius:14px;border:1px solid var(--line);background:transparent;font-size:16px;cursor:pointer">Keep it</button>
+  </sc-if>
+</div>
+</sc-if>
+
+<div style="position:absolute;bottom:8px;left:50%;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:var(--ink);opacity:.85;z-index:60;pointer-events:none"></div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;aiState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;needs-download&quot;,&quot;ready&quot;,&quot;download-interrupts&quot;,&quot;tagging-fails&quot;,&quot;unsupported&quot;],&quot;default&quot;:&quot;needs-download&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;On-device AI&quot;},&quot;dark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Accessibility &amp; appearance&quot;},&quot;largerText&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Accessibility &amp; appearance&quot;},&quot;reducedMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Accessibility &amp; appearance&quot;}}">
+const TODAY='2026-10-09';
+const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const pd=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const iso=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+const sh=s=>{const d=pd(s);return MO[d.getMonth()]+' '+d.getDate()};
+const rel=s=>s===TODAY?'Today':s==='2026-10-08'?'Yesterday':DAYS[pd(s).getDay()].slice(0,3)+', '+sh(s);
+const CK={feeling:'ter',situation:'umb',helped:'sage',topic:'slate'};
+const CN={feeling:'Feeling',situation:'Situation',helped:'What helped',topic:'Topic'};
+const CATS=[['feeling','Feelings'],['situation','Situations'],['helped','What helped'],['topic','Topics']];
+const NB=[{id:'daily',name:'Daily',color:'#B4633F'},{id:'work',name:'Work',color:'#3B3733'},{id:'grat',name:'Gratitude',color:'#7F9679'},{id:'refl',name:'Reflections',color:'#C8B186'}];
+const MODES={free:'Write freely',dump:'Brain dump',guided:'Guided reflection',photo:'Photo journal',sol:'Sol reflection'};
+let uid=1;const nid=()=>'t'+(uid++);
+const T=(label,cat,quote,status)=>({id:nid(),label,cat,quote:quote||null,status:status||'kept'});
+const DARK={'--page':'#121110','--bg':'#1B1916','--card':'#25221E','--sheet':'#211E1B','--ink':'#EEE7DB','--mut':'#A89F92','--line':'#38332D','--ter':'#DB906B','--onTer':'#1B1916','--terT':'#3E2B21','--sage':'#A3BC9C','--sageT':'#27322A','--umb':'#CDB298','--umbT':'#352D25','--slate':'#AEB8C2','--slateT':'#2A2F34','--bar':'rgba(27,25,22,.94)'};
+const DEMO_TEXT="I felt drained after back-to-back deadlines today.\nA short walk helped me settle.";
+const demoTags=()=>[T('Drained','feeling','I felt drained','suggested'),T('Work deadlines','situation','back-to-back deadlines','suggested'),T('Walking helped','helped','A short walk helped me settle','suggested')];
+const SEED=[
+ {id:'e8',date:'2026-10-08',time:'11:52 PM',nb:'daily',mode:'free',text:"Couldn't sleep until almost two. Kept replaying the conversation with Dana about moving the launch date, and everything I should have said.\n\nMade tea at midnight, which didn't help. Writing out a list of what's actually due this week did.",tags:[T('Poor sleep','situation',"Couldn't sleep until almost two"),T('Restless','feeling','Kept replaying','suggested'),T('Conflict','situation','the conversation with Dana about moving the launch date'),T('Writing it down','helped',"Writing out a list of what's actually due this week did")]},
+ {id:'e7',date:'2026-10-07',time:'10:05 PM',nb:'daily',mode:'free',text:"Finished the book Priya lent me — read the last chapter in the bath. Nothing much happened today and honestly that felt like a gift.",tags:[T('Calm','feeling','that felt like a gift'),T('Reading','helped','read the last chapter in the bath')]},
+ {id:'e6',date:'2026-10-06',time:'7:40 PM',nb:'work',mode:'dump',text:"Deadlines everywhere. Sprint review moved up to Thursday, the deck isn't done, and I said yes to mentoring the new hire because apparently I can't say no. Overwhelmed is the word.\n\nTook the long way home through the park and felt like a person again.",tags:[T('Work deadlines','situation','Deadlines everywhere'),T('Boundaries','situation',"apparently I can't say no",'suggested'),T('Overwhelmed','feeling','Overwhelmed is the word'),T('Walking helped','helped','Took the long way home through the park')]},
+ {id:'e5',date:'2026-10-04',time:'9:15 AM',nb:'grat',mode:'guided',prompt:"What are three small things you're grateful for today?",text:"Sunday pancakes with Theo, even though we burned the first batch.\nTomatoes from the market that actually taste like tomatoes.\nMum calling just to say hi.",tags:[T('Grateful','feeling','Sunday pancakes with Theo'),T('Family','topic','Mum calling just to say hi')]},
+ {id:'e4',date:'2026-09-29',time:'8:30 PM',nb:'daily',mode:'photo',photo:'first ceramics class, lopsided bowl',text:"My first bowl is lopsided and I love it. Two hours where I didn't check my phone once.",tags:[T('Absorbed','feeling',"Two hours where I didn't check my phone once"),T('Making things','helped','My first bowl is lopsided and I love it'),T('Creativity','topic')]},
+ {id:'e3',date:'2026-09-24',time:'11:10 PM',nb:'work',mode:'free',text:"Third late night this week and I'm completely drained. Snapped at Theo over nothing and had to apologise.\n\nWalked to the corner shop just to get out of the flat, and it took the edge off.",tags:[T('Work deadlines','situation','Third late night this week'),T('Drained','feeling',"I'm completely drained"),T('Conflict','situation','Snapped at Theo over nothing'),T('Walking helped','helped','Walked to the corner shop just to get out of the flat')]},
+ {id:'e2',date:'2026-09-17',time:'9:48 PM',nb:'refl',mode:'sol',text:"On saying no. I keep agreeing to things before I've checked whether I have room for them. Tonight I noticed it's less about being helpful and more about not wanting to disappoint anyone.\n\nNext time, I'll start with “let me get back to you.”",tags:[T('Boundaries','situation',"I keep agreeing to things before I've checked whether I have room for them"),T('Hopeful','feeling',"Next time, I'll start with “let me get back to you.”")]},
+ {id:'e1',date:'2026-09-12',time:'8:02 PM',nb:'daily',mode:'free',text:"Long walk with Priya after work. Told her about my doubts about the job and she didn't try to fix anything, just listened. Felt lighter on the way home.",tags:[T('Walking helped','helped','Long walk with Priya after work'),T('Talking to a friend','helped',"she didn't try to fix anything, just listened"),T('Lighter','feeling','Felt lighter on the way home'),T('Work','topic','my doubts about the job')]},
+];
+const RULES=[
+ {label:'Drained',cat:'feeling',re:/(?:i (?:felt|feel|am|was|'m) |i'm )?(?:so |really |completely )?(?:drained|exhausted|wiped out|worn out)/i},
+ {label:'Overwhelmed',cat:'feeling',re:/(?:i (?:felt|feel|am|was) |i'm )?(?:so |really )?overwhelm\w*/i},
+ {label:'Anxious',cat:'feeling',re:/(?:i (?:felt|feel|am|was) |i'm )?(?:so |really )?(?:anxious|worried|on edge|nervous)/i},
+ {label:'Hopeful',cat:'feeling',re:/(?:still |i'm |i feel )?(?:hopeful|optimistic)[^.!?,\n]*/i},
+ {label:'Grateful',cat:'feeling',re:/(?:grateful|thankful)[^.!?,\n]*/i},
+ {label:'Lonely',cat:'feeling',re:/(?:lonely|left out)/i},
+ {label:'Calm',cat:'feeling',re:/(?:felt |feel )?(?:calm|at peace|lighter)[^.!?,\n]*/i},
+ {label:'Work deadlines',cat:'situation',re:/(?:(?:back-to-back|tight|endless|too many) )?deadlines?/i},
+ {label:'Poor sleep',cat:'situation',re:/(?:couldn't|could not|didn't|barely|can't) (?:get to )?sleep[^.!?,\n]*|slept (?:badly|poorly)|(?:poor|bad|little) sleep/i},
+ {label:'Conflict',cat:'situation',re:/(?:argu\w+|fight with|fought|snapped at)[^.!?,\n]*/i},
+ {label:'Talking to a friend',cat:'helped',re:/(?:called|talked to|talked with|call with) (?:a friend|my friend|friends|my sister|my brother|my mum|my mom|Priya)/i},
+ {label:'Walking helped',cat:'helped',re:/(?:(?:a|the) )?(?:(?:short|long|quick) )?walk\w*[^.!?,\n]*/i},
+ {label:'Rest',cat:'helped',re:/(?:a nap|napped|rested|an early night|lay down)[^.!?,\n]*/i},
+ {label:'Work',cat:'topic',re:/\b(?:work|office|meeting|manager|sprint|inbox)\b/i},
+ {label:'Family',cat:'topic',re:/\b(?:mum|mom|dad|family|parents)\b/i},
+ {label:'Relationships',cat:'topic',re:/\b(?:partner|Theo)\b/i},
+ {label:'Creativity',cat:'topic',re:/\b(?:paint\w*|drawing|sketch\w*|ceramics|guitar)\b/i},
+];
+function analyze(text){const out=[];for(const r of RULES){const m=r.re.exec(text);if(!m)continue;const q=m[0].replace(/[\s,]+$/,'');const s=m.index,e=s+q.length;if(out.some(o=>s<o.e&&e>o.s))continue;out.push({s,e,label:r.label,cat:r.cat,q});if(out.length>=5)break;}return out.sort((a,b)=>a.s-b.s).map(o=>T(o.label,o.cat,o.q,'suggested'));}
+const PROMPTS={gratitude:["What are three small things you're grateful for today?","Who made today a little easier?"],day:["What happened today that you want to remember?","What drained you today, and what gave something back?"],mind:["What's taking up the most room in your head right now?","What would you say if no one would ever read this?"]};
+const EX={free:"Stayed late again to get the deck finished and I felt drained by the time I got home. Called my sister on the walk from the station and we laughed about Mum's new phone.\n\nStill hopeful the launch moves.",dump:"too many deadlines. inbox at 214. forgot to reply to Jo. need groceries. I'm so overwhelmed I can't think straight. maybe a walk at lunch tomorrow",guided:"Theo made coffee before I woke up — grateful for that.\nThe rain stopped right as I left.\nPriya sent a voice note just to check in.",photo:"Light through the kitchen window this morning. Felt calm for the first time this week."};
+const SOL0={me:false,text:"Hi Maya. What’s taking up the most room in your head tonight?"};
+const SOLR=["That sounds like a lot to carry into the evening. If you picture saying no to one thing this week, what comes up first?","So part of you worries that saying no lets people down — and part of you already knows what you need. Would you like to turn this into a reflection you can keep?"];
+const SOLQ=[["The launch date at work","I keep saying yes to everything"],["That I'll let Dana down","Relief, honestly"]];
+const aiFrom=v=>v==='unsupported'?'unsupported':(v==='ready'||v==='tagging-fails')?'ready':'none';
+const fmtList=a=>a.length<2?a.join(''):a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+const fmtTime=t=>{const[h,m]=t.split(':').map(Number);return((h%12)||12)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM')};
+const chipSt=(t,sm)=>{const k=CK[t.cat];const b={display:'inline-flex',alignItems:'center',gap:'5px',padding:sm?'4px 9px':'7px 12px',borderRadius:'999px',fontSize:sm?'12px':'14px',fontWeight:500,lineHeight:1.2,cursor:'pointer',whiteSpace:'nowrap'};return t.status==='suggested'?{...b,background:'transparent',color:`var(--${k})`,border:`1px dashed var(--${k})`}:{...b,background:`var(--${k}T)`,color:`var(--${k})`,border:'1px solid transparent'};};
+const markSt=(t,act)=>{const k=CK[t.cat];if(act)return{background:`var(--${k}T)`,boxShadow:`0 0 0 3px var(--${k}T)`,borderRadius:'3px',cursor:'pointer'};return t.status==='suggested'?{borderBottom:`1.5px dashed var(--${k})`,cursor:'pointer'}:{backgroundImage:`linear-gradient(transparent 62%, var(--${k}T) 62%)`,cursor:'pointer'};};
+const segs=(text,tags,act,tap)=>{const ms=tags.filter(t=>t.status!=='removed'&&t.quote).map(t=>{const i=text.indexOf(t.quote);return i<0?null:{s:i,e:i+t.quote.length,t}}).filter(Boolean).sort((a,b)=>a.s-b.s);const out=[];let p=0;ms.forEach(m=>{if(m.s<p)return;if(m.s>p)out.push({text:text.slice(p,m.s),st:{},tap:null});out.push({text:text.slice(m.s,m.e),st:markSt(m.t,act===m.t.id),tap:()=>tap(m.t.id)});p=m.e;});if(p<text.length)out.push({text:text.slice(p),st:{},tap:null});return out;};
+const fchip=(label,on,tap)=>({label,tap,st:{padding:'8px 14px',borderRadius:'999px',fontSize:'14px',fontWeight:500,whiteSpace:'nowrap',cursor:'pointer',background:on?'var(--ink)':'var(--card)',color:on?'var(--bg)':'var(--ink)',border:'1px solid '+(on?'var(--ink)':'var(--line)')}});
+const segSt=on=>({flex:1,height:'32px',borderRadius:'9px',border:'none',background:on?'var(--card)':'transparent',boxShadow:on?'0 1px 3px rgba(0,0,0,.12)':'none',color:'var(--ink)',fontSize:'13px',fontWeight:on?600:500,cursor:'pointer',whiteSpace:'nowrap'});
+const coverSt=n=>({position:'relative',aspectRatio:'3/4',borderRadius:'5px 14px 14px 5px',background:`repeating-linear-gradient(135deg,rgba(255,255,255,.06) 0 1px,transparent 1px 4px),repeating-linear-gradient(45deg,rgba(0,0,0,.07) 0 1px,transparent 1px 4px),${n.color}`,boxShadow:'inset 9px 0 0 rgba(0,0,0,.13),inset 10px 0 0 rgba(255,255,255,.08),0 12px 22px -12px rgba(40,25,10,.55),0 1px 2px rgba(40,25,10,.2)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'});
+
+class Component extends DCLogic {
+  scrollRef=React.createRef();
+  failed={};
+  state={dark:!!this.props.dark,screen:'onb',tab:'journal',stack:[],onb:0,demoPhase:0,demoTags:demoTags(),demoActive:null,
+    ai:aiFrom(this.props.aiState),dl:0,dlErr:false,entries:SEED,entryId:null,justSaved:null,proc:{},active:null,editKept:false,
+    tagLabel:null,nbId:null,nbQ:'',nbF:null,discQ:'',sheet:null,sheetTag:null,form:{label:'',cat:'feeling'},moveId:null,toast:null,
+    draft:{mode:'free',text:'',pc:'mind',pi:0,photo:false,nb:'daily'},tLeft:180,tRun:false,listening:false,
+    sol:[],solIn:'',solStep:0,solTyping:false,solDraft:'',sum:{purpose:'me',sel:[],step:0,quotes:true,note:''},
+    rem:{on:true,time:'20:30'},suggestOn:true,solOn:true,shareName:''};
+  componentDidMount(){this.applyTheme();}
+  componentDidUpdate(pp,ps){
+    if(pp.dark!==this.props.dark)this.setState({dark:!!this.props.dark});
+    if(pp.aiState!==this.props.aiState){clearInterval(this.dlT);this.noInt=false;this.failed={};this.setState({ai:aiFrom(this.props.aiState),dl:0,dlErr:false});}
+    if(ps.dark!==this.state.dark)this.applyTheme();
+  }
+  componentWillUnmount(){clearInterval(this.dlT);clearInterval(this.tmr);clearTimeout(this.tT);}
+  applyTheme(){const b=document.body.style;Object.entries(DARK).forEach(([k,v])=>this.state.dark?b.setProperty(k,v):b.removeProperty(k));}
+  top=()=>{const el=this.scrollRef.current;if(el)el.scrollTop=0;};
+  go=(screen,x)=>this.setState(s=>({stack:[...s.stack,{screen:s.screen,entryId:s.entryId,tagLabel:s.tagLabel,nbId:s.nbId}],screen,active:null,editKept:false,sheet:null,...(x||{})}),this.top);
+  back=()=>this.setState(s=>{const st=[...s.stack];const p=st.pop()||{screen:s.tab};return{stack:st,...p,active:null,editKept:false,sheet:null};},this.top);
+  tabTo=t=>this.setState({tab:t,screen:t,stack:[],sheet:null,active:null},this.top);
+  openEntry=id=>this.go('entry',{entryId:id});
+  openTag=l=>this.go('tag',{tagLabel:l});
+  openNb=id=>this.go('notebook',{nbId:id,nbQ:'',nbF:null});
+  toastShow=(text,undo)=>{clearTimeout(this.tT);this.setState({toast:{text,undo}});this.tT=setTimeout(()=>this.setState({toast:null}),4500);};
+  mapTag=(eid,tid,fn)=>this.setState(s=>({entries:s.entries.map(e=>e.id!==eid?e:{...e,tags:e.tags.map(t=>t.id!==tid?t:fn(t))})}));
+  getTag=(eid,tid)=>{const e=this.state.entries.find(e=>e.id===eid);return e&&e.tags.find(t=>t.id===tid);};
+  keep=(eid,tid)=>{this.mapTag(eid,tid,t=>({...t,status:'kept'}));};
+  removeTag=(eid,tid)=>{const t=this.getTag(eid,tid);const prev=t.status;this.mapTag(eid,tid,x=>({...x,status:'removed'}));this.setState({active:null,sheet:null});this.toastShow(`Removed “${t.label}”`,()=>{this.mapTag(eid,tid,x=>({...x,status:prev}));this.setState({toast:null});});};
+  keepAll=eid=>{const e=this.state.entries.find(x=>x.id===eid);const ids=e.tags.filter(t=>t.status==='suggested').map(t=>t.id);const set=st=>this.setState(s=>({entries:s.entries.map(x=>x.id!==eid?x:{...x,tags:x.tags.map(t=>ids.includes(t.id)?{...t,status:st}:t)})}));set('kept');this.toastShow(`Kept ${ids.length} ${ids.length===1?'tag':'tags'}`,()=>{set('suggested');this.setState({toast:null});});};
+  openEditTag=(eid,tid)=>{const t=this.getTag(eid,tid);this.setState({sheet:'tag',sheetTag:{eid,tid},form:{label:t.label,cat:t.cat}});};
+  saveForm=()=>{const s=this.state,f=s.form;const l=f.label.trim();if(!l)return;if(s.sheet==='tag'){const{eid,tid}=s.sheetTag;this.mapTag(eid,tid,t=>({...t,label:l,cat:f.cat,status:'kept',edited:true}));this.setState({sheet:null});}else{const eid=s.entryId;this.setState(st=>({sheet:null,entries:st.entries.map(e=>e.id!==eid?e:{...e,tags:[...e.tags,{...T(l,f.cat),manual:true}]})}));}};
+  runProc=id=>{const s=this.state;const set=v=>this.setState(st=>({proc:{...st.proc,[id]:v}}));
+    if(!s.suggestOn)return set('off');if(s.ai==='unsupported')return set('unsupported');if(s.ai!=='ready')return set('unavailable');
+    set('running');setTimeout(()=>{if(this.props.aiState==='tagging-fails'&&!this.failed[id]){this.failed[id]=1;return set('failed');}
+      const e=this.state.entries.find(e=>e.id===id);if(!e)return;const tags=analyze(e.text);if(!tags.length)return set('none');
+      this.setState(st=>({proc:{...st.proc,[id]:'done'},entries:st.entries.map(x=>x.id!==id?x:{...x,tags:[...x.tags,...tags]})}));},this.props.reducedMotion?1000:2400);};
+  newEntry=(e,extra)=>{this.setState(s=>({entries:[e,...s.entries],screen:'entry',entryId:e.id,justSaved:e.id,active:null,sheet:null,...(extra?extra(s):{})}),()=>{this.top();this.runProc(e.id);});};
+  saveDraft=()=>{const d=this.state.draft;const text=d.text.trim();if(!text&&!d.photo)return;clearInterval(this.tmr);
+    this.newEntry({id:'n'+Date.now(),date:TODAY,time:'9:41 PM',nb:d.nb,mode:d.mode,prompt:d.mode==='guided'?PROMPTS[d.pc][d.pi]:null,photo:d.mode==='photo'&&d.photo?'your photo':null,text,tags:[]},()=>({tRun:false,tLeft:180,draft:{mode:'free',text:'',pc:'mind',pi:0,photo:false,nb:'daily'}}));};
+  openWrite=mode=>{if(mode==='sol')return this.openSol();this.go('editor',{draft:{...this.state.draft,mode}});};
+  openSol=()=>this.go('sol',{sol:this.state.sol.length?this.state.sol:[SOL0]});
+  toggleTimer=()=>{if(this.state.tRun){clearInterval(this.tmr);return this.setState({tRun:false});}
+    this.setState(s=>({tRun:true,tLeft:s.tLeft<=0?180:s.tLeft}));clearInterval(this.tmr);
+    this.tmr=setInterval(()=>{const l=this.state.tLeft-1;if(l<=0){clearInterval(this.tmr);this.setState({tLeft:0,tRun:false});}else this.setState({tLeft:l});},1000);};
+  dictate=()=>{if(this.state.listening)return;this.setState({listening:true});setTimeout(()=>this.setState(s=>({listening:false,draft:{...s.draft,text:(s.draft.text.trim()?s.draft.text.replace(/\s*$/,' '):'')+"I think I just need an early night."}})),1800);};
+  solSend=txt=>{const t=(typeof txt==='string'?txt:this.state.solIn).trim();if(!t||this.state.solTyping||this.state.solStep>=2)return;
+    this.setState(s=>({sol:[...s.sol,{me:true,text:t}],solIn:'',solTyping:true}));
+    setTimeout(()=>this.setState(s=>({sol:[...s.sol,{me:false,text:SOLR[s.solStep]}],solStep:s.solStep+1,solTyping:false})),this.props.reducedMotion?500:1400);};
+  makeReflection=()=>{const u=this.state.sol.filter(m=>m.me).map(m=>m.text.replace(/[.!?]+$/,''));const lc=x=>x.charAt(0).toLowerCase()+x.slice(1);
+    const d=`Tonight I talked through ${lc(u[0]||'my day')}.`+(u[1]?`\n\nWhen I pictured saying no to one thing, the first thing that came up was: ${lc(u[1])}.`:'')+`\n\nOne thing I'd like to try this week: `;
+    this.go('solDraft',{solDraft:d});};
+  saveReflection=()=>{const t=this.state.solDraft.trim();if(!t)return;this.newEntry({id:'n'+Date.now(),date:TODAY,time:'9:41 PM',nb:'refl',mode:'sol',text:t,tags:[]},s=>({stack:s.stack.slice(0,-1),sol:[],solStep:0,solDraft:''}));};
+  openSummary=ids=>{const recent=this.state.entries.filter(e=>e.date>='2026-09-25').map(e=>e.id);this.go('summary',{sum:{purpose:'me',sel:ids||recent,step:0,quotes:true,note:''}});};
+  setSum=p=>this.setState(s=>({sum:{...s.sum,...p}}),p.step!==undefined?this.top:undefined);
+  openMove=id=>this.setState({sheet:'move',moveId:id});
+  moveTo=nb=>{const s=this.state;if(s.sheet==='pickNb'){return this.setState(st=>({sheet:null,draft:{...st.draft,nb}}));}
+    const id=s.moveId;const prev=s.entries.find(e=>e.id===id).nb;const setNb=v=>this.setState(st=>({entries:st.entries.map(e=>e.id===id?{...e,nb:v}:e)}));
+    this.setState({sheet:null});if(prev===nb)return;setNb(nb);this.toastShow(`Moved to ${NB.find(n=>n.id===nb).name}`,()=>{setNb(prev);this.setState({toast:null});});};
+  startDl=()=>{clearInterval(this.dlT);this.setState({ai:'downloading',dlErr:false});
+    this.dlT=setInterval(()=>{const p=this.state.dl+1.6;
+      if(this.props.aiState==='download-interrupts'&&!this.noInt&&p>=64){clearInterval(this.dlT);return this.setState({dl:64,dlErr:true});}
+      if(p>=100){clearInterval(this.dlT);this.setState({dl:100,ai:'ready'});return this.toastShow('Tagging is ready — works offline');}
+      this.setState({dl:p});},90);};
+  retryDl=()=>{this.noInt=true;this.startDl();};
+  cancelDl=()=>{clearInterval(this.dlT);this.setState({ai:'none',dl:0,dlErr:false});};
+  removeModel=()=>{this.setState({ai:'none',dl:0,sheet:null});this.toastShow('Tagging model removed · 1.1 GB freed');};
+  demoSet=(tid,status)=>this.setState(s=>({demoTags:s.demoTags.map(t=>t.id===tid?{...t,status}:t)}));
+  demoFind=()=>{this.setState({demoPhase:1});setTimeout(()=>this.setState({demoPhase:2}),this.props.reducedMotion?400:1500);};
+  finishOnb=()=>this.setState(s=>({entries:s.entries.some(e=>e.id==='e9')?s.entries:[{id:'e9',date:TODAY,time:'9:12 PM',nb:'daily',mode:'free',text:DEMO_TEXT,tags:s.demoTags.map(t=>({...t}))},...s.entries],screen:'journal',tab:'journal',stack:[]}),this.top);
+  restart=()=>this.setState(s=>({screen:'onb',onb:0,demoPhase:0,demoTags:demoTags(),demoActive:null,stack:[],sheet:null,entries:s.entries.filter(e=>e.id!=='e9')}),this.top);
+  jump=k=>{if(k==='onb')return this.restart();
+    this.setState(s=>{let entries=s.entries;if(!entries.some(e=>e.id==='e9'))entries=[{id:'e9',date:TODAY,time:'9:12 PM',nb:'daily',mode:'free',text:DEMO_TEXT,tags:s.demoTags.map(t=>({...t}))},...entries];
+      const J={journal:['journal','journal'],write:['journal','journal'],editor:['editor','journal'],entry:['entry','journal'],tag:['tag','discover'],discover:['discover','discover'],notebooks:['notebooks','notebooks'],notebook:['notebook','notebooks'],sol:['sol','you'],summary:['summary','you'],reminders:['reminders','you'],ai:['ai','you']}[k];
+      const[screen,tab]=J;
+      return{entries,screen,tab,stack:screen===tab?[]:[{screen:tab}],sheet:k==='write'?'write':null,entryId:'e8',tagLabel:'Walking helped',nbId:'daily',nbQ:'',nbF:null,active:null,editKept:false,
+        sum:k==='summary'?{purpose:'me',sel:entries.filter(e=>e.date>='2026-09-25').map(e=>e.id),step:0,quotes:true,note:''}:s.sum,sol:k==='sol'&&!s.sol.length?[SOL0]:s.sol};},this.top);};
+
+  renderVals(){
+    const s=this.state,P=this.props,rm=!!P.reducedMotion,tr=rm?'none':'all .22s ease';
+    const E=s.entries;const nbN=id=>(NB.find(n=>n.id===id)||NB[0]).name;
+    const idx={};E.forEach(e=>e.tags.forEach(t=>{if(t.status!=='kept')return;const k=t.label.toLowerCase();if(!idx[k])idx[k]={label:t.label,cat:t.cat,ids:[]};if(!idx[k].ids.includes(e.id))idx[k].ids.push(e.id);}));
+    const cnt=l=>(idx[(l||'').toLowerCase()]||{ids:[]}).ids.length;
+    const pend=e=>e.tags.filter(t=>t.status==='suggested').length;
+    const excerpt=e=>{const t=e.text.replace(/\n+/g,' ');return t.length>110?t.slice(0,108).replace(/\s+\S*$/,'')+'…':t;};
+    const card=e=>{const n=pend(e);const kept=e.tags.filter(t=>t.status==='kept');return{date:rel(e.date)+' · '+nbN(e.nb),mode:MODES[e.mode],excerpt:excerpt(e),photo:!!e.photo,photoLabel:e.photo||'',chips:kept.slice(0,3).map(t=>({label:t.label,st:chipSt(t,true)})),more:'+'+(kept.length-3),hasMore:kept.length>3,pending:n===1?'1 to review':n+' to review',hasPending:n>0,open:()=>this.openEntry(e.id),move:()=>this.openMove(e.id)};};
+    const sw=on=>({track:{width:'51px',height:'31px',borderRadius:'999px',background:on?'var(--sage)':'var(--line)',position:'relative',transition:tr,flex:'none',cursor:'pointer',border:'none',padding:0},knob:{position:'absolute',top:'2px',left:on?'22px':'2px',width:'27px',height:'27px',borderRadius:'50%',background:'#fff',boxShadow:'0 2px 4px rgba(0,0,0,.2)',transition:tr}});
+    const scr=s.screen;
+    // streak
+    const dates=new Set(E.map(e=>e.date));let streak=0;const d=pd(TODAY);if(!dates.has(TODAY))d.setDate(d.getDate()-1);while(dates.has(iso(d))){streak++;d.setDate(d.getDate()-1);}
+    const week=['M','T','W','T','F','S','S'].map((l,i)=>{const x=iso(new Date(2026,9,5+i));const has=dates.has(x),td=x===TODAY;return{l,st:{width:'30px',height:'30px',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'12px',fontWeight:600,background:has?'var(--ter)':'transparent',color:has?'var(--onTer)':'var(--mut)',border:has?'1.5px solid var(--ter)':td?'1.5px dashed var(--ter)':'1.5px solid var(--line)',boxSizing:'border-box'}};});
+    const pendEntries=E.filter(e=>pend(e)>0);const pendTotal=pendEntries.reduce((a,e)=>a+pend(e),0);
+    const pendLabel=`${pendTotal} ${pendTotal===1?'suggestion':'suggestions'} waiting in ${pendEntries.length} ${pendEntries.length===1?'entry':'entries'}`;
+    const topHelp=Object.values(idx).filter(i=>i.cat==='helped').sort((a,b)=>b.ids.length-a.ids.length)[0];
+    const J={date:'Friday, October 9',streak:String(streak),streakUnit:streak===1?'day in a row':'days in a row',week,cards:E.map(card),hasPending:pendTotal>0,pendingLabel:pendLabel,review:()=>pendEntries[0]&&this.openEntry(pendEntries[0].id),
+      revisit:{has:!!topHelp&&topHelp.ids.length>=2,label:topHelp?topHelp.label.toLowerCase():'',n:topHelp?String(topHelp.ids.length):'',open:()=>topHelp&&this.openTag(topHelp.label)},
+      wFree:()=>this.openWrite('free'),wDump:()=>this.openWrite('dump'),wGuided:()=>this.openWrite('guided'),openRem:()=>this.go('reminders')};
+    // onboarding
+    const dsegs=segs(DEMO_TEXT,s.demoPhase===2?s.demoTags:[],s.demoActive,tid=>this.setState(st=>({demoActive:st.demoActive===tid?null:tid})));
+    const rowSt=on=>({display:'flex',gap:'10px',alignItems:'center',padding:'12px 10px 12px 14px',borderRadius:'16px',background:on?'var(--card)':'transparent',border:on?'1px solid var(--line)':'1px solid transparent',transition:tr,cursor:'pointer'});
+    const demoSugg=s.demoTags.map(t=>({label:t.label,quote:'“'+t.quote+'”',st:chipSt(t),pending:t.status==='suggested',kept:t.status==='kept',removed:t.status==='removed',rowSt:{...rowSt(s.demoActive===t.id),opacity:t.status==='removed'?.5:1},
+      keep:e=>{e&&e.stopPropagation();this.demoSet(t.id,'kept');},remove:e=>{e&&e.stopPropagation();this.demoSet(t.id,'removed');},undo:e=>{e&&e.stopPropagation();this.demoSet(t.id,'suggested');},focus:()=>this.setState(st=>({demoActive:st.demoActive===t.id?null:t.id}))}));
+    const walkKept=s.demoTags.some(t=>t.label==='Walking helped'&&t.status==='kept');
+    const demoLocked=s.onb===1&&s.demoPhase<2;
+    // AI
+    const ai={ready:s.ai==='ready',none:s.ai==='none',downloading:s.ai==='downloading'&&!s.dlErr,interrupted:s.ai==='downloading'&&s.dlErr,unsupported:s.ai==='unsupported',supported:s.ai!=='unsupported',
+      pct:Math.round(s.dl)+'%',got:(s.dl*1.1/100).toFixed(2)+' of 1.1 GB',barSt:{width:s.dl+'%',height:'100%',background:'var(--sage)',borderRadius:'3px',transition:rm?'none':'width .1s linear'},
+      start:this.startDl,cancel:this.cancelDl,retry:this.retryDl,askRemove:()=>this.setState({sheet:'remove'}),remove:this.removeModel,
+      sugSw:sw(s.suggestOn),solSw:sw(s.solOn),toggleSuggest:()=>this.setState(st=>({suggestOn:!st.suggestOn})),toggleSol:()=>this.setState(st=>({solOn:!st.solOn}))};
+    const aiLabel={ready:'Ready',none:'Not set up',downloading:'Downloading',unsupported:'Not available'}[s.ai];
+    // entry
+    const en=E.find(e=>e.id===s.entryId);let EV={};
+    if(en){const pr=s.proc[en.id]||'done';const sug=en.tags.filter(t=>t.status==='suggested');const kept=en.tags.filter(t=>t.status==='kept');const tap=tid=>this.setState(st=>({active:st.active===tid?null:tid}));
+      EV={date:rel(en.date)+', '+en.time,nb:nbN(en.nb),mode:MODES[en.mode],hasPrompt:!!en.prompt,prompt:en.prompt||'',photo:!!en.photo,photoLabel:en.photo||'',segs:segs(en.text,en.tags,s.active,tap),justSaved:s.justSaved===en.id,
+        running:pr==='running',failed:pr==='failed',none:pr==='none',unavailable:pr==='unavailable'||pr==='off',unsupported:pr==='unsupported',
+        hasSug:sug.length>0,sugCount:String(sug.length),
+        sug:sug.map(t=>({label:t.label,cat:CN[t.cat],quote:t.quote?'“'+t.quote+'”':'',hasQuote:!!t.quote,st:chipSt(t),rowSt:rowSt(s.active===t.id),focus:()=>tap(t.id),
+          keep:e=>{e.stopPropagation();this.keep(en.id,t.id);},remove:e=>{e.stopPropagation();this.removeTag(en.id,t.id);},edit:e=>{e.stopPropagation();this.openEditTag(en.id,t.id);}})),
+        hasKept:kept.length>0,kept:kept.map(t=>({label:t.label,st:{...chipSt(t),...(s.editKept?{boxShadow:`0 0 0 1.5px var(--${CK[t.cat]})`}:{})},n:String(cnt(t.label)),hasN:cnt(t.label)>1,tap:()=>s.editKept?this.openEditTag(en.id,t.id):this.openTag(t.label)})),
+        editLabel:s.editKept?'Done':'Edit',toggleEdit:()=>this.setState(st=>({editKept:!st.editKept})),keptHint:s.editKept?'Tap a tag to rename, change its kind, or remove it.':'Tap a tag to see every entry it appears in. The number shows how many.',
+        retry:()=>this.runProc(en.id),keepAll:()=>this.keepAll(en.id),add:()=>this.setState({sheet:'add',form:{label:'',cat:'feeling'}}),move:()=>this.openMove(en.id),setup:()=>this.go('ai')};}
+    // tag detail
+    let TG={};let hasTG=false;
+    if(s.tagLabel){const k=s.tagLabel.toLowerCase();const it=idx[k];const ents=E.filter(e=>e.tags.some(t=>t.status==='kept'&&t.label.toLowerCase()===k)).sort((a,b)=>b.date.localeCompare(a.date));
+      if(it&&ents.length){hasTG=true;const cat=it.cat,ck=CK[cat];const nbs=new Set(ents.map(e=>e.nb));const ds=ents.map(e=>e.date).sort();
+        const st0=new Date(2026,8,1).getTime(),en0=new Date(2026,9,31).getTime();
+        const co={};ents.forEach(e=>e.tags.forEach(t=>{if(t.status!=='kept'||t.label.toLowerCase()===k)return;co[t.label]=co[t.label]||{t,n:0};co[t.label].n++;}));
+        const coL=Object.values(co).filter(c=>c.n>=2).sort((a,b)=>b.n-a.n).slice(0,5);
+        TG={label:it.label,cat:CATS.find(c=>c[0]===cat)[1],catSt:{fontSize:'12px',fontWeight:600,letterSpacing:'.1em',textTransform:'uppercase',color:`var(--${ck})`},
+          meta:`Mentioned in ${ents.length} ${ents.length===1?'entry':'entries'} · ${nbs.size} ${nbs.size===1?'notebook':'notebooks'} · ${sh(ds[0])}${ds.length>1?' – '+sh(ds[ds.length-1]):''}`,
+          marks:ents.map(e=>({st:{position:'absolute',top:'50%',left:((pd(e.date).getTime()-st0)/(en0-st0)*100)+'%',width:'12px',height:'12px',marginLeft:'-6px',marginTop:'-6px',borderRadius:'50%',background:`var(--${ck})`,border:'2px solid var(--bg)',boxSizing:'border-box'}})),
+          entries:ents.map(e=>{const t=e.tags.find(t=>t.status==='kept'&&t.label.toLowerCase()===k);return{date:rel(e.date),nb:nbN(e.nb),quote:t.quote||excerpt(e),qSt:t.quote?{backgroundImage:`linear-gradient(transparent 60%, var(--${ck}T) 60%)`}:{},open:()=>this.openEntry(e.id)};}),
+          co:coL.map(c=>({label:c.t.label,n:'in '+c.n,st:chipSt(c.t),open:()=>this.openTag(c.t.label)})),hasCo:coL.length>0,
+          summarize:()=>this.openSummary(ents.map(e=>e.id)),sumLabel:`Summarize these ${ents.length} entries`};}}
+    // discover
+    const q=s.discQ.trim().toLowerCase();
+    const groups=CATS.map(([c,name])=>{const items=Object.values(idx).filter(i=>i.cat===c&&(!q||i.label.toLowerCase().includes(q))).sort((a,b)=>b.ids.length-a.ids.length);return{name,count:items.length+(items.length===1?' tag':' tags'),has:items.length>0,chips:items.map(i=>({label:i.label,n:String(i.ids.length),st:chipSt({cat:c,status:'kept'}),open:()=>this.openTag(i.label)}))};}).filter(g=>g.has);
+    const results=q.length>1?E.filter(e=>e.text.toLowerCase().includes(q)).map(card):[];
+    const tagged=E.filter(e=>e.tags.some(t=>t.status==='kept')).length;
+    const DC={q:s.discQ,onQ:e=>this.setState({discQ:e.target.value}),groups,results,hasResults:results.length>0,basis:`From ${tagged} of your ${E.length} entries with kept tags. Numbers show how many entries mention each.`,
+      hasPending:pendTotal>0,pendingLabel:pendLabel,review:J.review,summary:()=>this.openSummary()};
+    // notebooks
+    const NBS={total:`${NB.length} notebooks · ${E.length} entries`,list:NB.map(n=>({name:n.name,count:(c=>c+(c===1?' entry':' entries'))(E.filter(e=>e.nb===n.id).length),coverSt:coverSt(n),open:()=>this.openNb(n.id)}))};
+    const nb=NB.find(n=>n.id===s.nbId);let NV={};
+    if(nb){const all=E.filter(e=>e.nb===nb.id);const tl={};all.forEach(e=>e.tags.forEach(t=>{if(t.status==='kept')tl[t.label]=1;}));const nq=s.nbQ.trim().toLowerCase();
+      const list=all.filter(e=>(!s.nbF||e.tags.some(t=>t.status==='kept'&&t.label===s.nbF))&&(!nq||e.text.toLowerCase().includes(nq)||e.tags.some(t=>t.label.toLowerCase().includes(nq))));
+      NV={name:nb.name,count:`${all.length} ${all.length===1?'entry':'entries'}${s.nbF?' · '+list.length+' tagged '+s.nbF:''}`,q:s.nbQ,onQ:e=>this.setState({nbQ:e.target.value}),
+        bandSt:{...coverSt(nb),aspectRatio:'auto',height:'160px',borderRadius:'0',boxShadow:'inset 0 -1px 0 rgba(0,0,0,.1)',cursor:'default'},
+        filters:[fchip('All',!s.nbF,()=>this.setState({nbF:null})),...Object.keys(tl).map(l=>fchip(l,s.nbF===l,()=>this.setState(st=>({nbF:st.nbF===l?null:l}))))],cards:list.map(card),empty:list.length===0};}
+    // editor
+    const dr=s.draft;const can=!!(dr.text.trim()||(dr.mode==='photo'&&dr.photo));const wc=dr.text.trim()?dr.text.trim().split(/\s+/).length:0;
+    const ED={tabs:[['free','Free'],['dump','Brain dump'],['guided','Guided'],['photo','Photo']].map(([m,l])=>({label:l,st:segSt(dr.mode===m),tap:()=>this.setState(st=>({draft:{...st.draft,mode:m}}))})),
+      isDump:dr.mode==='dump',isGuided:dr.mode==='guided',isPhoto:dr.mode==='photo',
+      timer:Math.floor(s.tLeft/60)+':'+String(s.tLeft%60).padStart(2,'0'),timerBtn:s.tRun?'Pause':s.tLeft===0?'Again':s.tLeft<180?'Resume':'Start',
+      timerNote:s.tLeft===0?'Time’s up. Keep going if you like — nothing stops you.':s.tRun?'Keep moving. Don’t fix anything.':'Three minutes. Write whatever arrives.',
+      timerBar:{width:((180-s.tLeft)/180*100)+'%',height:'100%',background:'var(--ter)',transition:rm?'none':'width 1s linear'},toggleTimer:this.toggleTimer,
+      pcats:[['gratitude','Gratitude'],['day','The day'],['mind','On my mind']].map(([k,l])=>fchip(l,dr.pc===k,()=>this.setState(st=>({draft:{...st.draft,pc:k,pi:0}})))),
+      prompt:PROMPTS[dr.pc][dr.pi],nextPrompt:()=>this.setState(st=>({draft:{...st.draft,pi:(st.draft.pi+1)%PROMPTS[st.draft.pc].length}})),
+      photo:dr.photo,noPhoto:!dr.photo,pickPhoto:()=>this.setState(st=>({draft:{...st.draft,photo:true}})),clearPhoto:()=>this.setState(st=>({draft:{...st.draft,photo:false}})),
+      text:dr.text,onText:e=>{const v=e.target.value;this.setState(st=>({draft:{...st.draft,text:v}}));},
+      ph:{free:'Start anywhere…',dump:'Just keep going…',guided:'Write your answer…',photo:'Add a few words, if you like…'}[dr.mode],
+      nb:nbN(dr.nb),pickNb:()=>this.setState({sheet:'pickNb'}),cantSave:!can,save:this.saveDraft,
+      saveSt:{background:'none',border:'none',color:can?'var(--ter)':'var(--mut)',opacity:can?1:.5,fontSize:'17px',fontWeight:700,cursor:can?'pointer':'default',minHeight:'44px',padding:'0 6px'},
+      words:wc?wc+(wc===1?' word':' words'):'',listening:s.listening,dictate:this.dictate,
+      example:()=>this.setState(st=>({draft:{...st.draft,text:EX[st.draft.mode]}}))};
+    // sol
+    const solReady=s.ai==='ready'&&s.solOn;
+    const SV={gated:!solReady,open:solReady,
+      gateTitle:s.ai==='unsupported'?'Sol isn’t available on this iPhone':!s.solOn?'Sol is turned off':'Sol needs on-device AI',
+      gateBody:s.ai==='unsupported'?'Sol needs on-device AI this iPhone can’t run, and it won’t use the cloud instead. Guided reflection offers prompts to think things through.':!s.solOn?'You can turn Sol back on in On-device AI settings.':'Set up the on-device model first. Your conversation would stay on this iPhone.',
+      gateCta:s.ai==='unsupported'?'Try Guided reflection':'Open On-device AI',gateAction:()=>s.ai==='unsupported'?this.go('editor',{draft:{...s.draft,mode:'guided'}}):this.go('ai'),
+      msgs:s.sol.map(m=>({text:m.text,wrapSt:{display:'flex',justifyContent:m.me?'flex-end':'flex-start'},bSt:m.me?{maxWidth:'78%',padding:'11px 15px',borderRadius:'20px 20px 6px 20px',background:'var(--terT)',color:'var(--ink)',fontSize:'16px',lineHeight:1.4}:{maxWidth:'88%',fontFamily:"'Newsreader',Georgia,serif",fontSize:'20px',lineHeight:1.45,color:'var(--ink)'}})),
+      typing:s.solTyping,quick:(s.solTyping||s.solStep>=2)?[]:SOLQ[s.solStep].map(x=>({label:x,tap:()=>this.solSend(x)})),canMake:s.solStep>=1&&!s.solTyping,canChat:s.solStep<2,
+      input:s.solIn,onIn:e=>this.setState({solIn:e.target.value}),send:()=>this.solSend(),make:this.makeReflection};
+    const SD={text:s.solDraft,onText:e=>this.setState({solDraft:e.target.value}),save:this.saveReflection,discard:()=>this.setState(st=>({sol:[],solStep:0,solDraft:'',screen:'you',tab:'you',stack:[]}),this.top)};
+    // summary
+    const sm=s.sum;const sel=E.filter(e=>sm.sel.includes(e.id)).sort((a,b)=>a.date.localeCompare(b.date));const clin=sm.purpose==='clin';
+    const tc={};sel.forEach(e=>e.tags.forEach(t=>{if(t.status!=='kept')return;const k=t.cat+'|'+t.label;tc[k]=tc[k]||{cat:t.cat,label:t.label,n:0};tc[k].n++;}));
+    const byCat=c=>Object.values(tc).filter(x=>x.cat===c).sort((a,b)=>b.n-a.n);const top=(c,n)=>byCat(c).slice(0,n).map(x=>x.label.toLowerCase()+' ('+x.n+')');
+    const range=sel.length?sh(sel[0].date)+(sel.length>1?' – '+sh(sel[sel.length-1].date):'')+', 2026':'';
+    const f=top('feeling',3),si=top('situation',3),he=top('helped',3);
+    const narr=clin?[`Across ${sel.length} entries I chose, the feelings I named most often were ${fmtList(f)||'not tagged'}.`,si.length?`Situations I wrote about included ${fmtList(si)}.`:'',he.length?`Things I noted as helping: ${fmtList(he)}.`:'','Numbers are how many selected entries carry each tag.'].filter(Boolean).join(' ')
+      :[`Across ${sel.length} entries, the feelings you named most were ${fmtList(f)||'not tagged yet'}.`,si.length?`You wrote about ${fmtList(si)}.`:'',he.length?`Things you noted helped: ${fmtList(he)}.`:''].filter(Boolean).join(' ');
+    const optSt=on=>({display:'flex',flexDirection:'column',gap:'4px',padding:'16px',borderRadius:'18px',background:'var(--card)',border:on?'2px solid var(--ter)':'1px solid var(--line)',cursor:'pointer',margin:on?'0':'1px'});
+    const preset=(l,ids)=>fchip(l,false,()=>this.setSum({sel:ids}));
+    const SU={step0:sm.step===0,step1:sm.step===1,clin,meSt:optSt(!clin),clinSt:optSt(clin),setMe:()=>this.setSum({purpose:'me'}),setClin:()=>this.setSum({purpose:'clin'}),
+      count:`${sel.length} selected`,
+      presets:[preset('Last 2 weeks',E.filter(e=>e.date>='2026-09-25').map(e=>e.id)),preset('All entries',E.map(e=>e.id)),preset('Walking helped',E.filter(e=>e.tags.some(t=>t.status==='kept'&&t.label==='Walking helped')).map(e=>e.id)),preset('Work deadlines',E.filter(e=>e.tags.some(t=>t.status==='kept'&&t.label==='Work deadlines')).map(e=>e.id)),preset('Clear',[])],
+      list:E.map(e=>{const on=sm.sel.includes(e.id);const kt=e.tags.filter(t=>t.status==='kept').map(t=>t.label);return{date:rel(e.date),excerpt:excerpt(e),tags:kt.length?kt.slice(0,3).join(', '):'No kept tags',mark:on?'✓':'',
+        boxSt:{flex:'none',width:'24px',height:'24px',borderRadius:'50%',marginTop:'2px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'13px',fontWeight:700,boxSizing:'border-box',background:on?'var(--ter)':'transparent',color:'var(--onTer)',border:on?'none':'1.5px solid var(--mut)'},
+        tap:()=>this.setSum({sel:on?sm.sel.filter(x=>x!==e.id):[...sm.sel,e.id]})};}),
+      qSw:sw(sm.quotes),toggleQuotes:()=>this.setSum({quotes:!sm.quotes}),note:sm.note,onNote:e=>this.setSum({note:e.target.value}),
+      cantPreview:!sel.length,preview:()=>this.setSum({step:1}),prevSt:{height:'54px',borderRadius:'16px',border:'none',background:sel.length?'var(--ter)':'var(--line)',color:sel.length?'var(--onTer)':'var(--mut)',fontSize:'17px',fontWeight:600,cursor:sel.length?'pointer':'default'},
+      backBtn:sm.step===1?()=>this.setSum({step:0}):this.back,backLabel:sm.step===1?'Edit selection':'Back',
+      export:()=>this.setState({sheet:'share',shareName:clin?'Memento – appointment summary.pdf':'Memento – a look back.pdf'}),
+      pdf:{title:clin?'Journal summary for my appointment':'A look back',who:clin?'Prepared by Maya Lin · October 9, 2026':'For me · October 9, 2026',range,countLine:sel.length+' selected '+(sel.length===1?'entry':'entries'),narrative:narr,
+        groups:CATS.map(([c,name])=>({name,has:byCat(c).length>0,items:byCat(c).map(x=>x.label+' ('+x.n+')').join(', ')})).filter(g=>g.has),
+        showQuotes:sm.quotes,quotes:sel.slice(-6).map(e=>{const t=e.tags.find(t=>t.status==='kept'&&t.quote);return{date:sh(e.date),text:t?t.quote:excerpt(e)};}),hasNote:clin&&!!sm.note.trim(),note:sm.note}};
+    // reminders
+    const RM={on:s.rem.on,sw:sw(s.rem.on),toggle:()=>this.setState(st=>({rem:{...st.rem,on:!st.rem.on}})),time:s.rem.time,clock:fmtTime(s.rem.time).replace(/ (AM|PM)/,''),
+      onTime:e=>{const v=e.target.value;if(v)this.setState(st=>({rem:{...st.rem,time:v}}));},
+      presets:[['08:00','8:00 AM'],['12:30','12:30 PM'],['20:30','8:30 PM'],['22:00','10:00 PM']].map(([t,l])=>fchip(l,s.rem.time===t,()=>this.setState(st=>({rem:{...st.rem,time:t}})))),
+      previewSt:{opacity:s.rem.on?1:.35,transition:tr},caption:s.rem.on?`One gentle nudge at ${fmtTime(s.rem.time)} each day. No follow-ups, no “you missed a day.”`:'Reminders are off. Memento will stay quiet — write whenever you like.'};
+    // you
+    const Y={streak:`${streak}-day streak`,remLabel:s.rem.on?fmtTime(s.rem.time):'Off',aiLabel,darkSw:sw(s.dark),toggleDark:()=>this.setState(st=>({dark:!st.dark})),
+      rem:()=>this.go('reminders'),sum:()=>this.openSummary(),sol:this.openSol,ai:()=>this.go('ai'),replay:this.restart,exportAll:()=>this.setState({sheet:'share',shareName:'Memento – journal export.pdf'})};
+    // sheets
+    const sheetEntry=s.sheet==='move'?E.find(e=>e.id===s.moveId):null;const curNb=s.sheet==='pickNb'?dr.nb:sheetEntry?sheetEntry.nb:null;
+    const editT=s.sheet==='tag'&&s.sheetTag?this.getTag(s.sheetTag.eid,s.sheetTag.tid):null;
+    const inEntry=en?en.tags.filter(t=>t.status!=='removed').map(t=>t.label.toLowerCase()):[];
+    const quick=s.sheet==='add'?Object.values(idx).filter(i=>!inEntry.includes(i.label.toLowerCase())).sort((a,b)=>b.ids.length-a.ids.length).slice(0,8):[];
+    const SH={write:s.sheet==='write',tagForm:s.sheet==='tag'||s.sheet==='add',move:s.sheet==='move'||s.sheet==='pickNb',share:s.sheet==='share',remove:s.sheet==='remove',
+      modes:[['free','Write freely','An open page.'],['dump','Brain dump','Three gentle minutes. Don’t stop to fix.'],['guided','Guided reflection','Gratitude, your day, or what’s on your mind.'],['photo','Photo journal','Start with a picture. Words optional.']].map(([m,l,ds],i)=>({label:l,desc:ds,tap:()=>this.openWrite(m),
+        iconSt:{flex:'none',width:'40px',height:'40px',boxSizing:'border-box',background:'var(--terT)',...[{borderRadius:'12px'},{borderRadius:'50%',border:'3px solid var(--ter)',background:'transparent'},{borderRadius:'4px',transform:'rotate(45deg) scale(.78)',background:'var(--ter)'},{borderRadius:'8px',border:'2px solid var(--ter)'}][i]}})),
+      sol:this.openSol,formTitle:s.sheet==='tag'?'Edit tag':'Add a tag',saveLabel:s.sheet==='tag'?'Save':'Add',save:this.saveForm,label:s.form.label,
+      onLabel:e=>{const v=e.target.value;this.setState(st=>({form:{...st.form,label:v}}));},
+      cats:[['feeling','Feeling'],['situation','Situation'],['helped','Helped'],['topic','Topic']].map(([c,l])=>({label:l,st:segSt(s.form.cat===c),tap:()=>this.setState(st=>({form:{...st.form,cat:c}}))})),
+      hasQuote:!!(editT&&editT.quote),quote:editT&&editT.quote||'',canRemove:!!editT,remove:()=>editT&&this.removeTag(s.sheetTag.eid,s.sheetTag.tid),
+      hasQuick:quick.length>0,quick:quick.map(i=>({label:i.label,st:chipSt({cat:i.cat,status:'kept'}),tap:()=>this.setState({form:{label:i.label,cat:i.cat}})})),
+      moveTitle:s.sheet==='pickNb'?'Save to notebook':'Move to notebook',moveOpts:NB.map(n=>({name:n.name,on:curNb===n.id,tap:()=>this.moveTo(n.id),sw:{width:'22px',height:'28px',borderRadius:'2px 5px 5px 2px',background:n.color,flex:'none'}})),
+      shareName:s.shareName,shareOpts:['Save to Files','Print','Mail','Messages','AirDrop'].map(l=>({label:l,tap:()=>{this.setState({sheet:null});this.toastShow(l==='Save to Files'?'Saved to Files':l==='Print'?'Sent to printer':`Opened ${l} — nothing sent yet`);}}))};
+    const tabC=t=>({flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',background:'none',border:'none',cursor:'pointer',fontSize:'10.5px',fontWeight:500,color:s.tab===t?'var(--ter)':'var(--mut)',minHeight:'48px',padding:'2px 0'});
+    const jumps=[['onb','Onboarding'],['journal','Journal'],['write','Write sheet'],['editor','Editor'],['entry','Entry + suggestions'],['tag','Tag detail'],['discover','Discover'],['notebooks','Notebooks'],['notebook','Notebook detail'],['sol','Sol'],['summary','Summary'],['reminders','Reminders'],['ai','On-device AI']].map(([k,label])=>({label,tap:()=>this.jump(k)}));
+    return{
+      zoom:P.largerText?1.15:1,jumps,back:this.back,
+      isOnb:scr==='onb',onb0:s.onb===0,onb1:s.onb===1,onb2:s.onb===2,onb3:s.onb===3,
+      onbDots:[0,1,2,3].map(i=>({st:{width:i===s.onb?'20px':'6px',height:'6px',borderRadius:'3px',background:i===s.onb?'var(--ter)':'var(--line)',transition:tr}})),
+      nextOnb:()=>this.setState(st=>({onb:st.onb+1}),this.top),skipOnb:()=>this.setState({onb:3},this.top),
+      demoSegs:dsegs,demoP0:s.demoPhase===0,demoP1:s.demoPhase===1,demoP2:s.demoPhase===2,demoFind:this.demoFind,demoSugg,demoLocked,
+      demoNextSt:{height:'54px',borderRadius:'16px',border:'none',background:demoLocked?'var(--line)':'var(--ter)',color:demoLocked?'var(--mut)':'var(--onTer)',fontSize:'17px',fontWeight:600,cursor:demoLocked?'default':'pointer'},
+      walkLabel:walkKept?'in 4 entries':'in 3 earlier entries',
+      findList:[{date:'Today',quote:'A short walk helped me settle'},{date:'Tue, Oct 6',quote:'Took the long way home through the park'},{date:'Thu, Sep 24',quote:'Walked to the corner shop just to get out of the flat'},{date:'Sat, Sep 12',quote:'Long walk with Priya after work'}].slice(walkKept?0:1),
+      finishOnb:this.finishOnb,finishLabel:s.ai==='downloading'?'Start journaling while it downloads':s.ai==='none'?'Set up later, start journaling':'Start journaling',ai,
+      showTabs:['journal','discover','notebooks','you','entry','tag','notebook','reminders','ai','summary'].includes(scr),
+      tabJ:tabC('journal'),tabD:tabC('discover'),tabN:tabC('notebooks'),tabY:tabC('you'),
+      goJ:()=>this.tabTo('journal'),goD:()=>this.tabTo('discover'),goN:()=>this.tabTo('notebooks'),goY:()=>this.tabTo('you'),openWriteSheet:()=>this.setState({sheet:'write'}),
+      isJournal:scr==='journal',isDiscover:scr==='discover',isNotebooks:scr==='notebooks',isYou:scr==='you',isEditor:scr==='editor',isEntry:scr==='entry'&&!!en,
+      isTag:scr==='tag'&&hasTG,tgEmpty:scr==='tag'&&!hasTG,isNotebook:scr==='notebook'&&!!nb,isSol:scr==='sol',isSolDraft:scr==='solDraft',isSummary:scr==='summary',isReminders:scr==='reminders',isAI:scr==='ai',
+      J,EV,TG,DC,NBS,NV,ED,SV,SD,SU,RM,Y,SH,
+      hasSheet:!!s.sheet,closeSheet:()=>this.setState({sheet:null}),
+      hasToast:!!s.toast,toast:{text:s.toast?s.toast.text:'',hasUndo:!!(s.toast&&s.toast.undo),undo:s.toast&&s.toast.undo}};
+  }
+}
+</script>
+</body>
+</html>

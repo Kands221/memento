@@ -43,6 +43,8 @@ Recreate the Memento HTML prototype as a native SwiftUI iPhone app that a real p
 | D21 | Distribution | **Hackathon demo build for iPhone**, installed with Xcode on a real Apple Intelligence iPhone. No App Store compliance work for now (§11 lists what to add later) | App Store-ready from day one | The user said: hackathon, no compliance for now, iPhone. |
 | D22 | Sol conversation length | A soft cap of **12 user turns**. From turn 8, Sol steers toward "Turn this into a reflection". At 12, input is replaced by the reflection button and a note | Unlimited chat | This is a Foundation Models *framework* term (item 7: no "dependency or spiraling user interactions"), not an App Store rule, so it applies even to a demo. It costs about 10 lines and fits the design's framing of Sol as a short path to a written reflection. |
 | D23 | Demo controls | **You → Demo** section in every build: Load sample journal, Clear journal, Replay welcome, and an AI-state override (Live / Not set up / Getting ready / Unsupported / Tagging fails) to show every prototype state on stage | Debug-only tooling | The prototype's "Tweaks" panel exists so these states can be shown; judges will want to see them. |
+| D25 | Source hosting | **Public GitHub repo `Kands221/memento`**, `main` = this app. README with demo GIF/screens and run steps. `design-reference/support.js` (Anthropic's generated canvas runtime) is git-ignored; the prototype HTML (the user's design) is committed | Private repo | The user asked for a public repo (hackathon). |
+| D26 | Asset-driven UI/UX | Codex generates a **full asset kit, not just placeholders**: brand + onboarding spots, notebook covers, empty states, paper-cut write-mode icons, tag-kind emblems, a reminder lock-screen scene, streak and "Tonight" ornaments, and a paper-grain texture (§8) | Only replace the prototype's placeholder boxes | The user asked to improve UI/UX by generating assets with Codex. |
 | D24 | Bundle identity | Bundle ID `com.kand221.memento`, display name **Memento**, automatic signing, `DEVELOPMENT_TEAM` empty for the user to pick (a free personal team works for on-device demos) | Guess a team | Device signing needs the user's Apple ID in Xcode. |
 
 ## 3. Architecture
@@ -218,27 +220,45 @@ All copy, ordering, and states are taken from the prototype unless noted.
 
 | Asset | Size | Used in |
 |---|---|---|
+| **Wave 1: brand & anchor** | | |
 | `onb-hero` (style anchor) | 1024×1024 | Onboarding 1: an olive sprig laid across an open notebook |
 | `onb-private` | 1024×1024 | Onboarding 4: a closed notebook held shut by an olive-leaf band, small paper lock |
 | `sol-mark` | 1024×1024 | Sol avatar, header, Write sheet row: a small layered paper sun with soft rays; must read at 40 pt |
-| `app-icon` | 1024×1024 | AppIcon: a cream paper-cut olive sprig on full-bleed terracotta paper (no corner rounding; iOS masks it) |
-| `cover-daily` / `cover-work` / `cover-gratitude` / `cover-reflections` | 1024×1536 | Notebook covers: bookcloth in #B4633F / #3B3733 / #7F9679 / #C8B186 with a small paper-cut emblem (sun-and-moon / paper plane / olive branch / crescent over water) in the lower third; upper 55% plain for the label plate |
+| `app-icon` | 1024×1024 | AppIcon: a cream paper-cut olive sprig on full-bleed terracotta paper (no corner rounding) |
+| **Wave 2A: notebook covers** | | |
+| `cover-daily` / `cover-work` / `cover-gratitude` / `cover-reflections` | 1024×1536 | Bookcloth in #B4633F / #3B3733 / #7F9679 / #C8B186 with a small paper-cut emblem (sun-and-moon / paper plane / olive branch / crescent over water) in the lower third; upper 55% plain for the label plate. Used for grid covers and the notebook-detail band |
+| **Wave 2B: spots & empty states** | | |
+| `onb-notice` | 1024×1024 | Onboarding 2 header spot: a paper magnifier resting on a page with three small colored paper tabs |
+| `onb-find` | 1024×1024 | Onboarding 3 header spot: three paper pages joined by a single sage thread |
 | `empty-journal` | 1024×1024 | Empty Journal: an open blank notebook with a pencil and a single sprig |
 | `empty-discover` | 1024×1024 | Empty Discover: a row of small paper sprouts |
 | `empty-search` | 1024×1024 | No matches: paper leaves under a paper magnifier |
 | `ai-unavailable` | 1024×1024 | AI unsupported / Sol gate: a paper crescent moon resting over a notebook |
-| `sample-ceramics` | 1536×1024 | Sample journal photo entry: a warm film-style photo of a lopsided handmade ceramic bowl on a wooden table |
+| `sample-ceramics` | 1536×1024 | Sample journal photo entry: a warm film-style photo of a lopsided handmade ceramic bowl |
+| **Wave 2C: UI accents** | | |
+| `mode-free` / `mode-dump` / `mode-guided` / `mode-photo` | 1024×1024 | Write-sheet icons (40 pt): paper-cut versions of the design's shapes. Free = rounded terracotta-tint square with a folded corner; Dump = terracotta paper ring with a small swirl; Guided = terracotta diamond with a tiny compass star; Photo = cream frame with a small terracotta sun. Must read at 40 pt |
+| `kind-feeling` / `kind-situation` / `kind-helped` / `kind-topic` | 1024×1024 | Discover group and tag-detail emblems (28 pt): terracotta heart-shaped leaf / umber paper house with a lit window / sage sprig / slate folded paper note |
+| `reminder-scene` | 1024×1536 | Lock-screen preview backdrop in Reminders (replaces the prototype's #CDBFA8→#9C8C74 gradient): a paper-cut dusk landscape of layered sand hills and a low sun, calm, with the upper third quiet for the clock |
+| `streak-sprout` | 1024×1024 | You streak card ornament: a small paper sprout with three leaves, terracotta-tint pot |
+| `tonight-ornament` | 1024×1024 | Journal "Tonight" card corner: a paper crescent moon with two tiny stars |
+| `paper-grain` | 1024×1024 | Seamless, very subtle cream paper fiber texture, tiled at 25% opacity over `bg` and `card` for tactility. Only used if it tiles without visible seams; otherwise dropped |
+
+**UX rules for using the assets:**
+- Illustrations never carry information on their own. Every one sits beside text that says the same thing, and VoiceOver treats them as decorative (`accessibilityHidden`).
+- Spots are 120–200 pt; icons are 28–44 pt.
+- With Reduce Motion off, onboarding spots fade and rise 8 pt on appear (0.35 s ease-out).
+- In dark mode they stay inside their cream paper card (D19); the icons and emblems sit on a `card`-colored disc so the cream background reads as intentional.
 
 **Orchestration (images only, D18):**
 1. Claude writes `design-assets/STYLE.md` (the style bible) and creates an Orca Run.
 2. **Wave 1:** one Codex worker generates `onb-hero` (the style anchor), then `onb-private`, `sol-mark`, and `app-icon`.
-3. **Wave 2,** started after Wave 1 settles: two Codex workers run in parallel, one for the four covers and one for the empty states and the sample photo. Each first views `onb-hero.png` with `view_image` to match the style.
+3. **Wave 2,** started after Wave 1 is accepted: three Codex workers run in parallel (2A covers, 2B spots and empty states, 2C UI accents). Each first views `onb-hero.png` and `sol-mark.png` with `view_image` to match the style.
 4. **Task specs** follow the Orca contract (Target, Change, Constraints, Ownership, Observable acceptance). Each worker:
    - writes only to `design-assets/generated/<asset>.png` and `<asset>.prompt.md`;
    - never touches Swift, the Xcode project, or git;
    - reports through `worker_done`.
 5. Claude inspects every image (viewing it, checking dimensions, the "no text" rule, and palette fit). It re-dispatches a rejected asset with notes, at most 2 retries per asset.
-6. Claude imports accepted images into `Assets.xcassets`: resized with `sips` (illustrations to 1024 px max, covers to 768×1152), converted to compressed PNG, with the AppIcon as a single 1024 image.
+6. Claude imports accepted images into `Assets.xcassets`: resized with `sips` (spots to 768 px, icons and emblems to 256 px, covers and the reminder scene to 768×1152), converted to compressed PNG, with the AppIcon as a single 1024 image with alpha stripped.
 7. **Swift work proceeds in parallel** against named placeholder assets, so image generation never blocks the build.
 
 The generated originals are git-ignored; the prompts and processed catalog assets are committed.
