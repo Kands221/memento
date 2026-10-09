@@ -15,9 +15,10 @@ public enum SuggestionSanitizer {
     ///   Topics are exempt (`quoteOptional`): they name an area of life, often without quotable words.
     public static func sanitize(_ drafts: [SuggestedTagDraft], text: String, existingLabels: Set<String>,
                                 limit: Int = 5, requireQuote: Bool = true,
-                                quoteOptional: Set<TagKind> = [.topic]) -> [SuggestedTagDraft] {
+                                quoteOptional: Set<TagKind> = [.topic], reservedQuotes: [String] = []) -> [SuggestedTagDraft] {
         var seen = Set(existingLabels.map { $0.lowercased() })
-        var taken: [Range<String.Index>] = []
+        // Quotes already highlighted on the entry can't be claimed again.
+        var taken: [Range<String.Index>] = reservedQuotes.compactMap { text.range(of: $0) }
         var out: [SuggestedTagDraft] = []
         for draft in drafts where out.count < limit {
             let label = cleanLabel(draft.label)

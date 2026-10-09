@@ -25,15 +25,10 @@ final class AIStatus {
             ?? .live
     }
 
+    /// What tagging can do (the demo rules engine needs no model).
     var availability: AIAvailability {
         _ = revision
-        return switch demoState {
-        case .live: live != .ready && isDemoEngine() ? .ready : live
-        case .needsAppleIntelligence: .needsAppleIntelligence
-        case .preparing: .preparing
-        case .unsupported: .unsupported
-        case .failing: .ready
-        }
+        return AIResolution.tagging(live: live, override: demoState, demoTagging: isDemoEngine())
     }
 
     var label: String {

@@ -19,6 +19,8 @@ public final class TaggingCoordinator {
     @ObservationIgnored private let isEnabled: () -> Bool
     @ObservationIgnored private var queue: [UUID] = []
     @ObservationIgnored private var worker: Task<Void, Never>?
+    /// The entry the model is working on right now; never queued twice.
+    @ObservationIgnored private var inFlight: UUID?
 
     public init(context: ModelContext, engine: any TaggingEngine,
                 availability: @escaping () -> AIAvailability, isEnabled: @escaping () -> Bool) {
@@ -33,6 +35,7 @@ public final class TaggingCoordinator {
     }
 
     public func enqueue(_ entry: Entry) {
+        if inFlight == entry.id || queue.contains(entry.id) { return }
         if let gate = gate() {
             phases[entry.id] = gate
             if gate == .off || gate == .unsupported { entry.tagging = .skipped }
@@ -42,7 +45,7 @@ public final class TaggingCoordinator {
         phases[entry.id] = .running
         entry.tagging = .pending
         save()
-        if !queue.contains(entry.id) { queue.append(entry.id) }
+        queue.append(entry.id)
         startWorker()
     }
 
@@ -76,7 +79,9 @@ public final class TaggingCoordinator {
         worker = Task { [weak self] in
             while let self, !self.queue.isEmpty {
                 let id = self.queue.removeFirst()
+                self.inFlight = id
                 await self.process(id)
+                self.inFlight = nil
             }
             self?.worker = nil
         }
@@ -91,8 +96,14 @@ public final class TaggingCoordinator {
             let drafts = try await engine.suggest(text: text, vocabulary: vocabulary)
             guard let entry = fetch(id) else { phases[id] = nil; return }
             let existing = Set(entry.tags.map { $0.label.lowercased() })
-            let clean = SuggestionSanitizer.sanitize(drafts, text: entry.text, existingLabels: existing)
-            guard !clean.isEmpty else { finish(entry, .none, .done); return }
+            let clean = SuggestionSanitizer.sanitize(drafts, text: entry.text, existingLabels: existing,
+                                                     reservedQuotes: entry.visibleTags.compactMap(\.quote))
+            guard !clean.isEmpty else {
+                // A re-run that only repeats what's already there isn't "nothing stood out".
+                let hasModelTags = entry.visibleTags.contains { !$0.isManual }
+                finish(entry, hasModelTags ? .done : .none, .done)
+                return
+            }
             for d in clean { entry.addTag(label: d.label, kind: d.kind, quote: d.quote, status: .suggested) }
             finish(entry, .done, .done)
         } catch TaggingEngineError.nothingToSuggest {

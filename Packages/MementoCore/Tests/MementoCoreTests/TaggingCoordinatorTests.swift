@@ -114,10 +114,76 @@ actor RecordingEngine: TaggingEngine {
         c.enqueue(e)
         await c.drain()
         #expect(e.tags.count == 1)
-        #expect(c.phase(for: e) == .none)
+        #expect(c.phase(for: e) == .done)   // already tagged: don't claim "nothing stood out"
     }
 }
 
 extension RecordingEngine {
     func setResult(_ r: Result<[SuggestedTagDraft], TaggingEngineError>) { result = r }
+}
+
+/// Engine that waits until released, to exercise "in flight" paths.
+actor GateEngine: TaggingEngine {
+    private(set) var calls = 0
+    private var waiters: [CheckedContinuation<Void, Never>] = []
+    let result: [SuggestedTagDraft]
+    init(result: [SuggestedTagDraft]) { self.result = result }
+    func suggest(text: String, vocabulary: [String]) async throws -> [SuggestedTagDraft] {
+        calls += 1
+        await withCheckedContinuation { waiters.append($0) }
+        return result
+    }
+    func release() { waiters.forEach { $0.resume() }; waiters = [] }
+    var waiting: Int { waiters.count }
+}
+
+@MainActor
+@Suite struct TaggingCoordinatorReviewTests {
+    @Test func resumeWhileInFlightDoesNotRunTwice() async throws {
+        let engine = GateEngine(result: [SuggestedTagDraft(label: "Calm", kind: .feeling, quote: "Quiet day")])
+        let store = try TestStore()
+        let c = TaggingCoordinator(context: store.context, engine: engine, availability: { .ready }, isEnabled: { true })
+        let e = store.entry(text: "Quiet day.")
+        c.enqueue(e)
+        while await engine.waiting == 0 { await Task.yield() }
+        c.resumePending()               // app became active while tagging
+        await engine.release()
+        await c.drain()
+        #expect(await engine.calls == 1)
+        #expect(c.phase(for: e) == .done)
+    }
+
+    @Test func deletedMidRunIsIgnored() async throws {
+        let engine = GateEngine(result: [SuggestedTagDraft(label: "Calm", kind: .feeling, quote: "Quiet day")])
+        let store = try TestStore()
+        let c = TaggingCoordinator(context: store.context, engine: engine, availability: { .ready }, isEnabled: { true })
+        let e = store.entry(text: "Quiet day.")
+        c.enqueue(e)
+        while await engine.waiting == 0 { await Task.yield() }
+        store.context.delete(e)
+        try store.context.save()
+        await engine.release()
+        await c.drain()
+        #expect(try store.context.fetchCount(FetchDescriptor<TagMark>()) == 0)
+    }
+
+    @Test func rerunWithOnlyDuplicatesKeepsDone() async throws {
+        let store = try TestStore()
+        let engine = RecordingEngine(.success([SuggestedTagDraft(label: "Calm", kind: .feeling, quote: "Quiet day")]))
+        let c = TaggingCoordinator(context: store.context, engine: engine, availability: { .ready }, isEnabled: { true })
+        let e = store.entry(text: "Quiet day.", tags: [("Calm", .feeling, "Quiet day", .suggested)])
+        c.retry(e)
+        await c.drain()
+        #expect(c.phase(for: e) == .done)
+    }
+
+    @Test func newSuggestionsDontOverlapExistingHighlights() async throws {
+        let store = try TestStore()
+        let engine = RecordingEngine(.success([SuggestedTagDraft(label: "Tired", kind: .feeling, quote: "Quiet day")]))
+        let c = TaggingCoordinator(context: store.context, engine: engine, availability: { .ready }, isEnabled: { true })
+        let e = store.entry(text: "Quiet day.", tags: [("Calm", .feeling, "Quiet day", .kept)])
+        c.retry(e)
+        await c.drain()
+        #expect(e.tags.count == 1)
+    }
 }

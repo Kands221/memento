@@ -54,4 +54,11 @@ import Testing
         #expect(doc.countLine == "0 selected entries")
         #expect(doc.narrative == "Across 0 entries, the feelings you named most were not tagged yet.")
     }
+
+    @Test func countsLabelsCaseInsensitivelyOncePerEntry() throws {
+        s.entry(daysAgo: 1, text: "A walk.", tags: [("walking helped", .helped, nil, .kept), ("Walking helped", .helped, nil, .kept)])
+        s.entry(daysAgo: 2, text: "Another walk.", tags: [("Walking helped", .helped, nil, .kept)])
+        let doc = SummaryComposer.compose(entries: try s.all(), options: SummaryOptions(purpose: .me, today: Fixtures.today), calendar: Fixtures.calendar)
+        #expect(doc.groups.first { $0.name == "What helped" }?.items == "Walking helped (2)")
+    }
 }

@@ -38,4 +38,22 @@ import SwiftData
         try store.context.save()
         #expect(try store.context.fetchCount(FetchDescriptor<TagMark>()) == 0)
     }
+
+    @Test func addingAnExistingLabelKeepsTheOriginal() throws {
+        let store = try TestStore()
+        let e = store.entry(text: "Tired.", tags: [("Drained", .feeling, "Tired", .suggested)])
+        let tag = e.addOrKeepTag(label: "drained", kind: .feeling)
+        #expect(e.visibleTags.count == 1)
+        #expect(tag.status == .kept)
+        #expect(tag.quote == "Tired")
+    }
+
+    @Test func renamingIntoAnExistingLabelMerges() throws {
+        let store = try TestStore()
+        let e = store.entry(text: "Tired. Walked.", tags: [("Drained", .feeling, "Tired", .kept), ("Rest", .helped, "Walked", .suggested)])
+        let rest = e.orderedTags[1]
+        e.applyEdit(to: rest, label: "drained", kind: .feeling)
+        #expect(e.visibleTags.map(\.label) == ["Drained"])
+        #expect(rest.status == .removed)
+    }
 }

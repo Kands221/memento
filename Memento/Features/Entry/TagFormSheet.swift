@@ -98,12 +98,9 @@ struct TagFormSheet: View {
     private func save() {
         guard !trimmed.isEmpty, let entry else { return }
         if let tag {
-            tag.label = trimmed
-            tag.kind = kind
-            tag.status = .kept
-            tag.isEdited = true
+            entry.applyEdit(to: tag, label: trimmed, kind: kind)
         } else {
-            entry.addTag(label: trimmed, kind: kind, status: .kept, isManual: true)
+            entry.addOrKeepTag(label: trimmed, kind: kind)
         }
         try? context.save()
         dismiss()

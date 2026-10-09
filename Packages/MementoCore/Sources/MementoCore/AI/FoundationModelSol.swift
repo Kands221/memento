@@ -114,7 +114,14 @@ public final class FoundationModelSol: SolEngine {
             continuation.yield(SolTurn(reply: SolTurnPlanner.compose(reflection: c.reflection, perspective: c.perspective, question: c.question),
                                        suggestions: c.suggestions ?? []))
         }
-        if let question = last?.question?.trimmingCharacters(in: .whitespacesAndNewlines), !question.isEmpty { askedQuestions.append(question) }
+        if var question = last?.question?.trimmingCharacters(in: .whitespacesAndNewlines), !question.isEmpty {
+            if let fresh = SolTurnPlanner.freshQuestion(question, asked: askedQuestions) {
+                question = fresh
+                continuation.yield(SolTurn(reply: SolTurnPlanner.compose(reflection: last?.reflection, perspective: last?.perspective, question: fresh),
+                                           suggestions: last?.suggestions ?? []))
+            }
+            askedQuestions.append(question)
+        }
         if let theme = last?.theme, !theme.isEmpty { usedThemes.append(theme) }
     }
 

@@ -113,6 +113,22 @@ public enum SolTurnPlanner {
         return text
     }
 
+    static let followUps = [
+        "What would feel like a kind next step for you?",
+        "Who in your life would understand this?",
+        "What part of this matters most to you?",
+        "If you could set one thing down tonight, what would it be?",
+        "What would you tell a good friend in your place?",
+    ]
+
+    /// Small models sometimes ask the same question twice; returns an unused follow-up when that happens.
+    public static func freshQuestion(_ question: String, asked: [String]) -> String? {
+        func norm(_ s: String) -> String { s.lowercased().filter { $0.isLetter || $0.isNumber } }
+        let askedSet = Set(asked.map(norm))
+        guard askedSet.contains(norm(question)) else { return nil }
+        return followUps.first { !askedSet.contains(norm($0)) }
+    }
+
     public static func compose(reflection: String?, perspective: String?, question: String?) -> String {
         [reflection, perspective.map(soften), question]
             .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }

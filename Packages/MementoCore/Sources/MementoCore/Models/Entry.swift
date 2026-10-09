@@ -55,6 +55,30 @@ public final class Entry {
         keptTags.contains { $0.label.caseInsensitiveCompare(label) == .orderedSame }
     }
 
+    /// Adds a writer's tag, or keeps the existing one with the same label (never two identical chips).
+    @discardableResult
+    public func addOrKeepTag(label: String, kind: TagKind) -> TagMark {
+        if let existing = tags.first(where: { $0.label.caseInsensitiveCompare(label) == .orderedSame }) {
+            if existing.status == .removed { existing.kind = kind; existing.isManual = true }
+            existing.status = .kept
+            return existing
+        }
+        return addTag(label: label, kind: kind, status: .kept, isManual: true)
+    }
+
+    /// Applies a rename/re-kind; renaming into another visible tag's label merges into that tag.
+    public func applyEdit(to tag: TagMark, label: String, kind: TagKind) {
+        if let other = visibleTags.first(where: { $0.id != tag.id && $0.label.caseInsensitiveCompare(label) == .orderedSame }) {
+            other.status = .kept
+            tag.status = .removed
+            return
+        }
+        tag.label = label
+        tag.kind = kind
+        tag.status = .kept
+        tag.isEdited = true
+    }
+
     @discardableResult
     public func addTag(label: String, kind: TagKind, quote: String? = nil,
                        status: TagStatus = .kept, isManual: Bool = false) -> TagMark {

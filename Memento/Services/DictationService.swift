@@ -12,6 +12,8 @@ final class DictationService {
     @ObservationIgnored private var engine: AVAudioEngine?
     @ObservationIgnored private var request: SFSpeechAudioBufferRecognitionRequest?
     @ObservationIgnored private var task: SFSpeechRecognitionTask?
+    /// Identifies the current dictation; late callbacks from a stopped one are ignored.
+    @ObservationIgnored private var session = UUID()
 
     /// Only offered when recognition can run entirely on this iPhone.
     var isAvailable: Bool { recognizer?.supportsOnDeviceRecognition == true }
@@ -30,6 +32,12 @@ final class DictationService {
             try session.setCategory(.record, mode: .measurement, options: .duckOthers)
             try session.setActive(true, options: .notifyOthersOnDeactivation)
             let engine = AVAudioEngine()
+            let format = engine.inputNode.outputFormat(forBus: 0)
+            guard format.sampleRate > 0, format.channelCount > 0 else {
+                errorText = "No microphone input is available right now."
+                try? session.setActive(false)
+                return
+            }
             let request = SFSpeechAudioBufferRecognitionRequest()
             request.requiresOnDeviceRecognition = true
             request.shouldReportPartialResults = true
@@ -39,10 +47,13 @@ final class DictationService {
             self.engine = engine
             self.request = request
             isListening = true
+            let current = UUID()
+            self.session = current
             task = Self.recognize(with: recognizer, request: request) { [weak self] text, finished in
                 Task { @MainActor in
+                    guard let self, self.isListening, self.session == current else { return }
                     if let text { onText(text) }
-                    if finished { self?.stop() }
+                    if finished { self.stop() }
                 }
             }
         } catch {
@@ -52,6 +63,7 @@ final class DictationService {
     }
 
     func stop() {
+        session = UUID()
         engine?.stop()
         engine?.inputNode.removeTap(onBus: 0)
         request?.endAudio()

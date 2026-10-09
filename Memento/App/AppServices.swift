@@ -76,7 +76,8 @@ final class AppServices {
 
     /// Whether Sol can run right now with the selected engine.
     var solAvailability: AIAvailability {
-        solChoice == .demo && ai.demoState == .live ? .ready : ai.availability
+        _ = ai.revision
+        return AIResolution.sol(live: ai.live, override: ai.demoState, demoSol: solChoice == .demo)
     }
 }
 

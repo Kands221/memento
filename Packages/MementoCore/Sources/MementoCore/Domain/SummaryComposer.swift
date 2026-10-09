@@ -51,10 +51,12 @@ public enum SummaryComposer {
         let selected = entries.sorted { $0.createdAt < $1.createdAt }
         let clinician = options.purpose == .clinician
 
+        // One count per entry per label, case-insensitively (matches TagIndex and Discover).
         var counts: [(kind: TagKind, label: String, n: Int)] = []
         for entry in selected {
-            for tag in entry.keptTags {
-                if let i = counts.firstIndex(where: { $0.kind == tag.kind && $0.label == tag.label }) {
+            var seenInEntry = Set<String>()
+            for tag in entry.keptTags where seenInEntry.insert(tag.label.lowercased()).inserted {
+                if let i = counts.firstIndex(where: { $0.label.lowercased() == tag.label.lowercased() }) {
                     counts[i].n += 1
                 } else {
                     counts.append((tag.kind, tag.label, 1))

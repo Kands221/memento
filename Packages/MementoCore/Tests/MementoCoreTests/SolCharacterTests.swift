@@ -94,3 +94,24 @@ import Foundation
         #expect(SolTurnPlanner.soften("Small things add up.") == "Small things add up.")
     }
 }
+
+@Suite struct AIResolutionTests {
+    @Test func solIgnoresTheTaggingDemoEngine() {
+        // Rules engine for tags, on-device Sol, model not ready: Sol must stay gated.
+        #expect(AIResolution.tagging(live: .needsAppleIntelligence, override: .live, demoTagging: true) == .ready)
+        #expect(AIResolution.sol(live: .needsAppleIntelligence, override: .live, demoSol: false) == .needsAppleIntelligence)
+        #expect(AIResolution.sol(live: .unsupported, override: .live, demoSol: true) == .ready)
+        #expect(AIResolution.sol(live: .ready, override: .unsupported, demoSol: true) == .unsupported)
+        #expect(AIResolution.tagging(live: .ready, override: .failing, demoTagging: false) == .ready)
+    }
+}
+
+@Suite struct SolQuestionDedupeTests {
+    @Test func replacesARepeatedQuestionWithAnUnusedFollowUp() {
+        let asked = ["What’s on your heart?", "How are you feeling about the deadline?"]
+        let fresh = SolTurnPlanner.freshQuestion("how are you feeling about the deadline", asked: asked)
+        #expect(fresh != nil)
+        #expect(!asked.contains(fresh!))
+        #expect(SolTurnPlanner.freshQuestion("What would you let go of?", asked: asked) == nil)
+    }
+}

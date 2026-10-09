@@ -1,20 +1,7 @@
 import Foundation
+import MementoCore
 
 enum EngineChoice: String, CaseIterable { case onDevice, demo }
-
-enum DemoAIState: String, CaseIterable {
-    case live, needsAppleIntelligence, preparing, unsupported, failing
-
-    var title: String {
-        switch self {
-        case .live: "Live"
-        case .needsAppleIntelligence: "Not set up"
-        case .preparing: "Getting ready"
-        case .unsupported: "Unsupported"
-        case .failing: "Tagging fails"
-        }
-    }
-}
 
 /// Process arguments used by UI tests, screenshot runs and stage demos.
 struct LaunchOptions {
