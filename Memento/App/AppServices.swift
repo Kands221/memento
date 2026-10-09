@@ -25,7 +25,7 @@ final class AppServices {
         if options.uiTesting {
             for key in [SettingsKey.demoAIState, SettingsKey.demoTaggingEngine, SettingsKey.demoSolEngine,
                         SettingsKey.suggestTags, SettingsKey.solEnabled, SettingsKey.appearance, SettingsKey.reminderOn,
-                        SettingsKey.cloudFallback] {
+                        SettingsKey.cloudFallback, SolVoice.key, SolVoice.choiceKey] {
                 defaults.removeObject(forKey: key)
             }
             defaults.set(options.skipOnboarding || options.seedSample, forKey: SettingsKey.hasOnboarded)
