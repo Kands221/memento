@@ -3,6 +3,11 @@ import Foundation
 public struct TextSegment: Hashable, Sendable {
     public let text: String
     public let mark: QuoteMark?
+
+    public init(text: String, mark: QuoteMark?) {
+        self.text = text
+        self.mark = mark
+    }
 }
 
 public enum TextSegments {

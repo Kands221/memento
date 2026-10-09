@@ -144,3 +144,49 @@ struct LinkButtonStyle: ButtonStyle {
             .opacity(configuration.isPressed ? 0.6 : 1)
     }
 }
+
+/// Indeterminate sage progress bar ("Getting ready…"). Static under Reduce Motion.
+struct IndeterminateBar: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var phase: CGFloat = -0.4
+
+    var body: some View {
+        GeometryReader { geo in
+            Capsule().fill(Color.mLine)
+                .overlay(alignment: .leading) {
+                    Capsule().fill(Color.mSage)
+                        .frame(width: geo.size.width * 0.4)
+                        .offset(x: reduceMotion ? 0 : geo.size.width * phase)
+                }
+                .clipShape(Capsule())
+        }
+        .frame(height: 6)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) { phase = 1 }
+        }
+        .accessibilityLabel("In progress")
+    }
+}
+
+/// Small coloured dot used for "Reading the entry…" and bullet lists.
+struct Dot: View {
+    var color: Color = .mSage
+    var size: CGFloat = 8
+    var body: some View { Circle().fill(color).frame(width: size, height: size) }
+}
+
+/// 44 pt circular icon button (✕ on suggestion rows).
+struct CircleIconButtonStyle: ButtonStyle {
+    var size: CGFloat = 44
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(Color.mMut)
+            .frame(width: size, height: size)
+            .background(Circle().fill(Color.mCard))
+            .overlay(Circle().strokeBorder(Color.mLine, lineWidth: 1))
+            .contentShape(Circle())
+            .opacity(configuration.isPressed ? 0.7 : 1)
+    }
+}
