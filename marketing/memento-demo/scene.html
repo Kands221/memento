@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memento demo scene</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=block" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f1e7; --page: #e9e2d5; --card: #fffcf6; --ink: #2b2723; --mut: #6f675d; --line: #e3daca;
+    --ter: #a85a38; --terT: #f2e1d4; --sage: #56724f; --sageT: #dfe7d8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+  body { font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  #stage { position: absolute; inset: 0; overflow: hidden; background: var(--bg); }
+  #paper { position: absolute; inset: 0; width: 1080px; height: 1920px; opacity: 0.5; mix-blend-mode: multiply; }
+  .glow { position: absolute; border-radius: 50%; filter: blur(90px); }
+  #glow1 { width: 760px; height: 760px; background: rgba(168, 90, 56, 0.16); }
+  #glow2 { width: 680px; height: 680px; background: rgba(86, 114, 79, 0.14); }
+
+  /* captions */
+  .cap { position: absolute; left: 60px; right: 60px; top: 96px; text-align: center; opacity: 0; z-index: 40; }
+  .cap .l { display: block; font-family: Newsreader, serif; font-weight: 500; font-size: 86px; line-height: 1.04; letter-spacing: -0.015em; color: var(--ink); }
+  .cap .hl { color: var(--ter); font-style: italic; }
+  .cap .sub { display: block; margin-top: 18px; font-size: 38px; color: var(--mut); letter-spacing: 0.005em; }
+
+  /* phone */
+  #phone { position: absolute; left: 194px; top: 392px; width: 692px; height: 1463px; border-radius: 96px; background: #1c1a18; padding: 15px;
+           box-shadow: 0 60px 110px rgba(60, 40, 20, 0.28), 0 18px 34px rgba(60, 40, 20, 0.16), inset 0 0 0 3px #3a3631; z-index: 20; }
+  #screen-wrap { position: relative; width: 662px; height: 1433px; border-radius: 82px; overflow: hidden; background: var(--bg); }
+  #screen { position: absolute; left: 0; top: 0; width: 662px; height: 1440px; }
+  #ring { position: absolute; border: 5px solid var(--ter); border-radius: 26px; opacity: 0; z-index: 3; box-shadow: 0 0 0 10px rgba(168, 90, 56, 0.14); }
+
+  /* Sol */
+  #sol { position: absolute; z-index: 30; transform-origin: 50% 85%; }
+  #sol img { position: absolute; left: 0; bottom: 0; width: 100%; opacity: 0; }
+  #sol-shadow { position: absolute; z-index: 29; border-radius: 50%; background: radial-gradient(closest-side, rgba(60, 40, 20, 0.22), rgba(60, 40, 20, 0)); }
+  .wave { position: absolute; z-index: 31; border: 6px solid var(--ter); border-left-color: transparent; border-bottom-color: transparent; border-radius: 50%; opacity: 0; }
+
+  /* outro */
+  #why { position: absolute; left: 60px; right: 60px; top: 110px; text-align: center; opacity: 0; z-index: 40; }
+  #why .l { font-family: Newsreader, serif; font-weight: 500; font-size: 92px; line-height: 1.04; letter-spacing: -0.015em; }
+  #why .hl { color: var(--ter); font-style: italic; }
+  #bullets { position: absolute; left: 130px; right: 130px; top: 1150px; display: flex; flex-direction: column; gap: 22px; z-index: 40; }
+  .bul { display: flex; align-items: center; gap: 26px; background: var(--card); border: 2px solid var(--line); border-radius: 34px; padding: 26px 34px;
+         font-size: 44px; font-weight: 500; color: var(--ink); box-shadow: 0 14px 30px rgba(60, 40, 20, 0.08); opacity: 0; }
+  .bul i { width: 46px; height: 46px; border-radius: 50%; background: var(--sageT); flex-shrink: 0; position: relative; }
+  .bul i::after { content: ""; position: absolute; left: 15px; top: 9px; width: 12px; height: 22px; border: solid var(--sage); border-width: 0 6px 6px 0; transform: rotate(40deg); }
+  #endcard { position: absolute; left: 0; right: 0; top: 1180px; text-align: center; opacity: 0; z-index: 40; }
+  #endcard .name { font-family: Newsreader, serif; font-weight: 500; font-size: 150px; letter-spacing: -0.02em; line-height: 1; }
+  #endcard .tag { margin-top: 26px; font-size: 38px; color: var(--mut); }
+  #endcard .yours { margin-top: 54px; font-family: Newsreader, serif; font-style: italic; font-size: 64px; color: var(--ter); }
+  #endcard .foot { margin-top: 64px; font-size: 27px; color: var(--mut); letter-spacing: 0.02em; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <img id="paper" src="build/art/paper.jpg" alt="">
+  <div class="glow" id="glow1"></div>
+  <div class="glow" id="glow2"></div>
+
+  <div id="captions"></div>
+
+  <div id="phone">
+    <div id="screen-wrap">
+      <img id="screen" alt="">
+      <div id="ring"></div>
+    </div>
+  </div>
+
+  <div id="sol-shadow"></div>
+  <div id="sol">
+    <img data-pose="hello" src="build/art/sol-hello.png" alt="">
+    <img data-pose="listening" src="build/art/sol-listening.png" alt="">
+    <img data-pose="thinking" src="build/art/sol-thinking.png" alt="">
+    <img data-pose="mark" src="build/art/sol-mark.png" alt="">
+    <img data-pose="reflect" src="build/art/sol-reflect.png" alt="">
+    <img data-pose="resting" src="build/art/sol-resting.png" alt="">
+  </div>
+  <div class="wave" id="wave1"></div>
+  <div class="wave" id="wave2"></div>
+
+  <div id="why"><span class="l">Why on your <span class="hl">iPhone?</span></span></div>
+  <div id="bullets"></div>
+  <div id="endcard">
+    <div class="name">Memento</div>
+    <div class="tag">Write naturally. Notice gently. Find it again.</div>
+    <div class="yours">Your words stay yours.</div>
+    <div class="foot">On-device AI with Apple Intelligence · iOS 26</div>
+  </div>
+</div>
+<script type="module" src="scene.js"></script>
+</body>
+</html>

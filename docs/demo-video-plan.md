@@ -1,5 +1,11 @@
 # Memento demo video plan (under 60 seconds, on-device AI)
 
+> **Made (Oct 10, 2026):** `marketing/memento-demo/out/memento-demo-9x16-vo.mp4`, 58 s at 1080×1920.
+> - **Footage:** recorded in the iOS Simulator on the Mac with live on-device AI.
+> - **Sound:** Sol (ElevenLabs, Grandfather Joe) narrates, and a gentle ElevenLabs score sits underneath.
+> - **Rebuilding:** see `marketing/README.md`. The phone-recording plan below still applies if you want an
+>   Apple Intelligence iPhone version with real voice input and Paint this day.
+
 **Goal:** in under a minute, show every core feature running on Apple's on-device model, and answer *"Why does this product benefit from running AI locally?"*
 
 **The one idea to land:** a journal is the most private thing you write, so its AI should never leave your phone. The phone stays in **airplane mode for the whole video**, which proves that without saying it twice.

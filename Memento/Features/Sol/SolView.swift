@@ -25,6 +25,9 @@ struct SolView: View {
                 header
                 if let conversation, isOpen {
                     chat(conversation)
+                } else if isOpen {
+                    // Sol is available; his conversation is still being prepared. Never flash "needs on-device AI".
+                    Color.mBg.frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     gate
                 }

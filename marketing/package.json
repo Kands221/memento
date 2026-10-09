@@ -1,0 +1,10 @@
+{
+  "name": "memento-marketing",
+  "private": true,
+  "type": "module",
+  "description": "Ads built in code: HTML scenes rendered frame by frame in headless Chromium, ElevenLabs voice, synthesized sound.",
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "sharp": "0.34.5"
+  }
+}
