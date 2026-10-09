@@ -3711,6 +3711,33 @@ UI tests disable animations, so `ScriptedSol` streaming still takes about 0.7 s 
 - [ ] **Step 2: Implement.** Run the test and confirm it passes.
 - [ ] **Step 3: Commit.** `"Sol: streaming on-device conversation, reflection draft, support card"`
 
+### Task 21b: Sol character (D27)
+
+**Files:**
+- Create: `Packages/MementoCore/Sources/MementoCore/AI/SolCharacter.swift`
+- Test: `Packages/MementoCore/Tests/MementoCoreTests/SolCharacterTests.swift`
+- Modify: `SolConversation` (opening and copy come from `SolCharacter`), `FoundationModelSol` (persona comes from `SolCharacter.persona`), `SolView` (state-driven `sol-*` art)
+
+**Interfaces:**
+- Produces:
+  - `SolCharacter.opening(at:calendar:)`, with morning, afternoon, evening and late-night variants
+  - `SolCharacter.openingSuggestions(at:calendar:)`
+  - `SolCharacter.persona`, which includes three few-shot exchanges
+  - `SolCharacter.fallbackReply`, `SolCharacter.windDown`, `SolCharacter.drafting`
+  - `SolMood {hello, listening, thinking, speaking, reflect, resting}` and `SolMood.asset`
+  - `SolConversation(engine:now:)` exposing `mood`
+
+**Steps:**
+1. Write failing tests for: the time-of-day openings; the persona containing the voice rules and examples; and `mood` transitions (hello → thinking while awaiting the first token → speaking → listening while the input is non-empty → resting at the cap).
+2. Implement.
+3. In `SolView`:
+   - The header avatar shows `mood.asset`, with a slow 8 s rotation for `.thinking` unless Reduce Motion is on.
+   - An empty conversation shows `sol-hello` at 120 pt above the greeting.
+   - The draft screen shows `sol-reflect`.
+   - The gate and the cap note show `sol-resting`.
+4. Re-run the real-model Sol integration test and read two replies to confirm the voice.
+5. Commit.
+
 ### Task 22: Summary builder, preview, PDF export (proto L538–583, logic L903–925)
 
 **Files:**

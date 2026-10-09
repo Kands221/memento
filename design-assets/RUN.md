@@ -11,6 +11,8 @@ Run: `run_a9cf74431017`
 | 2C UI accents | — | ctx_f386773402bb | succeeded; release reported `retained` (recheck at close-out) |
 | 1 redo: sol-mark-v2 | — | ctx_1b6e9f7cdbb3 | succeeded; released |
 
+| 3 Sol character | — | ctx_4f1525d16a9d | running (user: "add character to the AI") |
+
 ## Verdicts
 - onb-hero: accepted (style anchor; paper fibre, palette, no text)
 - onb-private: accepted
