@@ -64,6 +64,19 @@ The seed exists (`AIEvalProbe.swift`). Grow it into the yardstick everything els
 - This means LoRA training with Apple's toolkit. Shipping it needs an Apple entitlement, and the adapter must be retrained for each OS model version (roughly 160 MB each).
 - That is a real ongoing cost, so it's held until prompts plus validators stop improving the numbers.
 
+## 4b. Making Sol feel like a real chat, not a form (≈3 days)
+
+Today every Sol turn has the same three parts: a reflection, a perspective and a question. That keeps a small model on the rails, but it's why Sol feels formulaic next to ChatGPT-style chat. The fixes stay on the device:
+
+| # | Change | What the writer notices |
+|---|---|---|
+| 1 | **Turn types instead of one template.** A small deterministic router picks the turn type: *answer* (they asked something direct, so answer it first), *listen* (short, warm, one question), *reflect* (today's shape), *celebrate* (good news), *advise* (only when asked), *small talk*. Each type has its own `@Generable` shape and length. | Sol answers "what should I do?" instead of deflecting with another question, and celebrates good news. |
+| 2 | **Reply length follows the writer.** A one-line message gets 1–2 sentences; a long message gets a fuller reply. | Feels like a conversation, not a lecture. |
+| 3 | **Conversation notes.** Every couple of turns, a tiny `@Generable ConversationNotes { people, events, feelingsNamed, whatHelps }` is extracted from the writer's own words and kept in the instructions. Older turns are condensed; the last 4 stay word for word. | At turn 9 Sol still knows "Dana" is their manager and the launch moved twice, without overflowing the 4K-token window. |
+| 4 | **Ask your journal.** Questions like "when did I last feel like this?" or "what did I write last Tuesday?" are answered from the on-device index (dates parsed in code), with "From your journal" chips. | LLM-style Q&A over their own writing, still private. |
+| 5 | **Say it another way.** Regenerate button, plus 👍/👎 feedback stored locally. | Control when a reply misses. |
+| 6 | **Sentence-gated streaming.** Each sentence appears (and is spoken) once it passes the checks in section 4. | Still feels live, but never shows a line that then gets taken back. |
+
 ## 5. Phase 2: summaries (≈2 days)
 
 Keep what's right: the numbers and lists stay deterministic, so they can't be wrong. Add a short, human "look back" paragraph without adding errors.
@@ -103,7 +116,48 @@ Keep what's right: the numbers and lists stay deterministic, so they can't be wr
 - **Model drift:** Apple's model changes with iOS, so rerun the evals on each iOS beta. Pin cloud model versions and rerun when changing them.
 - **Cloud before any public release:** move the key behind a small server (Kept's gateway is the pattern: per-device quotas, zero data retention, App Attest) and remove the key from the app.
 
-## 8. Order of work
+## 9. Model choice: is Apple Intelligence enough, or add a quantized model?
+
+**Short answer:**
+- **Phones with Apple Intelligence:** keep Apple's on-device model for Sol and summaries, and spend the effort on the checking pipeline above.
+- **iPhone 12 and other phones without it:** a 4-bit open model is the only way to make Sol private and offline there. Add it as an optional download only if it passes the same eval and runs acceptably on a real iPhone 12. Until then, those phones keep the cloud fallback, and summaries stay deterministic.
+
+| | Apple's on-device model (today) | 4-bit open model via llama.cpp / MLX (e.g. Qwen3-1.7B, Gemma 3 1B, Llama 3.2 1B) |
+|---|---|---|
+| Runs on | Apple Intelligence iPhones only (15 Pro and newer) | Any recent iPhone, **including iPhone 12** (4 GB RAM, so in practice only ~1–2B models) |
+| Size to ship | 0, it's part of iOS | ~0.8–1.2 GB download for a 1–2B model (on demand, not in the app); ~2–2.5 GB for 3–4B, which only 8 GB phones can hold |
+| Memory | Managed by the system | Weights plus the conversation's working memory; must stay under roughly 2 GB on a 4 GB phone or iOS will close the app |
+| Speed, battery | Runs on the Neural Engine; measured p50 4.5 s for a full reply on Mac | Runs on the GPU, so warmer and hungrier; iPhone 12 speed must be measured on the device |
+| Structured output | Native `@Generable` constrained decoding | JSON-schema grammars in llama.cpp; works, but more to maintain |
+| Context | 4,096 tokens | Up to 32K, but memory limits it on small phones |
+| Quality knobs | Prompts, validators, optional Apple adapter (entitlement, retrain every OS update) | Prompts, validators, our own LoRA fine-tune of Sol's voice |
+| Changes under us | Yes, with iOS updates (re-run evals each beta) | No, we pin the exact file |
+| Licence | Apple's terms | Per model (Qwen: Apache 2.0; Gemma and Llama have their own terms) |
+
+**Why a bigger model isn't the fix on Apple Intelligence phones:**
+- In the eval, Apple's model made errors on 4 of 20 turns: two banned openers, one assumed feeling and one missing question. Those are rule-following slips. The validate–repair–fall back pipeline catches them deterministically, whatever the model.
+- A 3–4B open model would roughly match Apple's ~3B model in size, cost a 2+ GB download, and still need the same checks.
+
+**What would justify the quantized model (decision gate):**
+1. Through the same 20-turn eval *with validators on*, it errs no more often than Apple's model.
+2. On a real iPhone 12: the first sentence arrives within 3 s, a full reply within 12 s, peak memory stays under 1.8 GB, and the phone doesn't get hot over a 10-turn chat.
+3. People actually want Sol offline on older phones more than the cloud fallback (privacy is the argument).
+
+If it passes, ship it as **"Sol offline"**, an optional ~1 GB download in On-device AI settings for phones without Apple Intelligence. It would run through the same `SolEngine` protocol, planner, validators and evals.
+
+**Summaries don't need a new model on any phone.** The model only phrases facts that code computed and validators check, so model size barely matters. Without on-device AI, the deterministic paragraph is already correct.
+
+**Measurement on the Mac** (Qwen3-1.7B Q4_K_M via llama.cpp, same 20 turns and checks): *pending; the model download is still in progress.*
+
+## 10. Order of work (updated)
+
+1. Phase 0 eval harness, then section 4 items 1–5 (validators, no assumed feelings, explicit memory use, safe fallback, deadlines).
+2. Section 4b items 1–3 (turn types, length that follows the writer, conversation notes): the biggest "feels like a real chat" gain.
+3. Phase 2 summaries (fact-cited paragraph and validator).
+4. Run the section 9 gate for an offline model on a real iPhone 12, then decide.
+5. Remaining polish (context budget, prewarm, guardrails, voice gating), and re-measure against section 6.
+
+## 8. Order of work (original)
 
 1. Phase 0, the eval harness, so everything after it is measured.
 2. Phase 1, items 1–5: the biggest error cuts for the least work.
