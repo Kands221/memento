@@ -88,15 +88,11 @@ public struct OpenRouterClient: Sendable {
     let apiKey: String
     let transport: any CloudTransport
     let retryDelay: Duration
-    /// Any OpenAI-compatible chat-completions URL; evals point this at a local llama.cpp server.
-    let endpoint: URL
 
-    public init(apiKey: String, transport: any CloudTransport = URLSessionTransport(), retryDelay: Duration = .milliseconds(800),
-                endpoint: URL = OpenRouterClient.endpoint) {
+    public init(apiKey: String, transport: any CloudTransport = URLSessionTransport(), retryDelay: Duration = .milliseconds(800)) {
         self.apiKey = apiKey
         self.transport = transport
         self.retryDelay = retryDelay
-        self.endpoint = endpoint
     }
 
     /// One JSON object matching `schema`. Retried once on rate limits, server errors and dropped connections.
@@ -170,7 +166,7 @@ public struct OpenRouterClient: Sendable {
                                 "json_schema": ["name": schemaName, "strict": true, "schema": schemaObject]],
             "provider": Self.routing(for: model),
         ]
-        var request = URLRequest(url: endpoint, timeoutInterval: 60)
+        var request = URLRequest(url: Self.endpoint, timeoutInterval: 30)
         request.httpMethod = "POST"
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")

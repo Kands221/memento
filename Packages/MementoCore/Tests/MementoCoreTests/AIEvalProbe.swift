@@ -105,16 +105,6 @@ struct EvalNarrative {
                     await Eval.run("cloud") { CloudSol(client: OpenRouterClient(apiKey: config.apiKey), model: config.solModel) })
     }
 
-    /// A small open model (e.g. a 4-bit Qwen3 on llama.cpp) through the same prompts, schema and checks.
-    /// Set MEMENTO_LOCAL_LLM to the server's chat-completions URL.
-    @Test func solLocalModel() async throws {
-        guard let url = ProcessInfo.processInfo.environment["MEMENTO_LOCAL_LLM"].flatMap(URL.init(string:)) else { return }
-        let name = ProcessInfo.processInfo.environment["MEMENTO_LOCAL_NAME"] ?? "local model"
-        Eval.report("local \(name)", await Eval.run("local") {
-            CloudSol(client: OpenRouterClient(apiKey: "sk-local", endpoint: url), model: name)
-        })
-    }
-
     /// Would an on-device narrative stay true to the deterministic counts?
     @Test func summaryNarrativeOnDevice() async throws {
         guard SystemLanguageModel.default.isAvailable else { return }

@@ -159,6 +159,8 @@ If it passes, ship it as **"Sol offline"**, an optional ~1 GB download in On-dev
 - **Verdict:** a model small enough for an iPhone 12 is **not** good enough for Sol. Validators could trim its replies but can't add the warmth and specificity it lacks.
 - **What that means:** Apple's model stays the engine. On phones without it, the honest options are the cloud fallback or no AI Sol. The offline model is dropped unless a much better small model appears; re-run this eval to check.
 
+**Decision (Oct 10, 2026): the local Qwen model is discontinued.** All on-device AI work goes into Apple's model. The llama.cpp eval hook was removed.
+
 ## 10. Order of work (updated)
 
 1. Phase 0 eval harness, then section 4 items 1–5 (validators, no assumed feelings, explicit memory use, safe fallback, deadlines).
