@@ -72,8 +72,9 @@ public final class SolConversation {
                 isAwaitingFirstToken = false
                 if let id = replyID, let i = messages.firstIndex(where: { $0.id == id }) {
                     messages[i].text = turn.reply
+                    if !turn.citations.isEmpty { messages[i].citations = turn.citations }
                 } else {
-                    let m = SolMessage(role: .sol, text: turn.reply)
+                    let m = SolMessage(role: .sol, text: turn.reply, citations: turn.citations)
                     replyID = m.id
                     messages.append(m)
                 }

@@ -60,3 +60,22 @@ struct SolLongConversationTests {
         #expect(Set(questions).count == questions.count, "Sol repeated a question: \(questions)")
     }
 }
+
+/// "Sol remembers": the live model looks through the sample journal and cites a real moment.
+@MainActor
+@Suite(.enabled(if: AIAvailability.live() == .ready))
+struct SolRemembersTests {
+    @Test func recallsWhatHelpedBefore() async throws {
+        let store = try TestStore()
+        _ = try SampleJournal.load(into: store.context, today: Fixtures.today, calendar: Fixtures.calendar)
+        let index = JournalIndex()
+        await index.rebuild(from: try store.all().map(JournalDocument.init))
+        let c = SolConversation(engine: FoundationModelSol(journal: index))
+        await c.send("Work stress is getting to me again tonight. What helped me before?")
+        let reply = c.messages.last
+        print("REMEMBERS →", reply?.text ?? "-", "| cites:", reply?.citations.map(\.label) ?? [])
+        #expect(reply?.role == .sol)
+        #expect(reply?.text != SolConversation.fallbackReply)
+        #expect(reply?.citations.isEmpty == false, "Sol should bring in and cite a real moment")
+    }
+}

@@ -29,7 +29,7 @@ import Foundation
         #expect(p.contains("Don't bring up death, dying or illness unless the writer does"))
         #expect(p.contains("Never diagnose"))
         #expect(p.contains("point toward people they trust"))
-        #expect(p.contains("no memory of earlier conversations"))
+        #expect(p.contains("don't remember earlier conversations"))
         #expect(p.contains("Respond only to what the writer actually wrote"))
         #expect(p.contains("If the writer just says hello"))
         #expect(!p.contains("Writer:"))   // examples must not read like a real transcript
@@ -70,6 +70,15 @@ import Foundation
         #expect(p.contains("What's on your heart?"))
         #expect(p.contains("busyness and what really matters"))
         #expect(!p.contains("written reflection"))
+    }
+
+    @Test func promptCarriesARememberedMoment() {
+        let p = SolTurnPlanner.prompt(for: "Work stress again", askedQuestions: [], usedThemes: [], steerTowardReflection: false,
+                                      memory: "On Sep 24 the writer wrote: “Walked to the corner shop”")
+        #expect(p.contains("From the writer's journal"))
+        #expect(p.contains("Walked to the corner shop"))
+        #expect(!SolTurnPlanner.prompt(for: "hi", askedQuestions: [], usedThemes: [], steerTowardReflection: false,
+                                       memory: "On Sep 24 …").contains("From the writer's journal"))
     }
 
     @Test func steeringAsksToOfferAReflection() {

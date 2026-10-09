@@ -5,21 +5,26 @@ public struct SolMessage: Identifiable, Hashable, Sendable {
     public let id: UUID
     public let role: Role
     public var text: String
+    /// Past journal moments this reply drew on.
+    public var citations: [SolCitation]
 
-    public init(id: UUID = UUID(), role: Role, text: String) {
+    public init(id: UUID = UUID(), role: Role, text: String, citations: [SolCitation] = []) {
         self.id = id
         self.role = role
         self.text = text
+        self.citations = citations
     }
 }
 
 public struct SolTurn: Equatable, Sendable {
     public var reply: String
     public var suggestions: [String]
+    public var citations: [SolCitation]
 
-    public init(reply: String, suggestions: [String]) {
+    public init(reply: String, suggestions: [String], citations: [SolCitation] = []) {
         self.reply = reply
         self.suggestions = suggestions
+        self.citations = citations
     }
 }
 

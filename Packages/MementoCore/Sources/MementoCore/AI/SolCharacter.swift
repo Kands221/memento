@@ -16,7 +16,9 @@ public enum SolCharacter {
     - Write 3 to 5 sentences in total: reflect the writer's words, offer one gentle piece of perspective, ask one question.
     - Respond only to what the writer actually wrote. Never assume how they feel or what their day was like.
     - If the writer just says hello or gives a very short answer, greet them warmly and ask what's on their heart.
-    - You have no memory of earlier conversations. Never say "again", that you missed them, or that you remember anything.
+    - You don't remember earlier conversations. Never say "again" or that you missed them.
+    - Sometimes the prompt includes a moment from the writer's journal. If it genuinely helps (like what helped last \
+    time), gently mention it once, with its date and in their own words. Never invent past entries.
     - Don't bring up death, dying or illness unless the writer does; if they do, be gentle and present.
     - Never diagnose, never name conditions, never give medical, legal or financial advice, and never claim to be a therapist.
     - Don't encourage the writer to rely on you; when it fits, point toward people they trust.
@@ -80,11 +82,15 @@ public enum SolMood: String, Sendable {
 public enum SolTurnPlanner {
     static let smallTalkMarker = "This is a greeting or a very short reply."
 
-    public static func prompt(for text: String, askedQuestions: [String], usedThemes: [String], steerTowardReflection: Bool) -> String {
+    public static func prompt(for text: String, askedQuestions: [String], usedThemes: [String], steerTowardReflection: Bool,
+                              memory: String? = nil) -> String {
         if isSmallTalk(text) && !steerTowardReflection {
             return "The writer says: \"\(text)\"\n\(smallTalkMarker) Greet them warmly in one or two sentences, in your own voice, and ask what's on their heart. Don't offer advice."
         }
         var lines = ["The writer says: \"\(text)\""]
+        if let memory {
+            lines.append("From the writer's journal, a closely related moment: \(memory)\nIn your perspective, gently bring this moment up once, with its date and in their own words, and connect it to what they said now.")
+        }
         if !usedThemes.isEmpty {
             lines.append("Perspectives you already offered (choose a different theme): \(usedThemes.joined(separator: "; ")).")
         }

@@ -98,3 +98,35 @@ final class ThrowingSol: SolEngine {
         #expect(c.messages.count == 1 && c.userTurns == 0)
     }
 }
+
+@MainActor
+final class CitingSol: SolEngine {
+    let id = UUID()
+    func prewarm() {}
+    func reset() {}
+    func reply(to text: String, history: [SolMessage], steerTowardReflection: Bool) -> AsyncThrowingStream<SolTurn, any Error> {
+        let id = self.id
+        return AsyncThrowingStream { (c: AsyncThrowingStream<SolTurn, any Error>.Continuation) in
+            c.yield(SolTurn(reply: "On Oct 6 a walk", suggestions: []))
+            c.yield(SolTurn(reply: "On Oct 6 a walk helped. Might it help now?", suggestions: ["Maybe"], citations: [SolCitation(entryID: id, label: "Oct 6")]))
+            c.finish()
+        }
+    }
+    func draftReflection(from userMessages: [String]) async throws -> String { "" }
+}
+
+@MainActor
+@Suite struct SolCitationTests {
+    @Test func repliesCarryTheirCitations() async {
+        let engine = CitingSol()
+        let c = SolConversation(engine: engine)
+        await c.send("Work stress again")
+        #expect(c.messages.last?.citations.map(\.entryID) == [engine.id])
+        #expect(c.messages.last?.citations.first?.label == "Oct 6")
+    }
+
+    @Test func personaExplainsTheJournalTool() {
+        #expect(SolCharacter.persona.contains("from the writer's journal"))
+        #expect(SolCharacter.persona.contains("Never invent past entries"))
+    }
+}

@@ -45,8 +45,14 @@ public final class FoundationModelSol: SolEngine {
     private var session: LanguageModelSession?
     private var askedQuestions: [String] = []
     private var usedThemes: [String] = []
+    private let journal: JournalIndex?
+    private var remembered: [JournalHit] = []
 
-    public init() {}
+    /// - Parameter journal: when given, Sol brings in a closely related moment from the writer's entries
+    ///   ("Sol remembers"). Retrieval is done by the app, on device, so it doesn't depend on the model calling a tool.
+    public init(journal: JournalIndex? = nil) {
+        self.journal = journal
+    }
 
     /// The session starts from the visible conversation, so the model knows what Sol already said
     /// (including its opening question) instead of meeting the writer's "hi" with no context.
@@ -72,10 +78,19 @@ public final class FoundationModelSol: SolEngine {
 
     public func reply(to text: String, history: [SolMessage], steerTowardReflection: Bool) -> AsyncThrowingStream<SolTurn, any Error> {
         if askedQuestions.isEmpty, let opening = history.first(where: { $0.role == .sol })?.text { askedQuestions = [opening] }
-        let prompt = SolTurnPlanner.prompt(for: text, askedQuestions: askedQuestions, usedThemes: usedThemes,
-                                           steerTowardReflection: steerTowardReflection)
+        let asked = askedQuestions, themes = usedThemes
         return AsyncThrowingStream { continuation in
             let task = Task { @MainActor in
+                var memory: String?
+                self.remembered = []
+                if let journal = self.journal, !SolTurnPlanner.isSmallTalk(text) {
+                    let hits = await journal.search(text, limit: 1, minimumScore: JournalIndex.strongMatch)
+                    let alreadyCited = Set(history.flatMap(\.citations).map(\.entryID))
+                    self.remembered = hits.filter { !alreadyCited.contains($0.snippet.entryID) }
+                    if !self.remembered.isEmpty { memory = SearchJournalTool.describe(self.remembered, calendar: .current) }
+                }
+                let prompt = SolTurnPlanner.prompt(for: text, askedQuestions: asked, usedThemes: themes,
+                                                   steerTowardReflection: steerTowardReflection, memory: memory)
                 do {
                     if self.session == nil { self.session = self.makeSession(earlier: history) }
                     try await self.stream(prompt, into: continuation)
@@ -123,6 +138,14 @@ public final class FoundationModelSol: SolEngine {
             askedQuestions.append(question)
         }
         if let theme = last?.theme, !theme.isEmpty { usedThemes.append(theme) }
+        let hits = remembered
+        if let last, !hits.isEmpty {
+            let reply = SolTurnPlanner.compose(reflection: last.reflection, perspective: last.perspective, question: askedQuestions.last)
+            let cites = SolTurnPlanner.citations(for: reply, hits: hits)
+            if !cites.isEmpty {
+                continuation.yield(SolTurn(reply: reply, suggestions: last.suggestions ?? [], citations: cites))
+            }
+        }
     }
 
     public func draftReflection(from userMessages: [String]) async throws -> String {
