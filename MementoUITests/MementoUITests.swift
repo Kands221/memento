@@ -91,4 +91,16 @@ final class MementoUITests: XCTestCase {
         XCTAssertTrue(meta.waitForExistence(timeout: 2))
         XCTAssertTrue(app.buttons["Summarize these 3 entries"].exists)
     }
+
+    func testNotebookFilterAndMove() {
+        let app = launch()
+        app.buttons["tab.notebooks"].tap()
+        XCTAssertTrue(app.buttons["notebook.daily"].waitForExistence(timeout: 3))
+        app.buttons["notebook.daily"].tap()
+        app.buttons["filter.Walking helped"].tap()
+        XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'tagged Walking helped'")).firstMatch.waitForExistence(timeout: 2))
+        app.buttons["Move"].firstMatch.tap()
+        app.buttons["notebook.option.work"].tap()
+        XCTAssertTrue(app.staticTexts["Moved to Work"].waitForExistence(timeout: 2))
+    }
 }
