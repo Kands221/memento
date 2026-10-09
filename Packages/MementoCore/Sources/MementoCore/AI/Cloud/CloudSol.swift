@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// Sol through OpenRouter, for iPhones without Apple's on-device model. Same character, planner,
 /// on-device journal memory and crisis handling (in `SolConversation`) as the on-device Sol;
@@ -23,7 +24,7 @@ public final class CloudSol: SolEngine {
             "required": ["reflection", "theme", "perspective", "question", "suggestions"],
             "properties": [
                 "reflection": ["type": "string", "description": "1 or 2 warm sentences reflecting the writer's own words back to them, specifically."],
-                "theme": ["type": "string", "enum": SolCharacter.themes, "description": "The theme for your perspective; one you haven't used."],
+                "theme": ["type": "string", "enum": .strings(SolCharacter.themes), "description": "The theme for your perspective; one you haven't used."],
                 "perspective": ["type": "string", "description": "1 or 2 sentences of gentle perspective on the theme, tied to what the writer said, the way a wise old teacher would say it."],
                 "question": ["type": "string", "description": "One open, caring question, different from every question already asked."],
                 "suggestions": ["type": "array", "items": ["type": "string"],
@@ -54,6 +55,8 @@ public final class CloudSol: SolEngine {
     private struct Greeting: Decodable { var reply: String; var suggestions: [String] }
     private struct Reflection: Decodable { var text: String }
 
+    static let log = Logger(subsystem: "com.kand221.memento", category: "CloudSol")
+
     public func prewarm() {}
 
     public func reset() {
@@ -78,6 +81,7 @@ public final class CloudSol: SolEngine {
                     }
                     continuation.finish()
                 } catch {
+                    Self.log.error("Cloud Sol turn failed: \(String(describing: error), privacy: .public)")
                     continuation.finish(throwing: SolEngineError.failed)
                 }
             }
@@ -99,14 +103,22 @@ public final class CloudSol: SolEngine {
                       into continuation: AsyncThrowingStream<SolTurn, any Error>.Continuation) async throws {
         var raw = ""
         for try await json in client.streamJSON(model: model, messages: messages, schemaName: "sol_turn", schema: Self.turnSchema,
-                                                temperature: 0.7, maxTokens: 700) {
+                                                temperature: 0.7, maxTokens: 1500) {
             raw = json
             let reply = SolTurnPlanner.compose(reflection: PartialJSON.string("reflection", in: json),
                                                perspective: PartialJSON.string("perspective", in: json),
                                                question: PartialJSON.string("question", in: json))
             if !reply.isEmpty { continuation.yield(SolTurn(reply: reply, suggestions: [])) }
         }
-        guard let final = try? JSONText.decode(Turn.self, from: raw) else { throw CloudAIError.badResponse }
+        let final: Turn
+        if let streamed = try? JSONText.decode(Turn.self, from: raw) {
+            final = streamed
+        } else {
+            // The stream ended early; one non-streamed try replaces the partial reply before giving up.
+            Self.log.notice("Cloud Sol stream ended early; retrying without streaming")
+            final = try JSONText.decode(Turn.self, from: try await client.json(model: model, messages: messages, schemaName: "sol_turn",
+                                                                               schema: Self.turnSchema, temperature: 0.7, maxTokens: 1500))
+        }
         var question = final.question.trimmingCharacters(in: .whitespacesAndNewlines)
         if let fresh = SolTurnPlanner.freshQuestion(question, asked: askedQuestions) { question = fresh }
         if !question.isEmpty { askedQuestions.append(question) }
@@ -119,11 +131,18 @@ public final class CloudSol: SolEngine {
     private func greet(_ messages: [CloudMessage], into continuation: AsyncThrowingStream<SolTurn, any Error>.Continuation) async throws {
         var raw = ""
         for try await json in client.streamJSON(model: model, messages: messages, schemaName: "sol_greeting", schema: Self.greetingSchema,
-                                                temperature: 0.7, maxTokens: 300) {
+                                                temperature: 0.7, maxTokens: 500) {
             raw = json
             if let reply = PartialJSON.string("reply", in: json), !reply.isEmpty { continuation.yield(SolTurn(reply: reply, suggestions: [])) }
         }
-        guard let final = try? JSONText.decode(Greeting.self, from: raw) else { throw CloudAIError.badResponse }
+        let final: Greeting
+        if let streamed = try? JSONText.decode(Greeting.self, from: raw) {
+            final = streamed
+        } else {
+            Self.log.notice("Cloud Sol greeting ended early; retrying without streaming")
+            final = try JSONText.decode(Greeting.self, from: try await client.json(model: model, messages: messages, schemaName: "sol_greeting",
+                                                                                   schema: Self.greetingSchema, temperature: 0.7, maxTokens: 500))
+        }
         continuation.yield(SolTurn(reply: final.reply.trimmingCharacters(in: .whitespacesAndNewlines), suggestions: Self.clean(final.suggestions)))
     }
 
@@ -140,7 +159,7 @@ public final class CloudSol: SolEngine {
             let raw = try await client.json(model: model,
                                             messages: [CloudMessage(.system, FoundationModelSol.reflectionInstructions),
                                                        CloudMessage(.user, "The writer said:\n\(numbered)")],
-                                            schemaName: "reflection", schema: Self.reflectionSchema, temperature: 0.4, maxTokens: 700)
+                                            schemaName: "reflection", schema: Self.reflectionSchema, temperature: 0.4, maxTokens: 1200)
             let text = try JSONText.decode(Reflection.self, from: raw).text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !text.isEmpty else { throw SolEngineError.failed }
             return text + "\n\n" + ReflectionTemplate.closingPrompt

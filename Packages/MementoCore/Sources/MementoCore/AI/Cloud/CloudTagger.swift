@@ -15,13 +15,13 @@ public struct CloudTagger: TaggingEngine {
     private struct Details: Decodable { var feeling: Slot; var situation: Slot; var helped: Slot; var topic: Slot }
 
     static var schema: String {
-        func slot(_ labels: [String], _ about: String) -> [String: Any] {
+        func slot(_ labels: [String], _ about: String) -> SchemaJSON {
             ["type": "object", "additionalProperties": false, "required": ["present", "quote", "label"],
-             "description": about,
+             "description": .string(about),
              "properties": [
                 "present": ["type": "boolean", "description": "False when the entry doesn't clearly contain this."],
                 "quote": ["type": "string", "description": "Exact words copied from the entry, 2 to 12 words. Empty when not present."],
-                "label": ["type": "string", "enum": labels],
+                "label": ["type": "string", "enum": .strings(labels)],
              ]]
         }
         return JSONText.schema([
@@ -41,7 +41,7 @@ public struct CloudTagger: TaggingEngine {
             raw = try await client.json(model: model,
                                         messages: [CloudMessage(.system, FoundationModelTagger.instructions),
                                                    CloudMessage(.user, "Journal entry:\n\"\"\"\n\(text.prefix(8_000))\n\"\"\"")],
-                                        schemaName: "entry_details", schema: Self.schema, temperature: 0.2, maxTokens: 500)
+                                        schemaName: "entry_details", schema: Self.schema, temperature: 0.2, maxTokens: 800)
         } catch {
             throw TaggingEngineError.failed
         }

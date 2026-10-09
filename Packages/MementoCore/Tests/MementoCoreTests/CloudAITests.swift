@@ -89,6 +89,8 @@ func body(of request: URLRequest) -> [String: Any] {
         #expect(provider["data_collection"] as? String == "deny")
         #expect(provider["zdr"] as? Bool == true)
         #expect(provider["require_parameters"] == nil) // filters out every endpoint on OpenRouter today
+        #expect(provider["order"] == nil)
+        #expect(OpenRouterClient.routing(for: "anthropic/claude-haiku-5.5")["order"] as? [String] == ["anthropic"])
     }
 
     @Test func retriesOnceOnServerErrorsButNotOnBadKeys() async throws {
@@ -163,6 +165,26 @@ func body(of request: URLRequest) -> [String: Any] {
         let system = ((b["messages"] as? [[String: Any]])?.first?["content"] as? String) ?? ""
         #expect(!system.contains("on this iPhone"))
         #expect(system.contains("Solomon"))
+    }
+
+    @Test func truncatedStreamGetsOneNonStreamedRetry() async throws {
+        let cut = String(turnJSON.prefix(90))
+        let fake = FakeTransport([.events(200, events(streaming: cut)), .body(200, completion(turnJSON))])
+        let sol = CloudSol(client: OpenRouterClient(apiKey: "sk-test", transport: fake, retryDelay: .zero), model: "m")
+        var last: SolTurn?
+        for try await t in sol.reply(to: "Work has been a lot", history: [], steerTowardReflection: false) { last = t }
+        #expect(last?.reply.hasPrefix("You keep saying yes to everything at work.") == true)
+        #expect(last?.suggestions.count == 2)
+        #expect(fake.requests.count == 2)
+        #expect(body(of: fake.requests[1])["stream"] as? Bool == false)
+    }
+
+    @Test func schemaKeepsFieldOrderAndIsValidJSON() throws {
+        let schema = CloudSol.turnSchema
+        let order = ["\"reflection\"", "\"theme\"", "\"perspective\"", "\"question\"", "\"suggestions\""].map { schema.range(of: $0)!.lowerBound }
+        #expect(order == order.sorted())
+        #expect((try? JSONSerialization.jsonObject(with: Data(schema.utf8))) != nil)
+        #expect((try? JSONSerialization.jsonObject(with: Data(CloudTagger.schema.utf8))) != nil)
     }
 
     @Test func greetsSmallTalkWithTheGreetingSchema() async throws {

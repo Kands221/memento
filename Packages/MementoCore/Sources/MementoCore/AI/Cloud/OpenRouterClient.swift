@@ -164,8 +164,7 @@ public struct OpenRouterClient: Sendable {
             "stream": stream,
             "response_format": ["type": "json_schema",
                                 "json_schema": ["name": schemaName, "strict": true, "schema": schemaObject]],
-            // Only route to providers that don't collect prompts and keep zero data.
-            "provider": ["data_collection": "deny", "zdr": true],
+            "provider": Self.routing(for: model),
         ]
         var request = URLRequest(url: Self.endpoint, timeoutInterval: 30)
         request.httpMethod = "POST"
@@ -174,6 +173,14 @@ public struct OpenRouterClient: Sendable {
         request.setValue("Memento", forHTTPHeaderField: "X-Title")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         return request
+    }
+
+    /// Only providers that don't collect prompts and keep zero data. Claude models prefer Anthropic's own
+    /// endpoint: another host ignored the schema's field order and cut replies off mid-JSON (finish=length).
+    static func routing(for model: String) -> [String: Any] {
+        var provider: [String: Any] = ["data_collection": "deny", "zdr": true]
+        if model.hasPrefix("anthropic/") { provider["order"] = ["anthropic"] }
+        return provider
     }
 
     static func check(status: Int, body: Data) throws {
@@ -234,10 +241,35 @@ enum JSONText {
         return try JSONDecoder().decode(T.self, from: Data(t.utf8))
     }
 
-    /// Serializes a schema written as Swift literals.
-    static func schema(_ object: [String: Any]) -> String {
-        let data = (try? JSONSerialization.data(withJSONObject: object, options: [.sortedKeys])) ?? Data("{}".utf8)
-        return String(decoding: data, as: UTF8.self)
+    static func schema(_ value: SchemaJSON) -> String { value.text }
+}
+
+/// JSON schema written as Swift literals, keeping key order: models generate fields in schema order,
+/// so Sol's reflection streams first and his quick replies last.
+indirect enum SchemaJSON: ExpressibleByDictionaryLiteral, ExpressibleByArrayLiteral, ExpressibleByStringLiteral, ExpressibleByBooleanLiteral {
+    case object([(String, SchemaJSON)])
+    case array([SchemaJSON])
+    case string(String)
+    case bool(Bool)
+
+    init(dictionaryLiteral elements: (String, SchemaJSON)...) { self = .object(elements) }
+    init(arrayLiteral elements: SchemaJSON...) { self = .array(elements) }
+    init(stringLiteral value: String) { self = .string(value) }
+    init(booleanLiteral value: Bool) { self = .bool(value) }
+
+    static func strings(_ values: [String]) -> SchemaJSON { .array(values.map { .string($0) }) }
+
+    var text: String {
+        switch self {
+        case .object(let pairs): "{" + pairs.map { Self.quote($0.0) + ":" + $0.1.text }.joined(separator: ",") + "}"
+        case .array(let items): "[" + items.map(\.text).joined(separator: ",") + "]"
+        case .string(let s): Self.quote(s)
+        case .bool(let b): b ? "true" : "false"
+        }
+    }
+
+    private static func quote(_ s: String) -> String {
+        (try? JSONEncoder().encode(s)).map { String(decoding: $0, as: UTF8.self) } ?? "\"\""
     }
 }
 
