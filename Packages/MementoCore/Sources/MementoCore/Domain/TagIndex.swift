@@ -46,7 +46,8 @@ public struct TagIndex: Sendable {
         Array(Self.byCount(summaries).prefix(n).map(\.label))
     }
 
-    static func byCount(_ items: [TagSummary]) -> [TagSummary] {
+    /// Most-used first; ties keep their original order.
+    public static func byCount(_ items: [TagSummary]) -> [TagSummary] {
         items.enumerated()
             .sorted { $0.element.count != $1.element.count ? $0.element.count > $1.element.count : $0.offset < $1.offset }
             .map(\.element)

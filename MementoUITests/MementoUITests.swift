@@ -53,4 +53,29 @@ final class MementoUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["2 suggestions waiting in 2 entries"].exists)
         XCTAssertTrue(app.staticTexts["REVISIT"].exists)
     }
+
+    func testWriteSaveShowsSuggestions() {
+        let app = launch()
+        app.buttons["tab.write"].tap()
+        XCTAssertTrue(app.staticTexts["Start writing"].waitForExistence(timeout: 3))
+        app.buttons["write.mode.free"].tap()
+        XCTAssertTrue(app.buttons["editor.example"].waitForExistence(timeout: 3))
+        app.buttons["editor.example"].tap()
+        app.buttons["editor.save"].tap()
+        XCTAssertTrue(app.staticTexts["Saved ✓"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Finding details on this iPhone…"].exists)
+        XCTAssertTrue(app.buttons["Keep Drained"].waitForExistence(timeout: 6))
+    }
+
+    func testKeepRemoveUndo() {
+        let app = launch()
+        app.staticTexts["2 suggestions waiting in 2 entries"].tap()
+        XCTAssertTrue(app.buttons["Keep Restless"].waitForExistence(timeout: 3))
+        app.buttons["Remove Restless"].tap()
+        XCTAssertTrue(app.staticTexts["Removed “Restless”"].waitForExistence(timeout: 2))
+        app.buttons["toast.undo"].tap()
+        XCTAssertTrue(app.buttons["Keep Restless"].waitForExistence(timeout: 2))
+        app.buttons["Keep Restless"].tap()
+        XCTAssertTrue(app.buttons["kept.Restless"].waitForExistence(timeout: 2))
+    }
 }

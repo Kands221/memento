@@ -44,14 +44,22 @@ final class AppModel {
     func openTag(_ label: String) { push(.tag(label)) }
 
     func openEditor(_ mode: WritingMode) {
-        sheet = nil
         draft.mode = mode
-        editorMode = mode
+        afterSheetDismiss { self.editorMode = mode }
     }
 
     func openSol() {
+        afterSheetDismiss { self.isSolPresented = true }
+    }
+
+    /// Full-screen covers can't present while a sheet is still animating away.
+    private func afterSheetDismiss(_ present: @escaping () -> Void) {
+        guard sheet != nil else { return present() }
         sheet = nil
-        isSolPresented = true
+        Task {
+            try? await Task.sleep(for: .milliseconds(450))
+            present()
+        }
     }
 
     func showToast(_ text: String, undo: (() -> Void)? = nil) {
