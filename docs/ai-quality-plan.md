@@ -22,6 +22,22 @@ Written Oct 9, 2026. Baselines were measured the same day with `AIEvalProbe` (`M
 
 **Caveat:** 20 turns is a small sample (±18 points at 95%). Phase 0 grows it to about 300 turns so the targets below can be measured honestly.
 
+### Shipped Oct 10, 2026: Sol on Apple's model
+
+Measured on a 70-turn set (14 conversations: advice, good news, grief, conflict, rambling, prompt injection, journal memory…), with the old and new Sol run back to back on the same machine and scored by an independent checker:
+
+| | Before | After |
+|---|---|---|
+| Turns with at least one error | **22 / 70 (31%)** | **9 / 70 (13%)** |
+| Repeats an earlier sentence | 8 | 0 |
+| Banned opener ("That sounds…") | 6 | 0 |
+| Missing or invalid quick replies | 5 | 0 |
+| Names a feeling the writer didn't | 4 | 3 |
+| Reply time p50 / p90 (Mac, load varied between runs) | 4.1 s / 7.4 s | 5.1 s / 9.0 s |
+
+- **What shipped:** every sentence is checked before it's shown or spoken (`SolReplyCheck`, `SolTurnGate`); five turn kinds with reply lengths that follow the writer; explicit `usedMemory` for citations; one targeted retry; a 25 s turn limit with a composed fallback; conversation notes when the context fills; and reflection drafts using permissive guardrails, cleaned and checked.
+- **Added after that run:** a broader "speaks as the writer" rule. On the three conversations where it showed up: 1 error in 15 turns, p50 2.5 s on a quiet machine.
+
 ## 2. Principles
 
 1. **Facts come from code, words from the model.** The model never counts, dates or recalls. Code supplies the facts; the model only phrases them; validators check that it did.

@@ -19,7 +19,7 @@ struct SolCharacterView: View {
     @State private var nodStart = Date.distantPast
     @State private var tucked = false
 
-    private var still: Bool { reduceMotion || LaunchOptions.current.uiTesting }
+    private var still: Bool { reduceMotion || (LaunchOptions.current.uiTesting && !LaunchOptions.current.demoRecording) }
     private var pose: SolMood { tucked ? .resting : mood }
 
     var body: some View {

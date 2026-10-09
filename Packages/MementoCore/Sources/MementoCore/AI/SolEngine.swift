@@ -20,11 +20,14 @@ public struct SolTurn: Equatable, Sendable {
     public var reply: String
     public var suggestions: [String]
     public var citations: [SolCitation]
+    /// Sol's safe composed reply stood in because the model couldn't give a good one in time.
+    public var usedFallback: Bool
 
-    public init(reply: String, suggestions: [String], citations: [SolCitation] = []) {
+    public init(reply: String, suggestions: [String], citations: [SolCitation] = [], usedFallback: Bool = false) {
         self.reply = reply
         self.suggestions = suggestions
         self.citations = citations
+        self.usedFallback = usedFallback
     }
 }
 

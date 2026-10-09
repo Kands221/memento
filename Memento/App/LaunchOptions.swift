@@ -11,6 +11,10 @@ struct LaunchOptions {
     var taggingEngine: EngineChoice?
     var solEngine: EngineChoice?
     var aiState: DemoAIState?
+    /// Demo recordings: Sol animates even under UI-test automation.
+    var demoRecording = false
+    /// Demo recordings in the iOS Simulator, which has no working speech model: tapping the mic "hears" this text.
+    var demoSpeech: String?
 
     static let current = LaunchOptions(arguments: ProcessInfo.processInfo.arguments)
 
@@ -25,5 +29,7 @@ struct LaunchOptions {
         taggingEngine = value("-taggingEngine").flatMap(EngineChoice.init(rawValue:))
         solEngine = value("-solEngine").flatMap(EngineChoice.init(rawValue:))
         aiState = value("-aiState").flatMap(DemoAIState.init(rawValue:))
+        demoRecording = arguments.contains("-demoRecording")
+        demoSpeech = value("-demoSpeech")
     }
 }

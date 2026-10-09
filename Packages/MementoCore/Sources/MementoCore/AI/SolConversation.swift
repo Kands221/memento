@@ -13,6 +13,8 @@ public final class SolConversation {
     public private(set) var suggestions: [String] = []
     public private(set) var isResponding = false
     public private(set) var isAwaitingFirstToken = false
+    /// Turns where a safe composed reply stood in for the model (for evals).
+    public private(set) var fallbackTurns = 0
     public var input = ""
     @ObservationIgnored private let engine: any SolEngine
     @ObservationIgnored private let startedAt: Date
@@ -79,6 +81,7 @@ public final class SolConversation {
                     messages.append(m)
                 }
                 finalSuggestions = turn.suggestions
+                if turn.usedFallback { fallbackTurns += 1 }
             }
             if replyID == nil { messages.append(SolMessage(role: .sol, text: Self.fallbackReply)) }
         } catch SolEngineError.guardrail {

@@ -8,17 +8,39 @@ final class SpeechInput {
     @ObservationIgnored private let live = LiveTranscriber()
     @ObservationIgnored private let classic = DictationService()
     private var useLive: Bool { LiveTranscriber.isSupported }
+    /// Demo recordings only (`-demoSpeech`): the iOS Simulator has no working speech model, so the mic
+    /// "hears" a scripted line word by word, the way live dictation fills the field on an iPhone.
+    @ObservationIgnored private let demoLine = LaunchOptions.current.demoSpeech
+    private var demoListening = false
+    @ObservationIgnored private var demoTask: Task<Void, Never>?
 
-    var isAvailable: Bool { useLive ? live.isAvailable : classic.isAvailable }
-    var isListening: Bool { useLive ? live.isListening : classic.isListening }
-    var isPreparing: Bool { useLive && live.isPreparing }
-    var errorText: String? { useLive ? live.errorText : classic.errorText }
+    var isAvailable: Bool { demoLine != nil || (useLive ? live.isAvailable : classic.isAvailable) }
+    var isListening: Bool { demoLine != nil ? demoListening : (useLive ? live.isListening : classic.isListening) }
+    var isPreparing: Bool { demoLine == nil && useLive && live.isPreparing }
+    var errorText: String? { demoLine != nil ? nil : (useLive ? live.errorText : classic.errorText) }
 
     func start(onText: @escaping @MainActor (String) -> Void) async {
+        if let demoLine {
+            demoListening = true
+            let words = demoLine.split(separator: " ").map(String.init)
+            demoTask = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(700))
+                for i in words.indices where !Task.isCancelled {
+                    onText(words[...i].joined(separator: " "))
+                    try? await Task.sleep(for: .milliseconds(230))
+                }
+            }
+            return
+        }
         if useLive { await live.start(onText: onText) } else { await classic.start(onText: onText) }
     }
 
     func stop() async {
+        if demoLine != nil {
+            _ = await demoTask?.value
+            demoListening = false
+            return
+        }
         if useLive { await live.stop() } else { classic.stop() }
     }
 }
