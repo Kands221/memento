@@ -30,8 +30,7 @@
       shouldAutocreateTestPlan = "YES">
       <Testables>
          <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
+            skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4D0000000000000000000009"
@@ -55,12 +54,12 @@
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4D0000000000000000000008"
-               BuildableName = "Memento.app"
-               BlueprintName = "Memento"
-               ReferencedContainer = "container:Memento.xcodeproj">
-            </BuildableReference>
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "4D0000000000000000000008"
+            BuildableName = "Memento.app"
+            BlueprintName = "Memento"
+            ReferencedContainer = "container:Memento.xcodeproj">
+         </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
    <ProfileAction
@@ -72,12 +71,12 @@
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "4D0000000000000000000008"
-               BuildableName = "Memento.app"
-               BlueprintName = "Memento"
-               ReferencedContainer = "container:Memento.xcodeproj">
-            </BuildableReference>
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "4D0000000000000000000008"
+            BuildableName = "Memento.app"
+            BlueprintName = "Memento"
+            ReferencedContainer = "container:Memento.xcodeproj">
+         </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
