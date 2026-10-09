@@ -15,7 +15,6 @@ struct SolView: View {
     @State private var draft = ""
     @State private var drafting = false
     @State private var showDraft = false
-    @State private var bob = false
 
     var body: some View {
         NavigationStack {
@@ -70,10 +69,8 @@ struct SolView: View {
 
     private func avatar(size: CGFloat) -> some View {
         let mood = conversation?.mood ?? .hello
-        return SolArt(name: mood.asset == "sol-hello" ? "sol-mark" : mood.asset, size: size)
-            .offset(y: mood == .thinking && bob ? -2 : 0)
-            .animation(mood == .thinking && !reduceMotion ? .easeInOut(duration: 0.9).repeatForever(autoreverses: true) : .default, value: bob)
-            .onChange(of: mood) { _, new in bob = new == .thinking && !reduceMotion }
+        return SolCharacterView(mood: mood == .hello ? .speaking : mood, size: size, showsEffects: false, reactsToTap: false)
+            .accessibilityHidden(true)
     }
 
     // MARK: Gate
@@ -88,7 +85,7 @@ struct SolView: View {
             : ("Sol needs on-device AI", "Set up the on-device model first. Your conversation would stay on this iPhone.", "Open On-device AI")
         return ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                PaperArt(name: "sol-resting", height: 160)
+                SolCharacterView(mood: .resting, size: 160).frame(maxWidth: .infinity)
                 Text(title).font(.serif(26, relativeTo: .title2)).foregroundStyle(Color.mInk)
                 Text(body).font(.ui(15.5)).foregroundStyle(Color.mMut).lineSpacing(3).fixedSize(horizontal: false, vertical: true)
                 Button(cta) {
@@ -114,23 +111,23 @@ struct SolView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     if c.userTurns == 0 {
-                        SolArt(name: "sol-hello", size: 150).frame(maxWidth: .infinity).padding(.top, 4)
+                        SolCharacterView(mood: c.input.isEmpty ? .hello : .listening, size: 160, nudge: c.input.split(separator: " ").count)
+                            .frame(maxWidth: .infinity).padding(.top, 4)
                     }
                     Text(SolCharacter.disclaimer)
                         .font(.ui(13)).foregroundStyle(Color.mMut).lineSpacing(2)
                         .paperCard(radius: 14, padding: 14)
-                    ForEach(c.messages) { message in messageView(message) }
+                    ForEach(c.messages) { message in messageView(message, isLatest: message.id == c.messages.last?.id && c.userTurns > 0, c: c) }
                     if c.isAwaitingFirstToken {
                         HStack(spacing: 8) {
-                            SolArt(name: "sol-thinking", size: 26)
-                                .offset(y: bob ? -2 : 0)
+                            SolCharacterView(mood: .thinking, size: 56, reactsToTap: false)
                             Text("Sol is thinking…").font(.ui(14).italic()).foregroundStyle(Color.mMut)
                                 .accessibilityIdentifier("sol.thinking")
                         }
                     }
                     if drafting {
                         HStack(spacing: 10) {
-                            SolArt(name: "sol-reflect", size: 28)
+                            SolCharacterView(mood: .reflect, size: 48, showsEffects: false, reactsToTap: false)
                             Text(SolCharacter.drafting).font(.ui(14).italic()).foregroundStyle(Color.mMut)
                         }
                     } else if c.canMakeReflection {
@@ -141,7 +138,7 @@ struct SolView: View {
                     }
                     if c.reachedCap {
                         HStack(alignment: .top, spacing: 10) {
-                            SolArt(name: "sol-resting", size: 32)
+                            SolCharacterView(mood: .resting, size: 56, reactsToTap: false)
                             Text(SolCharacter.windDown).font(.ui(14)).foregroundStyle(Color.mMut)
                         }
                     }
@@ -160,11 +157,20 @@ struct SolView: View {
     }
 
     @ViewBuilder
-    private func messageView(_ message: SolMessage) -> some View {
+    private func messageView(_ message: SolMessage, isLatest: Bool, c: SolConversation) -> some View {
         switch message.role {
         case .sol:
             HStack(alignment: .top, spacing: 10) {
-                SolArt(name: "sol-mark", size: 22).padding(.top, 3)
+                Group {
+                    if isLatest {
+                        // The latest reply's avatar nods along as words stream in.
+                        SolCharacterView(mood: .speaking, size: 40,
+                                         nudge: c.isResponding ? message.text.split(separator: " ").count / 4 : 0,
+                                         showsEffects: false)
+                    } else {
+                        SolArt(name: "sol-mark", size: 22).padding(.top, 3)
+                    }
+                }
                 Text(message.text).font(.serif(20, relativeTo: .body)).foregroundStyle(Color.mInk).lineSpacing(4)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .textSelection(.enabled)
