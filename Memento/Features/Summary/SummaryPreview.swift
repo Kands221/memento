@@ -16,7 +16,12 @@ struct SummaryPaper: View {
             }
             .padding(.bottom, 12)
             .overlay(alignment: .bottom) { Rectangle().fill(rule).frame(height: 1) }
-            Text(doc.narrative).font(.ui(13)).foregroundStyle(ink).lineSpacing(3).fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(doc.narrative).font(.ui(13)).foregroundStyle(ink).lineSpacing(3).fixedSize(horizontal: false, vertical: true)
+                if let credit = doc.narrativeCredit {
+                    Text(credit).font(.ui(11, relativeTo: .caption2).italic()).foregroundStyle(muted).fixedSize(horizontal: false, vertical: true)
+                }
+            }
             ForEach(doc.groups, id: \.name) { group in
                 VStack(alignment: .leading, spacing: 2) {
                     label(group.name)

@@ -6,6 +6,7 @@ import MementoCore
 struct SummaryView: View {
     let seed: SummarySeed
     @Environment(AppModel.self) private var app
+    @Environment(AppServices.self) private var services
     @Query(sort: \Entry.createdAt, order: .reverse) private var entries: [Entry]
     @AppStorage(SettingsKey.preparedBy) private var preparedBy = ""
     @State private var purpose: SummaryPurpose = .me
@@ -16,6 +17,11 @@ struct SummaryView: View {
     @State private var initialized = false
     @State private var pdfURL: URL?
     @State private var pages = 1
+    /// Sol's look-back paragraph ("For me" only), drafted on device and editable before export.
+    @State private var letSolWrite = true
+    @State private var lookBack: String?
+    @State private var drafting = false
+    @State private var editingLookBack = false
 
     var body: some View {
         Group {
@@ -25,8 +31,23 @@ struct SummaryView: View {
         .toolbar {
             if step == 1 {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button { step = 0 } label: { Label("Edit selection", systemImage: "chevron.left").labelStyle(.titleAndIcon) }
+                    Button {
+                        lookBack = nil
+                        step = 0
+                    } label: { Label("Edit selection", systemImage: "chevron.left").labelStyle(.titleAndIcon) }
                 }
+            }
+        }
+        .sheet(isPresented: $editingLookBack, onDismiss: makePreview) {
+            NavigationStack {
+                TextEditor(text: Binding(get: { lookBack ?? "" }, set: { lookBack = $0 }))
+                    .font(.ui(16))
+                    .padding(12)
+                    .navigationTitle("Look-back")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) { Button("Done") { editingLookBack = false } }
+                    }
             }
         }
         .onAppear {
@@ -45,7 +66,14 @@ struct SummaryView: View {
 
     private var document: SummaryDocument {
         SummaryComposer.compose(entries: chosen, options: SummaryOptions(purpose: purpose, includeQuotes: includeQuotes,
-                                                                        note: note, preparedBy: preparedBy, today: .now))
+                                                                        note: note, preparedBy: preparedBy, today: .now,
+                                                                        narrative: purpose == .me ? lookBack : nil))
+    }
+
+    /// Only Apple's on-device model writes the look-back; cloud and demo engines never do.
+    private var canDraft: Bool {
+        purpose == .me && services.ai.live == .ready && services.ai.availability == .ready && !services.taggingUsesCloud
+            && (!services.options.uiTesting || ProcessInfo.processInfo.arguments.contains("-liveSummary"))
     }
 
     // MARK: Step 0
@@ -93,6 +121,17 @@ struct SummaryView: View {
                 }
                 .toggleStyle(SageToggleStyle())
                 .padding(.horizontal, 16).padding(.vertical, 8)
+                if canDraft {
+                    Toggle(isOn: $letSolWrite) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Let Sol write the look-back").font(.ui(16)).foregroundStyle(Color.mInk)
+                            Text("Drafted on this iPhone from your kept tags. You can edit it.").font(.ui(13)).foregroundStyle(Color.mMut)
+                        }
+                    }
+                    .toggleStyle(SageToggleStyle())
+                    .padding(.horizontal, 16).padding(.vertical, 8)
+                    .accessibilityIdentifier("summary.lookBack")
+                }
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Only tags I’ve kept").font(.ui(16)).foregroundStyle(Color.mInk)
@@ -121,9 +160,9 @@ struct SummaryView: View {
                         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.mLine, lineWidth: 1))
                 }
             }
-            Button("Preview summary") { makePreview() }
+            Button(drafting ? "Sol is writing on this iPhone…" : "Preview summary") { startPreview() }
                 .buttonStyle(PrimaryButtonStyle())
-                .disabled(selected.isEmpty)
+                .disabled(selected.isEmpty || drafting)
                 .accessibilityIdentifier("summary.preview")
         }
     }
@@ -186,6 +225,20 @@ struct SummaryView: View {
                 Text("PDF · \(pages) \(pages == 1 ? "page" : "pages")").font(.ui(13)).foregroundStyle(Color.mMut)
             }
             .padding(.horizontal, 4)
+            if lookBack != nil {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text("Drafted by Sol on this iPhone from your kept tags. Edit anything.")
+                        .font(.ui(13.5)).foregroundStyle(Color.mMut).fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    Button { editingLookBack = true } label: {
+                        Text("Edit").frame(minWidth: 44, minHeight: 44).contentShape(Rectangle())
+                    }
+                        .buttonStyle(LinkButtonStyle(size: 15))
+                        .accessibilityLabel("Edit the look-back")
+                        .accessibilityIdentifier("summary.editLookBack")
+                }
+                .padding(.horizontal, 4)
+            }
             SummaryPaper(doc: document)
             Text("Nothing is shared until you choose where it goes.").font(.ui(13.5)).foregroundStyle(Color.mMut).padding(.horizontal, 4)
             if let pdfURL {
@@ -196,6 +249,22 @@ struct SummaryView: View {
                 }
                 .accessibilityLabel("Export PDF…")
             }
+        }
+    }
+
+    /// "For me" with Sol on: draft the look-back first; if it can't be trusted, the deterministic paragraph stays.
+    private func startPreview() {
+        guard canDraft, letSolWrite else {
+            lookBack = nil
+            makePreview()
+            return
+        }
+        drafting = true
+        let facts = SummaryFacts.make(entries: chosen)
+        Task {
+            lookBack = await SummaryNarrator.narrate(facts)?.text
+            drafting = false
+            makePreview()
         }
     }
 
