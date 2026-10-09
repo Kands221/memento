@@ -174,4 +174,21 @@ final class MementoUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Journal summary for my appointment"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.buttons["Export PDF…"].exists)
     }
+
+    func testSolVoicePicker() {
+        let app = launch()
+        app.buttons["tab.you"].tap()
+        reveal(app.buttons["row.solVoice"], in: app)
+        app.buttons["row.solVoice"].tap()
+        XCTAssertTrue(app.buttons["voice.automatic"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["voice.automatic"].isSelected)
+        let daniel = app.buttons["voice.Daniel"]
+        XCTAssertTrue(daniel.waitForExistence(timeout: 3), "Expected the built-in Daniel voice")
+        daniel.tap()
+        XCTAssertTrue(daniel.isSelected)
+        XCTAssertFalse(app.buttons["voice.automatic"].isSelected)
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "sol-voice-picker"; shot.lifetime = .keepAlways; add(shot)
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        XCTAssertTrue(app.buttons["row.solVoice"].label.contains("Daniel"))
+    }
 }

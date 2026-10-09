@@ -143,4 +143,39 @@ final class RealAITests: XCTestCase {
         XCTAssertTrue(keep.waitForExistence(timeout: 45), "No cloud tag suggestions arrived")
         let tags = XCTAttachment(screenshot: app.screenshot()); tags.name = "live-cloud-tags"; tags.lifetime = .keepAlways; add(tags)
     }
+
+    /// Speech to text, live and audible: `scripts/hear-sol.sh` speaks a sentence out loud on the Mac, the simulator's
+    /// microphone hears it, on-device transcription fills Sol's input, and Sol answers aloud. Needs MEMENTO_SPEAK=1.
+    func testLiveSpeechToSol() throws {
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["MEMENTO_SPEAK"] == "1", "Run through scripts/hear-sol.sh")
+        let app = XCUIApplication()
+        app.launchArguments = ["-uiTesting", "-seedSampleData", "-skipOnboarding", "-taggingEngine", "demo"]
+        app.launch()
+        app.buttons["tab.you"].tap()
+        app.buttons["row.sol"].tap()
+        let mic = app.buttons["sol.mic"]
+        XCTAssertTrue(mic.waitForExistence(timeout: 5), "No mic button: speech recognition isn't available here")
+        mic.tap()
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        for _ in 0..<2 {
+            let allow = springboard.alerts.buttons["Allow"]
+            if allow.waitForExistence(timeout: 3) { allow.tap() } else { break }
+        }
+        XCTAssertTrue(app.buttons["Stop and send"].waitForExistence(timeout: 60), "Sol didn't start listening")
+        print("MIC_ON")
+        let input = app.textFields["sol.input"]
+        let heard = expectation(for: NSPredicate(format: "value CONTAINS[c] 'settle'"), evaluatedWith: input)
+        wait(for: [heard], timeout: 60)
+        Thread.sleep(forTimeInterval: 1.5) // the last words finalize
+        print("HEARD: \(input.value as? String ?? "")")
+        let shot = XCTAttachment(screenshot: app.screenshot()); shot.name = "live-speech-heard"; shot.lifetime = .keepAlways; add(shot)
+        app.buttons["Stop and send"].tap()
+        let idle = expectation(for: NSPredicate(format: "value == 'Ready'"), evaluatedWith: app.buttons["sol.send"])
+        wait(for: [idle], timeout: 90)
+        let rows = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Sol: '"))
+        print("SOL: \(rows.element(boundBy: rows.count - 1).label.dropFirst(5))")
+        print("SOL_SPEAKING")
+        Thread.sleep(forTimeInterval: 30) // let Sol finish saying it out loud
+        let reply = XCTAttachment(screenshot: app.screenshot()); reply.name = "live-speech-sol"; reply.lifetime = .keepAlways; add(reply)
+    }
 }

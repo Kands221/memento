@@ -34,6 +34,8 @@ struct YouView: View {
                 SettingsRow(title: "Summaries") { app.push(.summary(SummarySeed(ids: nil))) }
                 SettingsRow(title: "Reflect with Sol") { app.openSol() }
                     .accessibilityIdentifier("row.sol")
+                SettingsRow(title: "Sol’s voice", value: SolVoice.currentVoice()?.name ?? "Automatic") { app.push(.solVoice) }
+                    .accessibilityIdentifier("row.solVoice")
             }
             SettingsGroup {
                 SettingsRow(title: "On-device AI", value: services.ai.label) { app.push(.onDeviceAI) }

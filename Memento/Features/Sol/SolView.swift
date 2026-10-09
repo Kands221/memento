@@ -17,6 +17,7 @@ struct SolView: View {
     @State private var showDraft = false
     @State private var voice = SolVoice()
     @State private var listener = SpeechInput()
+    @State private var showVoices = false
 
     var body: some View {
         NavigationStack {
@@ -33,6 +34,9 @@ struct SolView: View {
             .navigationDestination(isPresented: $showDraft) {
                 SolDraftView(text: $draft, onBack: { showDraft = false }, onSave: saveReflection, onDiscard: discard)
             }
+        }
+        .sheet(isPresented: $showVoices) {
+            NavigationStack { SolVoiceView() }
         }
         .task {
             guard conversation == nil else { return }
@@ -71,6 +75,10 @@ struct SolView: View {
             .accessibilityLabel(voice.isEnabled ? "Sol's voice is on" : "Sol's voice is off")
             .accessibilityHint("Sol reads his replies aloud")
             .accessibilityIdentifier("sol.voiceToggle")
+            .contextMenu {
+                Button("Choose Sol’s voice…", systemImage: "person.wave.2") { showVoices = true }
+            }
+            .accessibilityAction(named: "Choose Sol’s voice") { showVoices = true }
         }
         .padding(.horizontal, 12)
         .frame(minHeight: 56)

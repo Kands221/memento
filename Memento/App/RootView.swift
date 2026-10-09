@@ -70,6 +70,7 @@ struct RootView: View {
             case .notebook(let id): NotebookDetailView(notebookID: id)
             case .reminders: RemindersView()
             case .onDeviceAI: OnDeviceAIView()
+            case .solVoice: SolVoiceView()
             case .summary(let seed): SummaryView(seed: seed)
             }
         }

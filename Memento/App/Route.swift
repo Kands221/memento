@@ -16,6 +16,7 @@ enum Route: Hashable {
     case notebook(String)
     case reminders
     case onDeviceAI
+    case solVoice
     case summary(SummarySeed)
 }
 
