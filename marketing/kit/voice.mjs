@@ -53,7 +53,7 @@ async function synthesize(VOICES, line, file) {
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice.id}?output_format=mp3_44100_128`, {
     method: "POST",
     headers: { "xi-api-key": process.env.ELEVENLABS_API_KEY, "content-type": "application/json" },
-    body: JSON.stringify({ text: line.say, model_id: VOICES.model, voice_settings: VOICES.settings }),
+    body: JSON.stringify({ text: line.say, model_id: VOICES.model, voice_settings: voice.settings ?? VOICES.settings }),
   });
   if (!res.ok) throw new Error(`ElevenLabs ${res.status} for "${line.text}": ${await res.text()}`);
   await writeFile(file, Buffer.from(await res.arrayBuffer()));
@@ -72,7 +72,7 @@ async function clipFor(ad, line) {
   const voDir = path.join(ad.build, "vo");
   await mkdir(voDir, { recursive: true });
   const hash = createHash("sha1")
-    .update(JSON.stringify([VOICES.model, VOICES.settings, VOICES[line.who].id, line.say]))
+    .update(JSON.stringify([VOICES.model, VOICES[line.who].settings ?? VOICES.settings, VOICES[line.who].id, line.say]))
     .digest("hex")
     .slice(0, 10);
   const raw = path.join(voDir, `${line.who}-${hash}.mp3`);
@@ -119,6 +119,9 @@ async function ttsClips(ad, cut) {
     console.log(`${String(i + 1).padStart(4)}  ${c.line.who.padEnd(5)}  ${c.len.toFixed(2)}s  ${c.slot.toFixed(2)}s  ${c.tempo.toFixed(2)}x  ${c.out.toFixed(2)}s${warn}`);
   }
   if (clips.some((c) => c.tempo > MAX_TEMPO)) throw new Error(`A line needs more than ${MAX_TEMPO}x to fit. Shorten its text in timeline.mjs.`);
+  // When each line is actually spoken, for the scene's subtitles.
+  await writeFile(path.join(ad.build, "vo-timing.json"), JSON.stringify(
+    clips.map((c, i) => ({ index: i + 1, who: c.line.who, text: c.line.text, start: Number(c.start.toFixed(3)), out: Number(c.out.toFixed(3)) })), null, 2));
   return clips;
 }
 
@@ -228,10 +231,10 @@ async function mixCut(ad, cut, clips) {
         "[sfx][vo1]sidechaincompress=threshold=0.03:ratio=8:attack=15:release=250[duck];" +
         `[3:a]${st},volume=0.32,afade=t=in:d=1.2,afade=t=out:st=${(tl.DURATION - 2.5).toFixed(2)}:d=2.5[mus];` +
         "[mus][vo3]sidechaincompress=threshold=0.035:ratio=5:attack=40:release=600[mduck];" +
-        "[duck][vo2][mduck]amix=inputs=3:normalize=0:duration=first,alimiter=limit=0.95,apad[a]"
+        "[duck][vo2][mduck]amix=inputs=3:normalize=0:duration=first,alimiter=limit=0.85,apad[a]"
       : "[2:a]asplit=2[vo1][vo2];[1:a]aresample=48000,volume=0.6[sfx];" +
         "[sfx][vo1]sidechaincompress=threshold=0.03:ratio=8:attack=15:release=250[duck];" +
-        "[duck][vo2]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.95,apad[a]",
+        "[duck][vo2]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.85,apad[a]",
     "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2",
     "-t", String(tl.DURATION), "-movflags", "+faststart", master,
   ]);
@@ -255,6 +258,11 @@ async function main() {
     return;
   }
   if (!process.env.ELEVENLABS_API_KEY) throw new Error("Set ELEVENLABS_API_KEY.");
+  if (flag("clips-only") !== undefined) {
+    for (const cut of ad.cuts) await ttsClips(ad, cut);
+    console.log(`[${ad.folder}] speech timings → build/vo-timing.json`);
+    return;
+  }
   for (const cut of ad.cuts) {
     await requireRender(ad, cut);
     await mixCut(ad, cut, await ttsClips(ad, cut));
