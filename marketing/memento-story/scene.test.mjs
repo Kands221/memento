@@ -10,7 +10,7 @@ import { loadAd } from "../kit/render.mjs";
 import { cutout } from "../kit/art.mjs";
 
 // Opens the scene through the kit's static server and checks pure-function behaviour at given times.
-async function withScene(fn, { adName = "memento-story", beforeLoad, ready = true } = {}) {
+async function withScene(fn, { adName = "memento-story", beforeLoad, ready = true, initialTime = 0 } = {}) {
   const { serveForTest } = await import("../kit/render.mjs");
   const ad = await loadAd(adName);
   const { server, base } = await serveForTest(ad.folder);
@@ -20,7 +20,7 @@ async function withScene(fn, { adName = "memento-story", beforeLoad, ready = tru
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
     await beforeLoad?.(page);
-    await page.goto(`${base}?t=0`, { waitUntil: "networkidle" });
+    await page.goto(`${base}?t=${initialTime}`, { waitUntil: "networkidle" });
     if (ready) await page.evaluate(() => window.__ready);
     await fn(page, ad);
     if (ready) assert.deepEqual(errors, []);
@@ -28,6 +28,72 @@ async function withScene(fn, { adName = "memento-story", beforeLoad, ready = tru
     await browser.close();
     server.close();
   }
+}
+
+for (const [adName, exitTime] of [["memento-story", 42.7], ["memento-story-30", 20.5]]) {
+  test(`${adName}: phone exit holds the final frame regardless of seek history`, async () => {
+    const { tl, build } = await loadAd(adName);
+    const last = tl.SEGMENTS.at(-1);
+    const frames = JSON.parse(readFileSync(path.join(build, "frames.json"), "utf8"));
+    const expected = `build/frames/${last.id}/${String(frames[last.id]).padStart(5, "0")}.jpg`;
+    const histories = [
+      { name: "fresh direct request", initialTime: exitTime, times: [] },
+      { name: "from opening", initialTime: 0, times: [tl.PHONE.in + 0.1, exitTime] },
+      { name: "from end", initialTime: last.to - 1 / tl.FPS, times: [tl.DURATION - 1 / tl.FPS, exitTime] },
+      { name: "from highlighted journal", initialTime: tl.T.chip + 0.4, times: [exitTime] },
+    ];
+    const states = [];
+    for (const { name, initialTime, times } of histories) {
+      await withScene(async (page) => {
+        for (const t of times) await page.evaluate((t) => window.renderAt(t), t);
+        const state = await page.evaluate(() => {
+          const screen = document.querySelector("#screen");
+          return {
+            src: screen.getAttribute("src"), decoded: screen.complete && screen.naturalWidth > 0,
+            display: getComputedStyle(document.querySelector("#phone")).display,
+            ring: document.querySelector("#ring").style.cssText,
+            ringOpacity: getComputedStyle(document.querySelector("#ring")).opacity,
+            status: document.querySelector("#statusfix").style.cssText,
+            statusBackground: getComputedStyle(document.querySelector("#statusfix")).backgroundColor,
+          };
+        });
+        states.push({ name, state });
+      }, { adName, initialTime });
+    }
+    for (const { name, state } of states) {
+      assert.equal(state.src, expected, `${name}: final footage frame at ${exitTime}s`);
+      assert.equal(state.decoded, true, `${name}: frame is decoded`);
+      assert.notEqual(state.display, "none", `${name}: phone is still exiting`);
+      assert.equal(state.ringOpacity, "0", `${name}: journal highlight has ended`);
+      assert.notEqual(state.statusBackground, "rgba(0, 0, 0, 0)", `${name}: status patch is painted`);
+      assert.deepEqual(state, states[0].state, `${name}: frame and overlays match direct access`);
+    }
+  });
+}
+
+for (const adName of ["memento-story", "memento-story-30"]) {
+  test(`${adName}: clock digits stay centred on the face as the room drifts`, async () => {
+    await withScene(async (page) => {
+      for (const t of [0.5, 2.5, 3.5, 4.5]) {
+        await page.evaluate((t) => window.renderAt(t), t);
+        const { actual, expected } = await page.evaluate(() => {
+          const room = document.querySelector('#world img[src$="story-night.jpg"]');
+          const style = getComputedStyle(room);
+          const [ox, oy] = style.transformOrigin.split(" ").map(parseFloat);
+          // Measured independently on the accepted 1920×1080 crop: inner face
+          // spans approximately x=314..394, y=581..661, centred at (354, 621).
+          const face = new DOMPoint(354 - ox, 621 - oy).matrixTransform(new DOMMatrixReadOnly(style.transform));
+          const box = document.querySelector("#clock").getBoundingClientRect();
+          return {
+            actual: { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+            expected: { x: room.offsetLeft + ox + face.x, y: room.offsetTop + oy + face.y },
+          };
+        });
+        const distance = Math.hypot(actual.x - expected.x, actual.y - expected.y);
+        assert.ok(distance <= 3, `clock at ${t}s is ${distance.toFixed(2)}px from the face: ${JSON.stringify({ actual, expected })}`);
+      }
+    }, { adName });
+  });
 }
 
 for (const [adName, boundary] of [["memento-story", 55], ["memento-story-30", 26.8]]) {

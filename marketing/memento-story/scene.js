@@ -75,6 +75,8 @@ function renderWorld(t) {
     // The camera scales around 30% 50%; reserve enough image on each side of that origin for the pan.
     const cover = 1 + Math.max(x / 30, -x / 70, Math.abs(y) / 50) + 0.002;
     const tf = `translate(${x.toFixed(3)}%, ${y.toFixed(3)}%) scale(${Math.max(lerp(s0, s1, p), cover).toFixed(4)})`;
+    // Keep the clock's digits attached to the face throughout the opening camera move.
+    if (s.id === "night") css($("#clock-camera"), { transform: tf });
     if (s.enter === "unfold" || s.exit === "fold") {
       // The flashback opens out of the journal and folds back into it.
       const open = s.enter === "unfold" ? easeInOut(prog(t, s.from, s.from + 0.8)) : 1;
@@ -180,7 +182,9 @@ async function renderPhone(t) {
     left: `${(PHONE.x * WIDTH - w / 2).toFixed(1)}px`, top: `${(PHONE.y * HEIGHT - h / 2).toFixed(1)}px`,
     transformOrigin: "50% 66%", transform: `translateX(${away.toFixed(1)}px) perspective(2400px) rotateY(${PHONE.tilt}deg) scale(${zoom.toFixed(4)})`,
   });
-  const seg = segAt(t);
+  // The exit outlives the footage; hold its final frame even on a direct seek.
+  const exiting = t >= PHONE.out;
+  const seg = exiting ? SEGMENTS.at(-1) : segAt(t);
   if (!shown || !seg) return;
   const sw = w - 22;
   const sh = sw * (1440 / 662);
@@ -195,7 +199,7 @@ async function renderPhone(t) {
   css($("#statusfix"), { left: `${(108 / 828 * sw).toFixed(1)}px`, top: `${(45 / 1800 * sh).toFixed(1)}px`, width: `${(86 / 828 * sw).toFixed(1)}px`,
                          height: `${(44 / 1800 * sh).toFixed(1)}px`, fontSize: `${(36 / 828 * sw).toFixed(1)}px` });
   const n = frames[seg.id];
-  const i = clamp(Math.floor((t - seg.at) * FPS), 0, n - 1) + 1;
+  const i = exiting ? n : clamp(Math.floor((t - seg.at) * FPS), 0, n - 1) + 1;
   const src = `build/frames/${seg.id}/${String(i).padStart(5, "0")}.jpg`;
   if (src !== lastSrc) {
     const img = $("#screen");

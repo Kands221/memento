@@ -13,13 +13,16 @@ function of time, so any frame can be rendered on its own.
 
 ## Commands
 
+Before running any voice or music command, set and export `ELEVENLABS_API_KEY` in your shell, or read it from your own
+secret file and export it. The commands below use that environment variable.
+
 ```bash
 cd marketing && npm install                                   # Playwright + sharp
 memento-demo/record.sh                                        # record the scenes from the "Memento Demo" simulator
 TAKE=B memento-demo/record.sh Scene4Sol                       # another take of one scene (live AI varies)
 node kit/render.mjs memento-demo --still 2,34.9               # PNG stills into build/stills/
 node kit/render.mjs memento-demo                              # frames, SFX and the silent cut into out/
-ELEVENLABS_API_KEY=... node kit/voice.mjs memento-demo        # voice + score mix → out/memento-demo-9x16-vo.mp4
+node kit/voice.mjs memento-demo                              # voice + score mix → out/memento-demo-9x16-vo.mp4
 node kit/render.mjs memento-demo-wide && node kit/voice.mjs memento-demo-wide   # landscape (copy build/vo and build/music.mp3 first to reuse them)
 ```
 
@@ -27,24 +30,22 @@ For the story cuts, run these from `marketing/`. Generate the voice timings befo
 the cached speech, then generate the score, render, mix and verify:
 
 ```bash
-MEMENTO_SCRATCH=/private/tmp/claude-501/-Users-kands-orca-workspaces-memento-app/171e0a96-d442-450d-b371-a43ae3a8a435/scratchpad
-
 # 60 s master
-ELEVENLABS_API_KEY="$(cat "$MEMENTO_SCRATCH/.eleven")" node kit/voice.mjs memento-story --clips-only
+node kit/voice.mjs memento-story --clips-only
 curl -fsS -m 300 -o memento-story/build/music.mp3 -w "status=%{http_code}\n" \
-  -H "xi-api-key: $(cat "$MEMENTO_SCRATCH/.eleven")" -H "Content-Type: application/json" \
+  -H "xi-api-key: $ELEVENLABS_API_KEY" -H "Content-Type: application/json" \
   -d @memento-story/music.json "https://api.elevenlabs.io/v1/music?output_format=mp3_44100_128"
 node kit/render.mjs memento-story
-ELEVENLABS_API_KEY="$(cat "$MEMENTO_SCRATCH/.eleven")" node kit/voice.mjs memento-story
+node kit/voice.mjs memento-story
 node kit/verify.mjs memento-story/out/memento-story-16x9-vo.mp4 --duration 60
 
 # 30 s social cut
-ELEVENLABS_API_KEY="$(cat "$MEMENTO_SCRATCH/.eleven")" node kit/voice.mjs memento-story-30 --clips-only
+node kit/voice.mjs memento-story-30 --clips-only
 curl -fsS -m 300 -o memento-story-30/build/music.mp3 -w "status=%{http_code}\n" \
-  -H "xi-api-key: $(cat "$MEMENTO_SCRATCH/.eleven")" -H "Content-Type: application/json" \
+  -H "xi-api-key: $ELEVENLABS_API_KEY" -H "Content-Type: application/json" \
   -d @memento-story-30/music.json "https://api.elevenlabs.io/v1/music?output_format=mp3_44100_128"
 node kit/render.mjs memento-story-30
-ELEVENLABS_API_KEY="$(cat "$MEMENTO_SCRATCH/.eleven")" node kit/voice.mjs memento-story-30
+node kit/voice.mjs memento-story-30
 node kit/verify.mjs memento-story-30/out/memento-story-30-16x9-vo.mp4 --duration 30
 ```
 

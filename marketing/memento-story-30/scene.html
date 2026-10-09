@@ -19,6 +19,7 @@
   #moon { width: 520px; height: 520px; border-radius: 50%; background: radial-gradient(closest-side, rgba(242, 238, 226, 0.45), rgba(242, 238, 226, 0)); position: absolute; }
   #glow { width: 760px; height: 760px; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 196, 140, 0.42), rgba(255, 196, 140, 0)); position: absolute; mix-blend-mode: screen; }
   #sunrise { background: linear-gradient(115deg, rgba(255, 186, 140, 0.55), rgba(255, 220, 180, 0.15) 45%, rgba(255, 220, 180, 0) 70%); mix-blend-mode: screen; opacity: 0; }
+  #clock-camera { position: absolute; inset: 0; transform-origin: 30% 50%; pointer-events: none; }
   #clock { position: absolute; font-family: -apple-system, system-ui; font-weight: 600; font-size: 22px; color: #2b2723; letter-spacing: 0.5px; transform: translate(-50%, -50%); }
   #sol { position: absolute; transform-origin: 50% 100%; }
   #sol img { position: absolute; left: 0; bottom: 0; width: 100%; opacity: 0; }
@@ -49,7 +50,7 @@
   <div id="moon"></div>
   <div id="glow"></div>
   <div class="wash" id="sunrise"></div>
-  <div id="clock">2:04</div>
+  <div id="clock-camera"><div id="clock">2:04</div></div>
   <div id="sol-shadow"></div>
   <div id="sol">
     <img data-pose="hello" src="build/art/sol-hello.png" alt="">

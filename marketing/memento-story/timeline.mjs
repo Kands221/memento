@@ -26,7 +26,8 @@ export const MEMORY_DATE = "Sep 13";
 // Journal crease: (267, 700) in the writing crop, approximately (238, 705) after the drift at the peek.
 export const ANCHORS = {
   journal: { x: 0.125, y: 0.653 },
-  clock: { x: 0.189, y: 0.607 },
+  // Inner face centre measured on the accepted 1920×1080 night crop, before camera drift.
+  clock: { x: 354 / WIDTH, y: 621 / HEIGHT },
   moon: { x: 0.300, y: 0.115 },
   herNight: { x: 0.280, y: 0.590 },
   herSitting: { x: 0.312, y: 0.405 },
