@@ -147,7 +147,17 @@ If it passes, ship it as **"Sol offline"**, an optional ~1 GB download in On-dev
 
 **Summaries don't need a new model on any phone.** The model only phrases facts that code computed and validators check, so model size barely matters. Without on-device AI, the deterministic paragraph is already correct.
 
-**Measurement on the Mac** (Qwen3-1.7B Q4_K_M via llama.cpp, same 20 turns and checks): *pending; the model download is still in progress.*
+**Measured (Oct 10, 2026), same 20 turns, same prompts, same checks, before validators:**
+
+| Model | Turns with ≥1 error | Main failures | Reply time (p50 / p90) |
+|---|---|---|---|
+| Apple on-device model | **4 / 20** | Banned opener ×2, assumed feeling ×1, no question ×1 | 4.5 s / 7.1 s |
+| Qwen3-1.7B, 4-bit (llama.cpp on an **M5 Mac**) | **20 / 20** | Several questions per reply ×16, too long ×12, repeated questions ×11, no usable quick replies ×20, assumed feeling ×2 | 5.8 s / 25.6 s |
+
+- **What the 1.7B model's replies were like:** generic platitudes ("Chaos is like a river…") that ignored the reply shape, stacked 2–4 questions, and ran on to paragraphs.
+- **Speed:** it managed 73 tokens/s on an M5. An iPhone 12 is several times slower, so real replies there would take much longer.
+- **Verdict:** a model small enough for an iPhone 12 is **not** good enough for Sol. Validators could trim its replies but can't add the warmth and specificity it lacks.
+- **What that means:** Apple's model stays the engine. On phones without it, the honest options are the cloud fallback or no AI Sol. The offline model is dropped unless a much better small model appears; re-run this eval to check.
 
 ## 10. Order of work (updated)
 
