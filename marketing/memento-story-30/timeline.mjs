@@ -2,6 +2,7 @@
 export { FPS, WIDTH, HEIGHT, ANCHORS, VOICES, TAGS_ON_SCREEN, MEMORY_DATE } from "../memento-story/timeline.mjs";
 export const NAME = "memento-story-30";
 export const DURATION = 30;
+export const MUSIC = { delay: 4.6, fadeOut: 1.0 };
 export const COVER_T = 15.6;
 export const DOC = { title: "Memento story (30 s)", notes: [], rules: ["Same rules as the 60 s master."] };
 

@@ -40,6 +40,15 @@ const aspect = (tl) => (tl.WIDTH > tl.HEIGHT ? "16x9" : "9x16");
 
 const exists = (f) => access(f).then(() => true, () => false);
 
+// MUSIC delay/fadeOut are seconds. Fade the source in before delaying it, so
+// a delayed score keeps its gentle entrance while the exit follows the cut.
+export function musicFilter(tl) {
+  const { delay = 0, fadeOut = 2.5 } = tl.MUSIC ?? {};
+  const delayed = delay > 0 ? `,adelay=${Math.round(delay * 1000)}:all=1` : "";
+  return "[3:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=0.32,afade=t=in:d=1.2" +
+    `${delayed},afade=t=out:st=${(tl.DURATION - fadeOut).toFixed(2)}:d=${fadeOut}[mus];`;
+}
+
 async function ffmpeg(args) {
   const p = spawn("ffmpeg", ["-y", "-hide_banner", "-loglevel", "error", ...args], { stdio: "inherit" });
   const [code] = await once(p, "close");
@@ -236,7 +245,7 @@ async function mixCut(ad, cut, clips) {
     withMusic
       ? `[2:a]${st},asplit=3[vo1][vo2][vo3];[1:a]${st},volume=0.6[sfx];` +
         "[sfx][vo1]sidechaincompress=threshold=0.03:ratio=8:attack=15:release=250[duck];" +
-        `[3:a]${st},volume=0.32,afade=t=in:d=1.2,afade=t=out:st=${(tl.DURATION - 2.5).toFixed(2)}:d=2.5[mus];` +
+        musicFilter(tl) +
         "[mus][vo3]sidechaincompress=threshold=0.035:ratio=5:attack=40:release=600[mduck];" +
         `[duck][vo2][mduck]amix=inputs=3:normalize=0:duration=first,${LIMITER_FILTER},apad[a]`
       : "[2:a]asplit=2[vo1][vo2];[1:a]aresample=48000,volume=0.6[sfx];" +
