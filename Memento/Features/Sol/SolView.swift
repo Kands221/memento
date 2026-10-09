@@ -15,7 +15,7 @@ struct SolView: View {
     @State private var draft = ""
     @State private var drafting = false
     @State private var showDraft = false
-    @State private var spin = false
+    @State private var bob = false
 
     var body: some View {
         NavigationStack {
@@ -71,9 +71,9 @@ struct SolView: View {
     private func avatar(size: CGFloat) -> some View {
         let mood = conversation?.mood ?? .hello
         return SolArt(name: mood.asset == "sol-hello" ? "sol-mark" : mood.asset, size: size)
-            .rotationEffect(.degrees(mood == .thinking && spin ? 360 : 0))
-            .animation(mood == .thinking && !reduceMotion ? .linear(duration: 8).repeatForever(autoreverses: false) : .default, value: spin)
-            .onChange(of: mood) { _, new in spin = new == .thinking && !reduceMotion }
+            .offset(y: mood == .thinking && bob ? -2 : 0)
+            .animation(mood == .thinking && !reduceMotion ? .easeInOut(duration: 0.9).repeatForever(autoreverses: true) : .default, value: bob)
+            .onChange(of: mood) { _, new in bob = new == .thinking && !reduceMotion }
     }
 
     // MARK: Gate
@@ -114,7 +114,7 @@ struct SolView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     if c.userTurns == 0 {
-                        SolArt(name: "sol-hello", size: 120).frame(maxWidth: .infinity).padding(.top, 8)
+                        SolArt(name: "sol-hello", size: 150).frame(maxWidth: .infinity).padding(.top, 4)
                     }
                     Text(SolCharacter.disclaimer)
                         .font(.ui(13)).foregroundStyle(Color.mMut).lineSpacing(2)
@@ -122,8 +122,8 @@ struct SolView: View {
                     ForEach(c.messages) { message in messageView(message) }
                     if c.isAwaitingFirstToken {
                         HStack(spacing: 8) {
-                            SolArt(name: "sol-thinking", size: 22)
-                                .rotationEffect(.degrees(spin ? 360 : 0))
+                            SolArt(name: "sol-thinking", size: 26)
+                                .offset(y: bob ? -2 : 0)
                             Text("Sol is thinking…").font(.ui(14).italic()).foregroundStyle(Color.mMut)
                                 .accessibilityIdentifier("sol.thinking")
                         }

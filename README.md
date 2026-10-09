@@ -4,7 +4,7 @@
 
 <p align="center"><em>Write naturally. Notice gently. Find it again.</em></p>
 
-Memento is a private journal for iPhone. On-device AI suggests the details in what you wrote: how you felt, what was hard, what helped. Each suggestion is tied to your exact words, so you can find those moments again later. **Sol**, a small paper sun, talks things through with you and helps turn the conversation into a reflection you keep.
+Memento is a private journal for iPhone. On-device AI suggests the details in what you wrote: how you felt, what was hard, what helped. Each suggestion is tied to your exact words, so you can find those moments again later. **Sol** (short for Solomon), a wise old paper tortoise, talks things through with you and helps turn the conversation into a reflection you keep.
 
 All AI runs on the iPhone through Apple's Foundation Models framework, and the app makes no network calls. Your writing leaves the phone only when you export or share it yourself.
 
@@ -26,7 +26,7 @@ All AI runs on the iPhone through Apple's Foundation Models framework, and the a
 - **Write.** Four modes: free writing, a three-minute brain dump, guided prompts, and photo entries. Dictation runs on the device too. Saving is instant and never waits for AI.
 - **Notice.** After you save, the on-device model suggests up to four tags: a feeling, a situation, what helped, and a topic. Each one highlights the words behind it. Dashed means suggested, filled means kept. You can keep, edit, remove, or undo any of them.
 - **Find again.** A kept tag opens every related moment across your notebooks, on a timeline that also shows which other tags appear alongside it.
-- **Reflect with Sol.** Sol streams its replies, asks one gentle question at a time, and drafts a reflection only from your own words. Sol's mood shows in its pose: hello, listening, thinking, reflecting, resting.
+- **Reflect with Sol.** Sol streams its replies, asks one gentle question at a time, and drafts a reflection only from your own words. Sol's mood shows in his pose: waving hello, listening, thinking, reading beside your notebook, tucked in his shell to rest.
 - **Summaries.** A factual, deterministic one-page PDF, for yourself or to bring to an appointment. It counts only tags you kept.
 
 ## On-device AI

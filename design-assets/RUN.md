@@ -12,6 +12,7 @@ Run: `run_a9cf74431017`
 | 1 redo: sol-mark-v2 | — | ctx_1b6e9f7cdbb3 | succeeded; released |
 
 | 3 Sol character | — | ctx_4f1525d16a9d | succeeded (answered 1 question: no post-processing needed) |
+| 4 Sol as an old tortoise | — | ctx_3c0f1e807aea | succeeded; released (user: "i dont like sun") |
 
 ## Verdicts
 - onb-hero: accepted (style anchor; paper fibre, palette, no text)
@@ -26,3 +27,4 @@ Run: `run_a9cf74431017`
 - reminder-scene: accepted (quiet upper third for the clock)
 - paper-grain: dropped — so low-contrast it adds nothing at 25% opacity (spec §8 allows dropping)
 - sol-hello / sol-thinking / sol-listening / sol-reflect / sol-resting: accepted — same sun, character through pose only, reads at small size
+- Wave 4 tortoise (sol-mark, sol-hello, sol-listening, sol-thinking, sol-reflect, sol-resting): accepted — one consistent character (spectacles, terracotta scarf, sage shell); sol-mark cropped to head-and-scarf for avatar legibility; replaces the paper-sun set

@@ -87,7 +87,9 @@ struct SolArt: View {
             } else {
                 image
                     .blendMode(.multiply)
-                    .mask(RadialGradient(colors: [.black, .black, .clear], center: .center, startRadius: 0, endRadius: size * 0.5))
+                    .mask(RadialGradient(gradient: Gradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.84),
+                                                                    .init(color: .clear, location: 1)]),
+                                         center: .center, startRadius: 0, endRadius: size * 0.5))
             }
         }
         .accessibilityHidden(true)
