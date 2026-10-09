@@ -12,3 +12,21 @@ struct FoundationModelIntegrationTests {
         #expect(clean.allSatisfy { $0.quote.map(text.contains) ?? true })
     }
 }
+
+@MainActor
+@Suite(.enabled(if: AIAvailability.live() == .ready))
+struct FoundationModelSolIntegrationTests {
+    @Test func solStreamsAReplyAndReturnsToIdle() async {
+        let conversation = SolConversation(engine: FoundationModelSol())
+        await conversation.send("Work has been a lot this week and I keep saying yes to things.")
+        #expect(conversation.messages.last?.role == .sol)
+        #expect(!(conversation.messages.last?.text.isEmpty ?? true))
+        #expect(conversation.messages.last?.text != SolConversation.fallbackReply)
+        #expect(!conversation.isResponding)
+    }
+
+    @Test func draftsAReflectionFromUserWords() async throws {
+        let text = try await FoundationModelSol().draftReflection(from: ["Work has been a lot.", "I want to say no more often."])
+        #expect(text.hasSuffix(ReflectionTemplate.closingPrompt))
+    }
+}
