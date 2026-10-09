@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import test from "node:test";
 
-// memento-demo's clips are cached in build/vo, so this spends no ElevenLabs characters.
-test("--clips-only writes speech timings without a render", () => {
-  execFileSync("node", ["kit/voice.mjs", "memento-demo", "--clips-only"], { env: { ...process.env, ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY ?? "cached-only" } });
+// Optional integration check: cached clips only, with paid synthesis disabled.
+test("--clips-only writes speech timings without a render", { skip: !existsSync("memento-demo/build/vo") }, () => {
+  rmSync("memento-demo/build/vo-timing.json", { force: true });
+  execFileSync(process.execPath, ["kit/voice.mjs", "memento-demo", "--clips-only"], {
+    env: { ...process.env, VOICE_OFFLINE: "1", ELEVENLABS_API_KEY: "" },
+  });
   const timing = JSON.parse(readFileSync("memento-demo/build/vo-timing.json", "utf8"));
   assert.equal(timing.length, 9);
   for (const line of timing) {

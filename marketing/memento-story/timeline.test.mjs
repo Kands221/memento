@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import test from "node:test";
 
 for (const ad of ["memento-story", "memento-story-30"]) {
-  test(`${ad}: Sol only names what the footage shows`, async () => {
-    let tl;
-    try { tl = await import(`../${ad}/timeline.mjs`); } catch { return; }
+  const file = new URL(`../${ad}/timeline.mjs`, import.meta.url);
+  test(`${ad}: Sol only names what the footage shows`, { skip: ad === "memento-story-30" && !existsSync(file) }, async () => {
+    const tl = await import(file.href);
     const sol = tl.VO.filter((v) => v.who === "Sol").map((v) => v.text);
     const tagLine = sol.find((t) => t.includes("Priya") && !t.includes("wrote"));
     assert.ok(tagLine, "a tag line mentions Priya");

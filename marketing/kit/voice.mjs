@@ -13,17 +13,20 @@
 // settings, so a re-run only spends characters on lines that changed, and a
 // line shared by several hooks is generated once. The key is read from the
 // environment and never written anywhere.
+// Set VOICE_OFFLINE=1 to reuse cached clips without an API key; cache misses fail.
 
 import { execFile, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { once } from "node:events";
 import { access, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { flag, loadAd, ROOT, writeCrops } from "./render.mjs";
 import { forVariant } from "./text.mjs";
 
 const MAX_TEMPO = 1.25;
+export const LIMITER_FILTER = "alimiter=limit=0.85:level=false";
 const GAP = 0.1;
 // A human take keeps its own pacing: lines may start up to EARLY before their
 // beat, pauses close to about 0.16s (the clip's own air plus TAKE_GAP), and the whole take speeds up uniformly by no
@@ -76,7 +79,11 @@ async function clipFor(ad, line) {
     .digest("hex")
     .slice(0, 10);
   const raw = path.join(voDir, `${line.who}-${hash}.mp3`);
-  const spent = (await exists(raw)) ? 0 : await synthesize(VOICES, line, raw);
+  const cached = await exists(raw);
+  if (!cached && process.env.VOICE_OFFLINE === "1") {
+    throw new Error(`VOICE_OFFLINE=1: missing cached voice clip ${raw}; ElevenLabs synthesis is disabled.`);
+  }
+  const spent = cached ? 0 : await synthesize(VOICES, line, raw);
 
   // Trim the lead-in and the breathy tail, and squeeze dramatic pauses down
   // to a beat, so the slot math sees speech. -35 dB sits above the noise
@@ -231,10 +238,10 @@ async function mixCut(ad, cut, clips) {
         "[sfx][vo1]sidechaincompress=threshold=0.03:ratio=8:attack=15:release=250[duck];" +
         `[3:a]${st},volume=0.32,afade=t=in:d=1.2,afade=t=out:st=${(tl.DURATION - 2.5).toFixed(2)}:d=2.5[mus];` +
         "[mus][vo3]sidechaincompress=threshold=0.035:ratio=5:attack=40:release=600[mduck];" +
-        "[duck][vo2][mduck]amix=inputs=3:normalize=0:duration=first,alimiter=limit=0.85,apad[a]"
+        `[duck][vo2][mduck]amix=inputs=3:normalize=0:duration=first,${LIMITER_FILTER},apad[a]`
       : "[2:a]asplit=2[vo1][vo2];[1:a]aresample=48000,volume=0.6[sfx];" +
         "[sfx][vo1]sidechaincompress=threshold=0.03:ratio=8:attack=15:release=250[duck];" +
-        "[duck][vo2]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.85,apad[a]",
+        `[duck][vo2]amix=inputs=2:normalize=0:duration=first,${LIMITER_FILTER},apad[a]`,
     "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2",
     "-t", String(tl.DURATION), "-movflags", "+faststart", master,
   ]);
@@ -257,7 +264,7 @@ async function main() {
     await mixCut(ad, ad.cuts[0], await takeClips(ad, ad.cuts[0], file));
     return;
   }
-  if (!process.env.ELEVENLABS_API_KEY) throw new Error("Set ELEVENLABS_API_KEY.");
+  if (process.env.VOICE_OFFLINE !== "1" && !process.env.ELEVENLABS_API_KEY) throw new Error("Set ELEVENLABS_API_KEY.");
   if (flag("clips-only") !== undefined) {
     for (const cut of ad.cuts) await ttsClips(ad, cut);
     console.log(`[${ad.folder}] speech timings → build/vo-timing.json`);
@@ -269,7 +276,9 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  console.error(e.message ?? e);
-  process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((e) => {
+    console.error(e.message ?? e);
+    process.exit(1);
+  });
+}
