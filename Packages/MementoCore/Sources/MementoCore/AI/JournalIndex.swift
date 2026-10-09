@@ -41,6 +41,8 @@ public struct JournalSnippet: Sendable, Hashable {
     public let notebook: String
     public let text: String
     public let tags: [String]
+    /// The entry's "what helped" sentence, when the writer kept one.
+    public var helped: String? = nil
 }
 
 public struct JournalHit: Sendable, Hashable {
@@ -73,9 +75,13 @@ public actor JournalIndex {
         var built: [Item] = []
         for doc in documents {
             let tagWords = Self.lemmas(doc.keptTags.joined(separator: " "))
+            let helpedSentence = Self.sentences(in: doc.text).first { s in
+                doc.helpedQuotes.contains { s.localizedCaseInsensitiveContains($0) || $0.localizedCaseInsensitiveContains(s) }
+            }
             for sentence in Self.sentences(in: doc.text) {
                 let helped = doc.helpedQuotes.contains { sentence.localizedCaseInsensitiveContains($0) || $0.localizedCaseInsensitiveContains(sentence) }
-                built.append(Item(snippet: JournalSnippet(entryID: doc.entryID, date: doc.date, notebook: doc.notebook, text: sentence, tags: doc.keptTags),
+                built.append(Item(snippet: JournalSnippet(entryID: doc.entryID, date: doc.date, notebook: doc.notebook, text: sentence,
+                                                          tags: doc.keptTags, helped: helpedSentence),
                                   vector: embedder.vector(for: sentence), lemmas: Self.lemmas(sentence), tagWords: tagWords, isHelpedMoment: helped))
             }
         }

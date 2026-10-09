@@ -65,9 +65,11 @@ public struct SearchJournalTool: Tool {
 extension SolTurnPlanner {
     /// "Sol remembers": the one closely related journal moment for this message, skipping small talk
     /// and moments already cited in this conversation. Retrieval runs on device for every engine.
-    public static func recall(_ text: String, history: [SolMessage], journal: JournalIndex?) async -> (memory: String?, hits: [JournalHit]) {
+    /// - Parameter allowRepeat: a direct question ("what helped last time?") may bring back a moment already cited.
+    public static func recall(_ text: String, history: [SolMessage], journal: JournalIndex?,
+                              allowRepeat: Bool = false) async -> (memory: String?, hits: [JournalHit]) {
         guard let journal, !isSmallTalk(text) else { return (nil, []) }
-        let alreadyCited = Set(history.flatMap(\.citations).map(\.entryID))
+        let alreadyCited = allowRepeat ? [] : Set(history.flatMap(\.citations).map(\.entryID))
         let hits = await journal.search(text, limit: 1, minimumScore: JournalIndex.strongMatch)
             .filter { !alreadyCited.contains($0.snippet.entryID) }
         return (hits.isEmpty ? nil : SearchJournalTool.describe(hits, calendar: .current), hits)

@@ -53,7 +53,8 @@ public enum SummaryNarrator {
     or say what led to what, and don't interpret what the facts mean. Call each tag what the facts call it: a feeling, \
     something that happened, something that helped, or a topic. Use the exact numbers; never say "a lot", "always" \
     or "most of the time". Never diagnose or name conditions. Never give advice. 2 to 4 short sentences \
-    (under 20 words each), each one different.
+    (under 20 words each), each one different. A good shape: first how many entries and when; then the feelings \
+    they named, with their numbers, together in one sentence; then what helped, with its numbers.
     """
 
     public static func narrate(_ facts: SummaryFacts) async -> SummaryNarration? {

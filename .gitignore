@@ -10,3 +10,7 @@ design-reference/support.js
 .superpowers/
 design-assets/accepted/
 Memento/Resources/CloudAI.plist
+marketing/node_modules/
+marketing/*/build/
+marketing/*/out/
+marketing/*/footage/

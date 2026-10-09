@@ -97,6 +97,8 @@ public struct SolReplyCheck: Sendable {
     /// can't act in the world ("Would you like me to call her?").
     private func speaksAsWriter(_ s: String) -> Bool {
         if s.range(of: #"\b(like|want|need) me to (call|text|talk to|tell|ask|send|go|meet|visit|email|book)\b"#, options: .regularExpression) != nil { return true }
+        if s.range(of: #"\b(helped|worked for|was good for|calmed|eased|comforted|was a kind next step for|made) me\b"#,
+                   options: .regularExpression) != nil, s.range(of: #"\byou\b"#, options: .regularExpression) == nil { return true }
         guard s.range(of: #"^((sometimes|maybe|honestly|lately|and|but|so|oh|well),? )?(i|i'm|i’m|i've|i’ve|i'd|i’d|i'll|i’ll|my)\b"#,
                       options: .regularExpression) != nil else { return false }
         if s.range(of: #"(tortoise|shell|my (long|many|old) (years|life|days)|old friend)"#, options: .regularExpression) != nil { return false }

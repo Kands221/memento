@@ -47,6 +47,7 @@ import Testing
         #expect(sister.issues(in: "I've learned that slow steps still count.", isOpening: false).isEmpty)
         #expect(sister.issues(in: "In my long years as a tortoise, I've seen rifts mend.", isOpening: false).isEmpty)
         #expect(sister.issues(in: "I'd love to hear what you might say to her.", isOpening: false).isEmpty)
+        #expect(sister.issues(in: "Talking to a friend was a kind next step for me.", isOpening: false) == [.speaksAsWriter])
     }
 
     @Test func catchesRepeatsHiddenAssumptionsAndBrokenText() {
@@ -89,6 +90,13 @@ import Testing
                 == "A chaotic week asks a lot. Slow is still moving.")
     }
 
+    @Test func dropsASentenceRepeatedInTheSameReply() {
+        var g = gate([2, 2])
+        _ = g.feed(SolDraftSnapshot(parts: ["You're thinking about Priya. You're thinking about Priya.", "Friends help."], completeParts: 2))
+        #expect(g.shown == ["You're thinking about Priya.", "Friends help."])
+        #expect(g.dropped == [.repeatsItself])
+    }
+
     @Test func holdsQuestionsBackAndKeepsBudgets() {
         var g = gate([1, 1])
         _ = g.feed(SolDraftSnapshot(parts: ["Chaos takes room. It really does. What helps?", "One step at a time works. Another line."],
@@ -117,6 +125,30 @@ import Testing
         #expect(SolTurnGate.quickReplies(["Her voice"], question: "What do you miss most?") == ["Her voice", "I'm not sure yet"])
     }
 
+    @Test func quotesTheJournalMomentAfterTheFirstSentence() {
+        let line = "On Sep 12, you wrote: “Long walk with Priya after work.”"
+        var g = SolTurnGate(check: SolReplyCheck(writerMessages: ["Work stress is back"]), budgets: [2, 1], writerSaid: "Work stress is back",
+                            memoryLine: line, memoryAfter: 1)
+        #expect(g.feed(SolDraftSnapshot(parts: ["Work stress has come back around. And it", nil], completeParts: 0))
+                == "Work stress has come back around. " + line)
+        #expect(g.quotedMemory)
+        _ = g.feed(SolDraftSnapshot(parts: ["Work stress has come back around. And it lingers.", "A walk might help again."], completeParts: 2))
+        #expect(g.shown == ["Work stress has come back around.", line, "And it lingers.", "A walk might help again."])
+        // Answers lead with it.
+        var a = SolTurnGate(check: SolReplyCheck(writerMessages: ["What helped me last time?"]), budgets: [2], writerSaid: "x",
+                            memoryLine: line, memoryAfter: 0)
+        #expect(a.feed(SolDraftSnapshot(parts: [nil], completeParts: 0)) == line)
+    }
+
+    @Test func memoryLineUsesTheExactDateAndWords() {
+        let date = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 12, hour: 20))!
+        let hit = JournalHit(snippet: JournalSnippet(entryID: UUID(), date: date, notebook: "Daily", text: "Long walk with Priya after work", tags: []), score: 0.9)
+        #expect(SolTurnPlanner.memoryLine(hit) == "On Sep 12, you wrote: “Long walk with Priya after work.”")
+        let helped = JournalHit(snippet: JournalSnippet(entryID: UUID(), date: date, notebook: "Daily", text: "Work was relentless again.", tags: [],
+                                                        helped: "Long walk with Priya after work."), score: 0.9)
+        #expect(SolTurnPlanner.memoryLine(helped) == "On Sep 12, you wrote: “Long walk with Priya after work.”")
+    }
+
     @Test func fallbackStaysInVoiceAndAsksSomethingNew() {
         let turn = SolTurnPlanner.fallbackTurn(asked: [SolTurnPlanner.unusedFollowUp(asked: [])])
         #expect(turn.usedFallback)
@@ -131,6 +163,7 @@ import Testing
         #expect(SolTurnKind.of("hi", steerTowardReflection: false) == .smallTalk)
         #expect(SolTurnKind.of("What should I do to calm my nerves?", steerTowardReflection: false) == .answer)
         #expect(SolTurnKind.of("Do you think I should practice tonight or rest?", steerTowardReflection: false) == .answer)
+        #expect(SolTurnKind.of("Work stress is back this week. What helped me last time?", steerTowardReflection: false) == .answer)
         #expect(SolTurnKind.of("I got the job!!", steerTowardReflection: false) == .celebrate)
         #expect(SolTurnKind.of("Today was actually really good", steerTowardReflection: false) == .celebrate)
         #expect(SolTurnKind.of("I'm nervous but mostly excited", steerTowardReflection: false) == .reflect)
@@ -165,10 +198,19 @@ import Testing
         #expect(notes == ["Dana (their manager)", "stayed late three nights"])
     }
 
+    @Test func reflectionKeepsOnlyWhatTheWriterSaid() {
+        let raw = "This week, I've been feeling the familiar tug of work stress. I remember how I handled it last time: I took a deep breath, reminded myself of my goals, and focused on one task at a time. I also made sure to take regular breaks to recharge. It helped me stay calm and productive."
+        #expect(SolTurnPlanner.cleanReflection(raw, writerMessages: ["Work stress is back this week. What helped me last time?"]) == nil)
+        let grounded = "Work stress is back this week. Last time, a long walk with Priya helped. Tonight I'll text Priya and go for a walk."
+        #expect(SolTurnPlanner.cleanReflection(grounded, writerMessages: ["Work stress is back this week. What helped me last time?",
+                                                                          "I'll text Priya and go for a walk tonight, like last time with the long walk."]) == grounded)
+    }
+
     @Test func reflectionDropsPreamblesAndUnsaidFeelings() {
-        let raw = "Here's your reflection:\n\nI keep saying yes to everything at work. I feel completely hopeless about it.\n\nMaybe I can say no once this week."
-        let text = SolTurnPlanner.cleanReflection(raw, writerMessages: ["I keep saying yes to everything at work"])
-        #expect(text == "I keep saying yes to everything at work.\n\nMaybe I can say no once this week.")
+        let raw = "Here's your reflection:\n\nI keep saying yes to everything at work. I feel completely hopeless about it.\n\nSaying yes to everything keeps me busy every night. Maybe I can say no once this week."
+        let text = SolTurnPlanner.cleanReflection(raw, writerMessages: ["I keep saying yes to everything at work", "It keeps me busy every night"])
+        // The unsaid feeling and the invented intention both go; the writer adds their own at the end.
+        #expect(text == "I keep saying yes to everything at work.\n\nSaying yes to everything keeps me busy every night.")
         #expect(SolTurnPlanner.cleanReflection("You should rest.", writerMessages: ["tired"]) == nil)
     }
 }

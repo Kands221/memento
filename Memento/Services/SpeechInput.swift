@@ -10,7 +10,9 @@ final class SpeechInput {
     private var useLive: Bool { LiveTranscriber.isSupported }
     /// Demo recordings only (`-demoSpeech`): the iOS Simulator has no working speech model, so the mic
     /// "hears" a scripted line word by word, the way live dictation fills the field on an iPhone.
-    @ObservationIgnored private let demoLine = LaunchOptions.current.demoSpeech
+    @ObservationIgnored private let demoLines = LaunchOptions.current.demoSpeech?.components(separatedBy: " | ")
+    @ObservationIgnored private var demoTurn = 0
+    private var demoLine: String? { demoLines.map { $0[min(demoTurn, $0.count - 1)] } }
     private var demoListening = false
     @ObservationIgnored private var demoTask: Task<Void, Never>?
 
@@ -22,6 +24,7 @@ final class SpeechInput {
     func start(onText: @escaping @MainActor (String) -> Void) async {
         if let demoLine {
             demoListening = true
+            demoTurn += 1
             let words = demoLine.split(separator: " ").map(String.init)
             demoTask = Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(700))

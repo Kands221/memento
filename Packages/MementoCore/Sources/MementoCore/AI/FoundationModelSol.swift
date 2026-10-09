@@ -10,8 +10,6 @@ struct SolTurnContent {
     var theme: String
     @Guide(description: "1 or 2 sentences of gentle perspective on the chosen theme, the way a wise old teacher would say it, tied to what the writer said. Plain words, not generic advice; never start with 'Remember'.")
     var perspective: String
-    @Guide(description: "True only if your reply mentions the journal moment given in the prompt")
-    var usedMemory: Bool
     @Guide(description: "One open, caring question that moves the conversation forward and is different from every question already asked")
     var question: String
     @Guide(description: "Two short answers the writer (not Sol) could tap to answer your question, written as the writer, 2 to 6 words each. Never questions, never advice.", .count(2))
@@ -23,8 +21,6 @@ struct SolTurnContent {
 struct SolAnswerContent {
     @Guide(description: "Answer the writer's question directly in 1 to 3 sentences: warm, practical, plain words, in your own voice. No diagnosis and no medical advice.")
     var answer: String
-    @Guide(description: "True only if your answer mentions the journal moment given in the prompt")
-    var usedMemory: Bool
     @Guide(description: "One short, caring follow-up question")
     var question: String
     @Guide(description: "Two short answers the writer (not Sol) could tap, written as the writer, 2 to 6 words each. Never questions.", .count(2))
@@ -134,7 +130,10 @@ public final class FoundationModelSol: SolEngine {
     }
 
     public func reply(to text: String, history: [SolMessage], steerTowardReflection: Bool) -> AsyncThrowingStream<SolTurn, any Error> {
-        if askedQuestions.isEmpty, let opening = history.first(where: { $0.role == .sol })?.text { askedQuestions = [opening] }
+        if askedQuestions.isEmpty, let opening = history.first(where: { $0.role == .sol })?.text {
+            // The opening's own question counts as asked, so Sol never ends a turn by repeating it.
+            askedQuestions = SolReplyCheck.sentences(in: opening, includeTrailing: true).filter { $0.hasSuffix("?") }
+        }
         return AsyncThrowingStream { continuation in
             let task = Task { @MainActor in
                 do {
@@ -155,12 +154,18 @@ public final class FoundationModelSol: SolEngine {
         let kind = SolTurnKind.of(text, steerTowardReflection: steer)
         let writerMessages = history.filter { $0.role == .me }.map(\.text) + [text]
         let (memory, hits) = kind == .reflect || kind == .answer
-            ? await SolTurnPlanner.recall(text, history: history, journal: journal) : (nil, [])
+            ? await SolTurnPlanner.recall(text, history: history, journal: journal, allowRepeat: kind == .answer) : (nil, [])
         let memoryDate = hits.first.map { DateLabels().short($0.snippet.date) }
         let check = SolReplyCheck(writerMessages: writerMessages, memory: hits.first?.snippet.text, memoryDate: memoryDate,
                                   earlierReplies: history.filter { $0.role == .sol }.dropFirst().map(\.text))
         let words = text.split(whereSeparator: \.isWhitespace).count
-        gate = SolTurnGate(check: check, budgets: kind.budgets(forWords: words), writerSaid: writerMessages.joined(separator: " "))
+        // Sol quotes the journal moment himself (exact date, the writer's own words); the model only connects it.
+        let memoryLine = hits.first.map(SolTurnPlanner.memoryLine)
+        let makeGate = {
+            SolTurnGate(check: check, budgets: kind.budgets(forWords: words), writerSaid: writerMessages.joined(separator: " "),
+                        memoryLine: memoryLine, memoryAfter: kind == .answer ? 0 : 1)
+        }
+        gate = makeGate()
         await keepWithinContext(history, writerMessages: writerMessages)
         let prompt = SolTurnPlanner.onDevicePrompt(kind: kind, text: text, askedQuestions: askedQuestions, usedThemes: usedThemes,
                                                    steerTowardReflection: steer, memory: memory, notes: notes)
@@ -204,7 +209,7 @@ public final class FoundationModelSol: SolEngine {
             guard let gate, gate.shown.isEmpty, !timedOut, attempt == 1 else { break }
             // Nothing usable yet: one fresh try with a note about what went wrong.
             note = SolTurnPlanner.retryNote(for: gate.dropped)
-            self.gate = SolTurnGate(check: check, budgets: kind.budgets(forWords: words), writerSaid: writerMessages.joined(separator: " "))
+            self.gate = makeGate()
         }
         generation = nil
         let last = latest
@@ -219,7 +224,7 @@ public final class FoundationModelSol: SolEngine {
         askedQuestions.append(question)
         if let theme = last?.theme, !theme.isEmpty { usedThemes.append(theme) }
         let reply = gate.shown.joined(separator: " ") + " " + question
-        let citations = last?.usedMemory == true && !hits.isEmpty ? SolTurnPlanner.citations(for: reply, hits: hits) : []
+        let citations = gate.quotedMemory ? hits.prefix(1).map { SolCitation(entryID: $0.snippet.entryID, label: DateLabels().short($0.snippet.date)) } : []
         return SolTurn(reply: reply, suggestions: SolTurnGate.quickReplies(last?.suggestions, question: question), citations: citations)
     }
 
@@ -233,8 +238,8 @@ public final class FoundationModelSol: SolEngine {
             }
         case .answer:
             return try await stream(SolAnswerContent.self, prompt: prompt, in: session, show: show) { c in
-                SolDraftSnapshot(parts: [c.answer], completeParts: c.usedMemory != nil || c.question != nil ? 1 : 0,
-                                 question: c.question, suggestions: c.suggestions, usedMemory: c.usedMemory)
+                SolDraftSnapshot(parts: [c.answer], completeParts: c.question != nil ? 1 : 0,
+                                 question: c.question, suggestions: c.suggestions)
             }
         case .celebrate:
             return try await stream(SolCelebrateContent.self, prompt: prompt, in: session, show: show) { c in
@@ -246,9 +251,9 @@ public final class FoundationModelSol: SolEngine {
             }
         case .reflect:
             return try await stream(SolTurnContent.self, prompt: prompt, in: session, show: show) { c in
-                let done = (c.usedMemory != nil || c.question != nil) ? 2 : (c.theme != nil ? 1 : 0)
+                let done = c.question != nil ? 2 : (c.theme != nil ? 1 : 0)
                 return SolDraftSnapshot(parts: [c.reflection, c.perspective], completeParts: done, question: c.question,
-                                        suggestions: c.suggestions, usedMemory: c.usedMemory, theme: c.theme)
+                                        suggestions: c.suggestions, theme: c.theme)
             }
         }
     }

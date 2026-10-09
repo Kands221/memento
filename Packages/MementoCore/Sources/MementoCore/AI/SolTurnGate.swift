@@ -17,7 +17,7 @@ public enum SolTurnKind: String, Sendable, CaseIterable {
         let t = text.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         if SolTurnPlanner.isSmallTalk(t) && !steerTowardReflection { return .smallTalk }
         if steerTowardReflection { return .reflect }
-        let asks = t.contains("?") && t.range(of: #"(^|\b)(what should|should i|what would you|what do you think|do you think|any advice|how (do|can|should) i|what can i|is it (ok|okay|normal|bad)|why do i|would you|can you|could you|which)\b"#,
+        let asks = t.contains("?") && t.range(of: #"(^|\b)(what should|should i|what would you|what do you think|do you think|any advice|how (do|can|should) i|what can i|is it (ok|okay|normal|bad)|why do i|would you|can you|could you|which|what helped|what did i|when did i|how did i|what was i|remind me)\b"#,
                                              options: .regularExpression) != nil
         if asks { return .answer }
         let good = t.range(of: #"(got the job|good news|so happy|really good|great day|good day|went well|best day|proud|excited|finally|grateful|amazing|wonderful|loved it|it worked|i did it|passed|promotion|engaged|!!)"#,
@@ -49,16 +49,14 @@ public struct SolDraftSnapshot: Sendable, Equatable {
     public var completeParts: Int
     public var question: String?
     public var suggestions: [String]?
-    public var usedMemory: Bool?
     public var theme: String?
 
     public init(parts: [String?], completeParts: Int, question: String? = nil, suggestions: [String]? = nil,
-                usedMemory: Bool? = nil, theme: String? = nil) {
+                theme: String? = nil) {
         self.parts = parts
         self.completeParts = completeParts
         self.question = question
         self.suggestions = suggestions
-        self.usedMemory = usedMemory
         self.theme = theme
     }
 
@@ -75,6 +73,10 @@ public struct SolTurnGate: Sendable {
     let check: SolReplyCheck
     let budgets: [Int]
     let writerSaid: String
+    /// Sol's own line quoting the journal moment, placed after `memoryAfter` shown sentences.
+    let memoryLine: String?
+    let memoryAfter: Int
+    public private(set) var quotedMemory = false
     public private(set) var shown: [String] = []
     public private(set) var dropped: [SolReplyCheck.Issue] = []
     /// The last question the model tucked into a statement part; used if the question field comes back empty.
@@ -82,10 +84,12 @@ public struct SolTurnGate: Sendable {
     private var consumed: [Int]
     private var kept: [Int]
 
-    public init(check: SolReplyCheck, budgets: [Int], writerSaid: String) {
+    public init(check: SolReplyCheck, budgets: [Int], writerSaid: String, memoryLine: String? = nil, memoryAfter: Int = 1) {
         self.check = check
         self.budgets = budgets
         self.writerSaid = writerSaid
+        self.memoryLine = memoryLine
+        self.memoryAfter = memoryAfter
         consumed = Array(repeating: 0, count: budgets.count)
         kept = Array(repeating: 0, count: budgets.count)
     }
@@ -93,6 +97,13 @@ public struct SolTurnGate: Sendable {
     /// The reply text to show, when it grew.
     public mutating func feed(_ snapshot: SolDraftSnapshot) -> String? {
         var grew = false
+        func quoteMemoryIfDue(force: Bool = false) {
+            guard let memoryLine, !quotedMemory, shown.count >= memoryAfter || force else { return }
+            shown.insert(memoryLine, at: min(memoryAfter, shown.count))
+            quotedMemory = true
+            grew = true
+        }
+        quoteMemoryIfDue()
         for i in budgets.indices where i < snapshot.parts.count {
             let all = SolReplyCheck.sentences(in: snapshot.parts[i] ?? "", includeTrailing: i < snapshot.completeParts)
             guard all.count > consumed[i] else { continue }
@@ -103,16 +114,24 @@ public struct SolTurnGate: Sendable {
                     continue
                 }
                 guard kept[i] < budgets[i] else { continue }
+                // The same sentence twice in one reply ("You're thinking about Priya. You're thinking about Priya.").
+                if shown.contains(where: { $0.lowercased() == sentence.lowercased() }) {
+                    dropped.append(.repeatsItself)
+                    continue
+                }
                 let issues = check.issues(in: sentence, isOpening: shown.isEmpty)
                 if issues.isEmpty {
                     shown.append(sentence)
                     kept[i] += 1
                     grew = true
+                    quoteMemoryIfDue()
                 } else {
                     dropped.append(contentsOf: issues)
                 }
             }
             consumed[i] = all.count
+            // The first part is done: the memory goes in now even if that part had nothing usable.
+            if i == 0 && snapshot.completeParts >= 1 && !shown.isEmpty { quoteMemoryIfDue(force: true) }
         }
         return grew ? shown.joined(separator: " ") : nil
     }
@@ -182,14 +201,17 @@ extension SolTurnPlanner {
 extension SolTurnPlanner {
     /// The on-device prompt for one turn, shaped by its kind (plan §4b).
     public static func onDevicePrompt(kind: SolTurnKind, text: String, askedQuestions: [String], usedThemes: [String],
-                                      steerTowardReflection: Bool, memory: String? = nil, notes: [String] = []) -> String {
+                                      steerTowardReflection: Bool, memory: String? = nil, notes: [String] = [],
+                                      now: Date = .now, calendar: Calendar = .current) -> String {
         var lines = ["The writer says: \"\(text)\""]
         if !notes.isEmpty {
             lines.append("What the writer told you earlier in this conversation: \(notes.joined(separator: "; ")).")
         }
         switch kind {
         case .smallTalk:
-            lines.append("\(smallTalkMarker) Greet them warmly in one or two sentences, in your own voice, and ask what's on their heart. Don't offer advice.")
+            let hour = calendar.component(.hour, from: now)
+            let time = 5..<12 ~= hour ? "morning" : 12..<17 ~= hour ? "afternoon" : 17..<22 ~= hour ? "evening" : "night"
+            lines.append("\(smallTalkMarker) It's \(time) now. Greet them warmly in one or two sentences, in your own voice, and ask what's on their heart. Don't offer advice.")
         case .answer:
             lines.append("The writer asked you something. Answer it first: directly, warmly and practically, in plain words. Then ask one short follow-up question.")
         case .celebrate:
@@ -202,7 +224,7 @@ extension SolTurnPlanner {
             }
         }
         if let memory, kind == .reflect || kind == .answer {
-            lines.append("From the writer's journal, a closely related moment: \(memory)\nIf it genuinely helps, mention it once with its date and in their own words, and set usedMemory to true. Otherwise leave it out and set usedMemory to false.")
+            lines.append("From the writer's journal: \(memory)\nYour reply will already quote this moment for you, so don't repeat it. In your \(kind == .answer ? "answer" : "perspective"), gently connect it to what they said now, speaking to them as \"you\": it's their memory, not yours.")
         }
         if kind == .reflect, !usedThemes.isEmpty {
             lines.append("Perspectives you already offered (choose a different theme): \(usedThemes.joined(separator: "; ")).")
@@ -215,6 +237,16 @@ extension SolTurnPlanner {
         }
         lines.append("Name only feelings the writer named.")
         return lines.joined(separator: "\n")
+    }
+
+    /// Sol's line quoting a journal moment: the exact date and the writer's own words, never paraphrased.
+    public static func memoryLine(_ hit: JournalHit) -> String {
+        // What helped is the useful part of a past moment; otherwise the sentence that matched.
+        var quote = (hit.snippet.helped ?? hit.snippet.text).trimmingCharacters(in: .whitespacesAndNewlines)
+        let words = quote.split(whereSeparator: \.isWhitespace)
+        if words.count > 18 { quote = words.prefix(18).joined(separator: " ") + "…" }
+        if let last = quote.last, !".!?…".contains(last) { quote += "." }
+        return "On \(DateLabels().short(hit.snippet.date)), you wrote: “\(quote)”"
     }
 
     /// One line telling the model what to avoid on its second try.
@@ -246,11 +278,27 @@ extension SolTurnPlanner {
         return Array(notes.prefix(6))
     }
 
-    /// Strips preambles and formatting, and drops sentences that add feelings or clinical words the writer didn't use.
+    static let groundStopwords: Set<String> = ["this", "that", "with", "have", "been", "were", "what", "when", "will", "just", "about",
+        "from", "they", "them", "their", "there", "then", "than", "into", "also", "some", "more", "much", "very", "really",
+        "feel", "feeling", "felt", "think", "know", "like", "make", "made", "want", "would", "could", "should", "today", "myself"]
+
+    /// Rough stems, so "walk", "walks" and "walking" count as the same word.
+    static func contentStems(_ text: String) -> Set<String> {
+        Set(text.lowercased().split { !$0.isLetter }.map(String.init)
+            .filter { $0.count >= 4 && !groundStopwords.contains($0) }
+            .map { w in
+                for suffix in ["ing", "ed", "es", "s"] where w.count > suffix.count + 3 && w.hasSuffix(suffix) { return String(w.dropLast(suffix.count)) }
+                return w
+            })
+    }
+
+    /// Strips preambles and formatting, and drops sentences that add feelings, clinical words or things the writer
+    /// never said (each sentence must be built mostly from their own words).
     /// Nil when what's left isn't a first-person reflection of at least two sentences.
     public static func cleanReflection(_ raw: String, writerMessages: [String]) -> String? {
         let check = SolReplyCheck(writerMessages: writerMessages)
         let said = writerMessages.joined(separator: " ").lowercased()
+        let saidStems = contentStems(said)
         var paragraphs: [String] = []
         for line in raw.components(separatedBy: "\n") {
             var p = line.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -264,7 +312,10 @@ extension SolTurnPlanner {
                     !group.contains { SolReplyCheck.has($0, in: said) } && group.contains { SolReplyCheck.has($0, in: lower) }
                 }
                 // A reflection is written as the writer, so first person is right here.
-                return !unsaidFeeling && check.issues(in: s, isOpening: false).allSatisfy { $0 == .speaksAsWriter }
+                let stems = contentStems(s)
+                let shared = stems.intersection(saidStems).count
+                let grounded = stems.isEmpty || shared >= 3 || Double(shared) / Double(stems.count) >= 0.4
+                return grounded && !unsaidFeeling && check.issues(in: s, isOpening: false).allSatisfy { $0 == .speaksAsWriter }
             }
             p = kept.joined(separator: " ")
             if !p.isEmpty { paragraphs.append(p) }
