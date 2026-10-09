@@ -21,8 +21,11 @@ import Foundation
         #expect(p.contains("You are Sol"))
         #expect(p.contains("At most two short sentences"))
         #expect(p.contains("Never diagnose"))
-        #expect(p.contains("Examples of your voice"))
         #expect(p.contains("point toward people they trust"))
+        #expect(p.contains("no memory of earlier conversations"))
+        #expect(p.contains("Respond only to what the writer actually wrote"))
+        #expect(p.contains("If the writer just says hello"))
+        #expect(!p.contains("Writer:"))   // examples must not read like a real transcript
     }
 
     @Test func conversationOpensInCharacter() {

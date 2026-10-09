@@ -62,8 +62,6 @@ struct NotebookDetailView: View {
         }
         .scrollIndicators(.hidden)
         .background(Color.mBg.ignoresSafeArea())
-        .navigationTitle(notebook.name)
-        .toolbarTitleDisplayMode(.inline)
     }
 
     private func keptLabels(_ entries: [Entry]) -> [String] {

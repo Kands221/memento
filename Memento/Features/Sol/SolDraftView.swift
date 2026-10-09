@@ -23,7 +23,7 @@ struct SolDraftView: View {
                     HStack(alignment: .center, spacing: 12) {
                         Text("Your reflection").font(.serif(32, relativeTo: .largeTitle)).foregroundStyle(Color.mInk)
                         Spacer()
-                        PaperIcon(name: "sol-reflect", size: 64, disc: false)
+                        SolArt(name: "sol-reflect", size: 64)
                     }
                     Text("Drafted on this iPhone from your own words. Change anything — what you save is yours. Saves to Reflections and counts toward your streak.")
                         .font(.ui(14)).foregroundStyle(Color.mMut).fixedSize(horizontal: false, vertical: true)

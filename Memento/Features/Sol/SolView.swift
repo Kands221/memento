@@ -8,6 +8,7 @@ struct SolView: View {
     @Environment(AppServices.self) private var services
     @Environment(\.modelContext) private var context
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(SettingsKey.solEnabled) private var solEnabled = true
     @State private var conversation: SolConversation?
     @State private var engine: (any SolEngine)?
@@ -48,32 +49,31 @@ struct SolView: View {
 
     private var header: some View {
         HStack {
-            Button("Close") { close() }.buttonStyle(LinkButtonStyle(size: 17)).fontWeight(.regular).frame(width: 64, alignment: .leading)
-            Spacer()
+            Button("Close") { close() }.buttonStyle(LinkButtonStyle(size: 17)).fontWeight(.regular)
+                .lineLimit(1).minimumScaleFactor(0.6).frame(width: 56, alignment: .leading)
+            Spacer(minLength: 4)
             VStack(spacing: 1) {
                 HStack(spacing: 6) {
                     avatar(size: 24)
                     Text("Sol").font(.serif(19, relativeTo: .headline)).foregroundStyle(Color.mInk)
                 }
                 Text("On this iPhone · not saved unless you choose").font(.ui(11, relativeTo: .caption2)).foregroundStyle(Color.mMut)
+                    .lineLimit(2).minimumScaleFactor(0.8).multilineTextAlignment(.center)
             }
-            Spacer()
-            Color.clear.frame(width: 64, height: 1)
+            Spacer(minLength: 4)
+            Color.clear.frame(width: 56, height: 1)
         }
         .padding(.horizontal, 12)
-        .frame(height: 56)
+        .frame(minHeight: 56)
         .overlay(alignment: .bottom) { Rectangle().fill(Color.mLine).frame(height: 1) }
     }
 
     private func avatar(size: CGFloat) -> some View {
         let mood = conversation?.mood ?? .hello
-        return Image(mood.asset == "sol-hello" ? "sol-mark" : mood.asset)
-            .resizable().scaledToFit()
-            .frame(width: size, height: size)
+        return SolArt(name: mood.asset == "sol-hello" ? "sol-mark" : mood.asset, size: size)
             .rotationEffect(.degrees(mood == .thinking && spin ? 360 : 0))
             .animation(mood == .thinking && !reduceMotion ? .linear(duration: 8).repeatForever(autoreverses: false) : .default, value: spin)
             .onChange(of: mood) { _, new in spin = new == .thinking && !reduceMotion }
-            .accessibilityHidden(true)
     }
 
     // MARK: Gate
@@ -114,8 +114,7 @@ struct SolView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     if c.userTurns == 0 {
-                        Image("sol-hello").resizable().scaledToFit().frame(width: 120, height: 120)
-                            .frame(maxWidth: .infinity).padding(.top, 8).accessibilityHidden(true)
+                        SolArt(name: "sol-hello", size: 120).frame(maxWidth: .infinity).padding(.top, 8)
                     }
                     Text(SolCharacter.disclaimer)
                         .font(.ui(13)).foregroundStyle(Color.mMut).lineSpacing(2)
@@ -123,7 +122,7 @@ struct SolView: View {
                     ForEach(c.messages) { message in messageView(message) }
                     if c.isAwaitingFirstToken {
                         HStack(spacing: 8) {
-                            Image("sol-thinking").resizable().scaledToFit().frame(width: 22, height: 22)
+                            SolArt(name: "sol-thinking", size: 22)
                                 .rotationEffect(.degrees(spin ? 360 : 0))
                             Text("Sol is thinking…").font(.ui(14).italic()).foregroundStyle(Color.mMut)
                                 .accessibilityIdentifier("sol.thinking")
@@ -131,7 +130,7 @@ struct SolView: View {
                     }
                     if drafting {
                         HStack(spacing: 10) {
-                            Image("sol-reflect").resizable().scaledToFit().frame(width: 28, height: 28)
+                            SolArt(name: "sol-reflect", size: 28)
                             Text(SolCharacter.drafting).font(.ui(14).italic()).foregroundStyle(Color.mMut)
                         }
                     } else if c.canMakeReflection {
@@ -142,7 +141,7 @@ struct SolView: View {
                     }
                     if c.reachedCap {
                         HStack(alignment: .top, spacing: 10) {
-                            Image("sol-resting").resizable().scaledToFit().frame(width: 32, height: 32)
+                            SolArt(name: "sol-resting", size: 32)
                             Text(SolCharacter.windDown).font(.ui(14)).foregroundStyle(Color.mMut)
                         }
                     }
@@ -165,7 +164,7 @@ struct SolView: View {
         switch message.role {
         case .sol:
             HStack(alignment: .top, spacing: 10) {
-                Image("sol-mark").resizable().scaledToFit().frame(width: 22, height: 22).padding(.top, 3).accessibilityHidden(true)
+                SolArt(name: "sol-mark", size: 22).padding(.top, 3)
                 Text(message.text).font(.serif(20, relativeTo: .body)).foregroundStyle(Color.mInk).lineSpacing(4)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .textSelection(.enabled)
@@ -188,12 +187,10 @@ struct SolView: View {
         @Bindable var c = c
         return VStack(alignment: .leading, spacing: 10) {
             if !c.suggestions.isEmpty && c.canSend {
-                FlowLayout(spacing: 8) {
-                    ForEach(c.suggestions, id: \.self) { suggestion in
-                        Button(suggestion) { Task { await c.send(suggestion) } }
-                            .buttonStyle(PillButtonStyle(fill: .mCard, height: 38, horizontalPadding: 14))
-                            .font(.ui(14, weight: .regular))
-                    }
+                if dynamicTypeSize.isAccessibilitySize {
+                    ScrollView(.horizontal) { HStack(spacing: 8) { chips(c) } }.scrollIndicators(.hidden)
+                } else {
+                    FlowLayout(spacing: 8) { chips(c) }
                 }
             }
             if !c.reachedCap {
@@ -218,6 +215,14 @@ struct SolView: View {
         .padding(.top, 8)
         .padding(.bottom, 10)
         .background(Color.mBg)
+    }
+
+    private func chips(_ c: SolConversation) -> some View {
+        ForEach(c.suggestions, id: \.self) { suggestion in
+            Button(suggestion) { Task { await c.send(suggestion) } }
+                .buttonStyle(PillButtonStyle(fill: .mCard, height: 38, horizontalPadding: 14))
+                .font(.ui(14, weight: .regular))
+        }
     }
 
     // MARK: Actions

@@ -3,9 +3,9 @@ import FoundationModels
 
 @Generable
 struct SolTurnContent {
-    @Guide(description: "Sol's reply: warm, at most two short sentences, reflecting the writer's words and ending with one open question")
+    @Guide(description: "Sol's reply to the writer's latest message: at most two short sentences, ending with one open question")
     var reply: String
-    @Guide(description: "Two different answers the WRITER might give to Sol's question, in the writer's own first-person voice, 2 to 6 words each, e.g. \"More time for me\" or \"Honestly, sleep\". Never instructions, never addressed to the writer, never Sol speaking.", .count(2))
+    @Guide(description: "Two short answers the writer (not Sol) could tap to answer Sol's question, written as the writer, 2 to 6 words each, e.g. \"Work, mostly\" or \"Honestly, sleep\". Never questions, never advice, never Sol's words.", .count(2))
     var suggestions: [String]
 }
 
@@ -30,18 +30,19 @@ public final class FoundationModelSol: SolEngine {
 
     public init() {}
 
-    private func makeSession(earlier: [SolMessage] = []) -> LanguageModelSession {
+    /// The session starts from the visible conversation, so the model knows what Sol already said
+    /// (including its opening question) instead of meeting the writer's "hi" with no context.
+    private func makeSession(earlier: [SolMessage]) -> LanguageModelSession {
         var instructions = Self.persona
-        let recent = earlier.suffix(4).filter { $0.role != .support }
+        let recent = earlier.suffix(6).filter { $0.role != .support }
         if !recent.isEmpty {
-            instructions += "\n\nEarlier in this conversation:\n" + recent.map { "\($0.role == .me ? "Writer" : "Sol"): \($0.text)" }.joined(separator: "\n")
+            instructions += "\n\nThe conversation so far:\n" + recent.map { "\($0.role == .me ? "The writer said" : "You (Sol) said"): \($0.text)" }.joined(separator: "\n")
         }
         return LanguageModelSession(instructions: instructions)
     }
 
     public func prewarm() {
-        let s = session ?? makeSession()
-        session = s
+        let s = session ?? makeSession(earlier: [])
         s.prewarm()
     }
 
@@ -54,6 +55,7 @@ public final class FoundationModelSol: SolEngine {
         return AsyncThrowingStream { continuation in
             let task = Task { @MainActor in
                 do {
+                    if self.session == nil { self.session = self.makeSession(earlier: history) }
                     try await self.stream(prompt, into: continuation)
                     continuation.finish()
                 } catch LanguageModelSession.GenerationError.exceededContextWindowSize {
@@ -73,7 +75,7 @@ public final class FoundationModelSol: SolEngine {
     }
 
     private func stream(_ prompt: String, into continuation: AsyncThrowingStream<SolTurn, any Error>.Continuation) async throws {
-        let session = self.session ?? makeSession()
+        let session = self.session ?? makeSession(earlier: [])
         self.session = session
         for try await snapshot in session.streamResponse(to: prompt, generating: SolTurnContent.self) {
             continuation.yield(SolTurn(reply: snapshot.content.reply ?? "", suggestions: snapshot.content.suggestions ?? []))

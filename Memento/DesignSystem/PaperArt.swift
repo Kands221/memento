@@ -71,3 +71,20 @@ struct HatchedPlaceholder: View {
         }
     }
 }
+
+/// Sol expression art. In light mode the cream paper background multiplies into the page;
+/// in dark mode it sits on a soft cream disc so it reads as a printed sticker.
+struct SolArt: View {
+    let name: String
+    var size: CGFloat
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        Image(name).resizable().scaledToFit()
+            .frame(width: size, height: size)
+            .blendMode(scheme == .light ? .multiply : .normal)
+            .padding(scheme == .dark ? size * 0.08 : 0)
+            .background { if scheme == .dark { Circle().fill(Color(hex: 0xFFFCF6)) } }
+            .accessibilityHidden(true)
+    }
+}

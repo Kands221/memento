@@ -25,7 +25,7 @@ struct WriteSheet: View {
                     row(icon: "mode-\(mode.rawValue)", title: title, detail: detail, dashed: false) { app.openEditor(mode) }
                         .accessibilityIdentifier("write.mode.\(mode.rawValue)")
                 }
-                row(icon: "sol-mark", title: "Reflect with Sol", detail: "Talk it through, then save a reflection. Optional.", dashed: true) { app.openSol() }
+                row(icon: "sol-hello", title: "Reflect with Sol", detail: "Talk it through, then save a reflection. Optional.", dashed: true) { app.openSol() }
                     .padding(.top, 4)
                     .accessibilityIdentifier("write.sol")
             }

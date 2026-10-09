@@ -39,7 +39,8 @@ struct MementoTabBar: View {
         return Button { app.select(value) } label: {
             VStack(spacing: 4) {
                 Image(systemName: symbol).font(.system(size: 19, weight: .regular)).frame(height: 22)
-                Text(title).font(.ui(10.5, relativeTo: .caption2, weight: .medium))
+                    .accessibilityHidden(true)
+                Text(title).font(.system(size: 10.5, weight: .medium)).lineLimit(1).minimumScaleFactor(0.8)
             }
             .foregroundStyle(on ? Color.mTer : Color.mMut)
             .frame(maxWidth: .infinity, minHeight: 48)
