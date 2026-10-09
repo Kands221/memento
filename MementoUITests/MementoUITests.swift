@@ -77,5 +77,18 @@ final class MementoUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Keep Restless"].waitForExistence(timeout: 2))
         app.buttons["Keep Restless"].tap()
         XCTAssertTrue(app.buttons["kept.Restless"].waitForExistence(timeout: 2))
+        app.buttons["kept.Restless"].tap()
+        XCTAssertTrue(app.staticTexts["tag.title"].waitForExistence(timeout: 2))
+        XCTAssertEqual(app.staticTexts["tag.title"].label, "Restless")
+    }
+
+    func testDiscoverToTag() {
+        let app = launch()
+        app.buttons["tab.discover"].tap()
+        XCTAssertTrue(app.buttons["chip.Walking helped"].waitForExistence(timeout: 3))
+        app.buttons["chip.Walking helped"].tap()
+        let meta = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'Mentioned in 3 entries · 2 notebooks'")).firstMatch
+        XCTAssertTrue(meta.waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Summarize these 3 entries"].exists)
     }
 }
